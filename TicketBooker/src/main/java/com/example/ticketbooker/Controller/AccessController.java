@@ -1,30 +1,25 @@
 package com.example.ticketbooker.Controller;
 
-import com.example.ticketbooker.DTO.Account.AccountDTO;
-import com.example.ticketbooker.Entity.CustomUserDetails;
-import com.example.ticketbooker.Service.AccountService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.ticketbooker.DTO.Users.AddUserRequest;
+import com.example.ticketbooker.Service.UserService;
 
 @Controller
 public class AccessController {
+
+    // 1. Đổi AccountService -> UserService
     @Autowired
-    private AccountService accountService;
+    private UserService userService;
+
     @GetMapping("/admin/**")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')") // Thêm ADMIN vào cho chắc
     public String managerDashboard() {
         return "redirect:/admin/users";
     }
@@ -34,22 +29,28 @@ public class AccessController {
         System.out.println("Access denied");
         return "View/Util/404Page";
     }
+
     @GetMapping("/register")
     public String register() {
-        System.out.println("register");
+        // Trả về view đăng ký (bạn cần có file HTML này, hoặc dùng 404 như cũ để test)
+        System.out.println("register page requested");
         return "View/Util/404Page";
     }
+
+    // 2. Sửa logic Đăng ký (Register)
     @PostMapping("/register")
-    public ResponseEntity<Object> addAccount(@RequestBody AccountDTO accountDTO, RedirectAttributes redirectAttributes) {
-        System.out.println("Received data: " + accountDTO);
-        try{
-            if(accountService.createAccountWithUser(accountDTO) != null) {
+    public ResponseEntity<Object> registerUser(@RequestBody AddUserRequest addUserRequest) {
+        System.out.println("Received registration data: " + addUserRequest);
+        try {
+            // Gọi hàm addUser của UserService (hàm này đã xử lý check trùng email và mã hóa pass)
+            boolean isCreated = userService.addUser(addUserRequest);
+            
+            if (isCreated) {
                 return ResponseEntity.ok().build();
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.badRequest().build();
     }
-
 }

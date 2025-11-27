@@ -1,23 +1,50 @@
+/* Style chung cho ghế */
 .seat {
     width: 40px;
     height: 40px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid #d1d5db; /* Viền xám nhạt tinh tế hơn */
+    border-radius: 8px;        /* Bo tròn nhiều hơn chút cho hiện đại */
     font-size: 14px;
-    text-align: center;
+    font-weight: 600;
+    display: flex;             /* Canh giữa số ghế chuẩn hơn */
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    transition: all 0.2s ease; /* Hiệu ứng mượt mà */
+    margin: 4px;               /* Tạo khoảng cách giữa các ghế */
 }
 
+/* 1. Ghế Trống (Available) */
 .seat-available {
     background-color: white;
-    color: black;
+    color: #374151; /* Màu chữ xám đậm */
 }
 
+/* Hiệu ứng khi di chuột vào ghế trống */
+.seat-available:hover {
+    background-color: var(--secondary-color, #d1fae5); /* Nền xanh nhạt */
+    border-color: var(--primary-color, #10b981);       /* Viền xanh đậm */
+    color: var(--primary-color, #10b981);
+    transform: scale(1.05);
+}
+
+/* 2. Ghế Đang Chọn (Selected) - GreenBus Style */
 .seat-selected {
-    background-color: #3baf65; /* Màu xanh */
+    background-color: var(--primary-color, #10b981); /* Màu xanh GreenBus */
+    border-color: var(--primary-color, #10b981);
     color: white;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); 
+}
+
+/* 3. Ghế Đã Bán (Booked)*/
+.seat-booked {
+    background-color: #e5e7eb; /* Xám nhạt */
+    border-color: #d1d5db;
+    color: #9ca3af;            /* Chữ xám mờ */
+    cursor: not-allowed;       /* Con trỏ báo cấm bấm */
 }
 
 .seat:focus {
-    outline: none; /* Bỏ viền khi ghế được nhấn */
+    outline: none;
+    ring: 2px solid var(--primary-hover, #059669);
 }

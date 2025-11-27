@@ -1,100 +1,98 @@
-    document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector('form');
     const oldPasswordInput = document.querySelector('input[name="oldPassword"]');
     const newPasswordInput = document.querySelector('input[name="newPassword"]');
     const confirmPasswordInput = document.querySelector('input[name="confirmPassword"]');
-    const statusMessage = document.createElement('p'); // Element to display status messages
-
-    // Append statusMessage to the form (can be styled as needed)
+    // Tìm nút submit để khóa lại khi đang loading
+    const submitButton = form.querySelector('button[type="submit"]'); 
+    
+    const statusMessage = document.createElement('p'); 
     form.appendChild(statusMessage);
 
     form.addEventListener('submit', async function (event) {
-    event.preventDefault(); // Prevent default form submission
+        event.preventDefault(); 
+        resetStatusMessage();
 
-    // Reset any previous status messages
-    resetStatusMessage();
+        if (!validateForm()) {
+            return;
+        }
 
-    // Validate inputs
-    if (!validateForm()) {
-    return;
-}
+        // 1. Hiệu ứng Loading: Khóa nút & đổi text
+        const originalBtnText = submitButton.innerText;
+        submitButton.disabled = true;
+        submitButton.innerText = "Đang xử lý...";
 
-    // Prepare data to send
-    const formData = new URLSearchParams();
-    formData.append('oldPassword', document.querySelector('input[name="oldPassword"]').value);
-    formData.append('newPassword', document.querySelector('input[name="newPassword"]').value);
+        const formData = new URLSearchParams();
+        formData.append('oldPassword', oldPasswordInput.value);
+        formData.append('newPassword', newPasswordInput.value);
 
         try {
-    // Send request using Fetch API
-    const response = await fetch('/profile/change-password', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-},
-    body: formData.toString()
-});
+            const response = await fetch('/profile/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData.toString()
+            });
 
-    // Handle response
-    if (response.ok) {
-    displaySuccess("Password updated successfully!");
-    form.reset();
-} else if (response.status === 400) {
-    const errorData = await response.text();
-    displayError(`Error: ${errorData}`);
-} else if (response.status === 401) {
-    displayError("You are not authorized to change the password.");
-} else {
-    displayError("An unexpected error occurred. Please try again later.");
-}
-} catch (error) {
-    // Handle network or other errors
-    displayError("Failed to connect to the server. Please check your connection.");
-}
-});
+            // 2. Xử lý kết quả trả về
+            const responseText = await response.text(); // Backend trả về text thông báo
 
-    // Function to validate form inputs
+            if (response.ok) {
+                displaySuccess(responseText || "Đổi mật khẩu thành công!");
+                form.reset();
+            } else {
+                // Hiển thị lỗi từ Backend (ví dụ: "Mật khẩu cũ không đúng")
+                displayError(responseText || "Đã xảy ra lỗi.");
+            }
+        } catch (error) {
+            displayError("Lỗi kết nối đến máy chủ.");
+        } finally {
+            // 3. Mở khóa nút dù thành công hay thất bại
+            submitButton.disabled = false;
+            submitButton.innerText = originalBtnText;
+        }
+    });
+
+    // --- CÁC HÀM VALIDATE GIỮ NGUYÊN ---
     function validateForm() {
-    resetStatusMessage();
+        resetStatusMessage();
 
-    if (!oldPasswordInput.value.trim()) {
-    displayError("Old password is required.");
-    return false;
-}
+        if (!oldPasswordInput.value.trim()) {
+            displayError("Vui lòng nhập mật khẩu cũ.");
+            return false;
+        }
 
-    if (!validatePasswordStrength(newPasswordInput.value)) {
-    displayError("New password must have at least 8 characters, including uppercase, lowercase, numbers, and special characters.");
-    return false;
-}
+        if (!validatePasswordStrength(newPasswordInput.value)) {
+            displayError("Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa, thường, số và ký tự đặc biệt.");
+            return false;
+        }
 
-    if (newPasswordInput.value !== confirmPasswordInput.value) {
-    displayError("Passwords do not match.");
-    return false;
-}
+        if (newPasswordInput.value !== confirmPasswordInput.value) {
+            displayError("Mật khẩu xác nhận không khớp.");
+            return false;
+        }
+        return true;
+    }
 
-    return true;
-}
-
-    // Function to validate password strength
     function validatePasswordStrength(password) {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-}
+        // Regex này khá chặt chẽ, đảm bảo bảo mật cao
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        return passwordRegex.test(password);
+    }
 
-    // Function to display error messages
     function displayError(message) {
-    statusMessage.textContent = message;
-    statusMessage.className = 'text-red-500 text-sm mt-2';
-}
+        statusMessage.textContent = message;
+        statusMessage.className = 'text-danger small mt-2'; // Dùng class Bootstrap (text-danger) hoặc Tailwind (text-red-500) tùy project
+    }
 
-    // Function to display success messages
     function displaySuccess(message) {
-    statusMessage.textContent = message;
-    statusMessage.className = 'text-green-500 text-sm mt-2';
-}
+        statusMessage.textContent = message;
+        statusMessage.className = 'text-success small mt-2'; // Dùng class Bootstrap (text-success)
+    }
 
-    // Function to reset status messages
     function resetStatusMessage() {
-    statusMessage.textContent = '';
-    statusMessage.className = '';
-}
+        statusMessage.textContent = '';
+        statusMessage.className = '';
+    }
 });

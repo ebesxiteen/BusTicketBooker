@@ -1,37 +1,54 @@
 <!DOCTYPE html>
-<html html lang="vi" xmlns:th="http://thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xác Nhận Mua Vé Thành Công</title>
+    <title>Xác Nhận Mua Vé Thành Công - GreenBus</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script th:src="@{/js/Thankyou.js}"></script>
     <link rel="stylesheet" th:href="@{/css/Thankyou.css}">
 
+    <style>
+        /* Định nghĩa màu GreenBus chính */
+        .bg-primary-green { background-color: #10b981 !important; }
+        .hover\:bg-primary-dark:hover { background-color: #059669 !important; }
+        .text-primary-green { color: #10b981 !important; }
+        
+        /* Ghi đè màu tím và xanh dương cũ */
+        .bg-purple-800 { background-color: #047857 !important; }
+        .text-purple-800 { color: #047857 !important; }
+        .bg-purple-600 { background-color: #059669 !important; }
+        .text-purple-600 { color: #059669 !important; }
+        .bg-purple-500 { background-color: #10b981 !important; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-purple-100 to-purple-300 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
 <div class="max-w-4xl w-full">
+    
     <div class="text-center mb-8">
-        <div class="inline-block rounded-full bg-white p-3 mb-4 animate-scale-check">
-            <div class="rounded-full bg-green-500 p-4">
+        <div class="inline-block rounded-full bg-white p-3 mb-4 animate-scale-check shadow-lg">
+            <div class="rounded-full bg-primary-green p-4">
                 <i class="fas fa-check text-4xl text-white"></i>
             </div>
         </div>
-        <h1 class="text-4xl font-bold text-purple-800 mb-2">Cảm Ơn Bạn Đã Mua Vé!</h1>
-        <p class="text-xl text-purple-600">Mua vé thành công</p>
+        <h1 class="text-4xl font-bold text-primary-green mb-2">Cảm Ơn Bạn Đã Mua Vé!</h1>
+        <p class="text-xl text-gray-600">Mua vé thành công</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-lg p-8 mt-8 text-center animate-fade-in-up">
-        <img src="/components/ticket2.png?height=200&width=200" alt="Biểu tượng vé" class="mx-auto mb-6 w-32 h-32">
-        <h2 class="text-2xl font-semibold text-purple-800 mb-4">Vé Của Bạn Đã Sẵn Sàng!</h2>
-        <p class="text-purple-600 mb-6">Cảm ơn bạn đã mua vé. Hãy tải vé điện tử của bạn bên dưới và chuẩn bị cho một trải nghiệm tuyệt vời!</p>
-        <div class="flex justify-center space-x-4">
-            <div class="flex items-center text-green-500">
+    <div class="bg-white rounded-xl shadow-2xl p-8 mt-8 text-center animate-fade-in-up border border-gray-200">
+        <img th:src="@{/components/ticket2.png}" alt="Biểu tượng vé" class="mx-auto mb-6 w-32 h-32">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Vé Của Bạn Đã Sẵn Sàng!</h2>
+        <p class="text-gray-600 mb-6">Cảm ơn bạn đã mua vé. Vé điện tử đã được gửi từ hệ thống GreenBus.</p>
+        
+        <div class="flex justify-center space-x-6 pt-4 border-t border-gray-200">
+            <div class="flex items-center text-primary-green font-medium">
                 <i class="fas fa-check-circle mr-2"></i>
                 <span>Thanh toán thành công</span>
             </div>
-            <a href="/fuba/ticket-lookup" class="flex items-center text-blue-500">
+            
+            <a th:href="@{/greenbus/ticket-lookup}" class="flex items-center text-blue-600 hover:text-blue-800 transition font-medium">
                 <i class="fas fa-search mr-2"></i>
                 <span>Tra cứu vé ngay</span>
             </a>
@@ -39,15 +56,14 @@
     </div>
 
     <div class="text-center mt-8">
-        <a href="/fuba" class="inline-block bg-purple-500 text-white font-bold py-4 px-8 rounded-full hover:bg-purple-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-110 shadow-lg">
+        <a th:href="@{/greenbus}" class="inline-block bg-primary-green text-white font-bold py-4 px-8 rounded-full hover:bg-primary-dark transition duration-300 ease-in-out transform hover:scale-105 shadow-xl">
             <i class="fas fa-home mr-2"></i>Trở về trang chủ
         </a>
     </div>
 
-    <div class="mt-8 text-center text-purple-800">
-        <p>Mọi thắc mắc xin liên hệ: <span class="font-semibold">hotro@fuba.vn</span> hoặc <span class="font-semibold">1900 1990</span></p>
+    <div class="mt-8 text-center text-gray-700">
+        <p>Mọi thắc mắc xin liên hệ: <span class="font-semibold text-primary-green">hotro@greenbus.vn</span> hoặc <span class="font-semibold text-primary-green">1900 1990</span></p>
     </div>
 </div>
 </body>
 </html>
-

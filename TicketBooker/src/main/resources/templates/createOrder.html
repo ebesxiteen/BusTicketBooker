@@ -1,64 +1,94 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <title>Tạo đơn hàng</title>
+    <title>Thanh Toán VNPay - GreenBus</title>
+    <style>
+        /* Ghi đè màu Bootstrap sang Emerald Green */
+        :root {
+            --bs-primary: #10b981;
+            --bs-primary-rgb: 16, 185, 129;
+            --bs-btn-bg: var(--bs-primary);
+            --bs-btn-border-color: var(--bs-primary);
+            --bs-btn-hover-bg: #059669; /* Xanh đậm */
+            --bs-btn-hover-border-color: #047857;
+        }
+        .btn-primary {
+            background-color: var(--bs-btn-bg) !important;
+            border-color: var(--bs-btn-border-color) !important;
+        }
+        .btn-primary:hover {
+            background-color: var(--bs-btn-hover-bg) !important;
+            border-color: var(--bs-btn-hover-border-color) !important;
+        }
+        .text-primary {
+            color: var(--bs-primary) !important;
+        }
+    </style>
 </head>
 
 <body>
 <div class="container">
     <div class="row justify-content-center mt-5">
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <img src="https://vinadesign.vn/uploads/thumbnails/800/2023/05/vnpay-logo-vinadesign-25-12-59-16.jpg"
-                         style="width: 200px">
-                    <h2 class="card-title text-center">Tạo Đơn Hàng</h2>
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-body p-5">
+                    
+                    <div class="text-center mb-4">
+                        <img src="https://vinadesign.vn/uploads/thumbnails/800/2023/05/vnpay-logo-vinadesign-25-12-59-16.jpg"
+                             style="width: 200px" alt="VNPay Logo" class="mx-auto border rounded p-2">
+                    </div>
+                    
+                    <h2 class="card-title text-center text-primary mb-4">Thanh Toán Đơn Hàng</h2>
+                    
                     <form class="orderForm" th:action="@{/submitOrder}" method="post">
-                        <!-- Số tiền -->
+                        
                         <div class="form-group">
                             <label for="amount">Số tiền:</label>
                             <input type="number" class="form-control" id="amount" name="amount" required
                                    th:value="${grandTotal}" readonly>
                         </div>
 
-                        <!-- Thông tin đơn hàng -->
                         <div class="form-group">
                             <label for="orderInfo">Nội dung chuyển khoản:</label>
                             <input type="text" class="form-control" id="orderInfo" name="orderInfo" required
-                                   value="A0, A1, B0, B1">
+                                   value="Thanh toán vé GreenBus" readonly>
                         </div>
-                        <!-- Nút Thanh toán -->
-                        <button type="submit" class="btn btn-primary btn-block mt-4 btn-submit">Thanh toán</button>
+                        
+                        <button type="submit" class="btn btn-primary btn-block mt-4 btn-submit">
+                            <i class="fas fa-wallet mr-2"></i> Thanh toán qua VNPay
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <script>
     (
         function () {
             document.addEventListener("DOMContentLoaded", function () {
                 const btnSubmit = document.querySelector(".btn-submit");
                 const form = document.querySelector("form.orderForm");
+                
+                if(!btnSubmit || !form) return;
+
                 btnSubmit.addEventListener("click", function (even) {
                     even.preventDefault();
-                    const expiresTime = new Date();
-                    expiresTime.setTime(expiresTime.getTime() + 10 * 60 * 1000)
-                    const expires = expiresTime.toUTCString();
-                    document.cookie = `paymentStatus=${encodeURIComponent(2)}; expires=${expires} ;path=/`;
-                    fetch("http://localhost:8080/vnpay/vnpay-payment-status", {
+                    
+                    // --- LOGIC GỬI TRẠNG THÁI (Nếu cần) ---
+                    // Cần gửi API status về Backend trước khi submit form
+                    // SỬA URL: Dùng đường dẫn tương đối để khớp port
+                    fetch("/vnpay/vnpay-payment-status", {
                         method: "POST",
                         headers: {"Content-Type": "application/json"}
-                    }).then(async response => {
-                        if (response.ok) {
-                            await response.json();
-                        }
-                    }).catch(e => console.log(e));
+                    }).catch(e => console.error("Lỗi gửi trạng thái VNPay:", e));
+                    
+                    // --- Gửi Form (Sẽ chuyển hướng tới cổng VNPay) ---
                     form.submit();
                 });
             });
@@ -69,5 +99,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
-
 </html>

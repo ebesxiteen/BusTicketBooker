@@ -1,22 +1,24 @@
 package com.example.ticketbooker.Controller;
 
-import com.example.ticketbooker.DTO.Driver.DriverDTO;
-import com.example.ticketbooker.DTO.Routes.AddRouteDTO;
-import com.example.ticketbooker.DTO.Routes.RouteDTO;
-import com.example.ticketbooker.DTO.Routes.UpdateRouteDTO;
-import com.example.ticketbooker.Service.RouteService;
-import com.example.ticketbooker.Util.Mapper.DriverMapper;
-import com.example.ticketbooker.Util.Mapper.RouteMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Objects;
+import com.example.ticketbooker.DTO.Routes.AddRouteDTO;
+import com.example.ticketbooker.DTO.Routes.RouteDTO;
+import com.example.ticketbooker.DTO.Routes.UpdateRouteDTO;
+import com.example.ticketbooker.Service.RouteService;
+import com.example.ticketbooker.Util.Mapper.RouteMapper;
 
 @Controller
 @RequestMapping("/admin/routes")
@@ -40,7 +42,7 @@ public class RouteController {
     @GetMapping("/add")
     public String AddRoute(Model model) {
         model.addAttribute("routeDTO", new RouteDTO());
-        return "View/Admin/Routes/UpdateForm";
+        return "View/Admin/Routes/RouteForm";
     }
     @PostMapping("/add")
     public String createRoute(@ModelAttribute("createRouteForm") AddRouteDTO dto, Model model) {
@@ -62,7 +64,7 @@ public class RouteController {
         RouteDTO dto = RouteMapper.toDTO(routeService.getRoute(id));
         if(dto != null){
             model.addAttribute("routeDTO", dto);
-            return "View/Admin/Routes/UpdateForm";
+            return "View/Admin/Routes/RouteForm";
         } else{
             redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy tuyến đường với ID: " + id);
             return "redirect:/admin/routes";

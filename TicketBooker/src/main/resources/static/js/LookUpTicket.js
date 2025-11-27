@@ -1,45 +1,36 @@
+// --- CẤU HÌNH MÀU SẮC GREENBUS ---
 tailwind.config = {
     theme: {
         extend: {
             colors: {
-                primary: '#6B46C1',
-                secondary: '#9F7AEA',
-                accent: '#D6BCFA',
+                primary: '#10b981',   /* Xanh ngọc */
+                secondary: '#047857', /* Xanh đậm */
+                accent: '#d1fae5',    /* Xanh nhạt */
             }
         }
     }
 }
-function fetchTicketInfo() {
-    // Simulate API call
-    document.getElementById("searchSection").classList.add("hidden");
-    document.getElementById("ticketInfo").classList.remove("hidden");
-}
-
-function resetForm() {
-    document.getElementById("ticketId").value = "";
-    document.getElementById("ticketInfo").classList.add("hidden");
-    document.getElementById("searchSection").classList.remove("hidden");
-}
 
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // Hàm gọi API Tra cứu vé
     async function fetchTicketInfo() {
         const ticketId = document.getElementById("ticketId").value.trim();
         const customerPhone = document.getElementById("phoneNumber").value.trim();
 
-        // Kiểm tra đầu vào
+        // Validate
         if (!ticketId) {
-            alert("Vui lòng nhập mã vé.");
+            Swal.fire({ icon: 'warning', title: 'Vui lòng nhập mã vé!' });
             return;
         }
-
         if (!customerPhone) {
-            alert("Vui lòng nhập số điện thoại.");
+            Swal.fire({ icon: 'warning', title: 'Vui lòng nhập số điện thoại!' });
             return;
         }
 
         try {
-            // Gửi request đến API
-            const response = await fetch("http://localhost:8080/api/tickets/payment-infor", {
+            // SỬA URL: Dùng đường dẫn tương đối
+            const response = await fetch("/api/tickets/payment-infor", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -48,31 +39,28 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!response.ok) {
-                throw new Error("Không tìm thấy thông tin vé hoặc có lỗi xảy ra.");
+                if(response.status === 404) throw new Error("Không tìm thấy vé. Vui lòng kiểm tra lại!");
+                throw new Error("Có lỗi xảy ra khi tra cứu.");
             }
 
             const ticketInfo = await response.json();
 
-            // Hiển thị dữ liệu trên giao diện
+            // Hiển thị dữ liệu (Mapping)
             const elements = {
                 "ticketIdValue": ticketInfo.id,
                 "customerNameValue": ticketInfo.customerName,
                 "customerPhoneValue": ticketInfo.customerPhone,
-                "bookingDateValue": ticketInfo.paymentTime,
+                "bookingDateValue": ticketInfo.paymentTime, // Định dạng ngày tháng nếu cần
                 "emailValue": ticketInfo.email,
-                "totalPriceValue": `${ticketInfo.totalAmount} VND`
+                "totalPriceValue": new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(ticketInfo.totalAmount)
             };
 
             for (const [id, value] of Object.entries(elements)) {
                 const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = value;
-                } else {
-                    console.warn(`Element with id "${id}" not found`);
-                }
+                if (element) element.textContent = value;
             }
 
-            // Hiển thị thông tin lộ trình
+            // Hiển thị lộ trình
             const tripInfoElements = {
                 ".tripInfo .departure .time": ticketInfo.departureTime,
                 ".tripInfo .departure .location": ticketInfo.departureLocation,
@@ -82,73 +70,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
             for (const [selector, value] of Object.entries(tripInfoElements)) {
                 const element = document.querySelector(selector);
-                if (element) {
-                    element.textContent = value;
-                } else {
-                    console.warn(`Element with selector "${selector}" not found`);
-                }
+                if (element) element.textContent = value;
             }
 
-            // Ẩn modal tìm kiếm và hiện khối thông tin vé
-            const searchSection = document.getElementById("searchSection");
-            const ticketInfoElement = document.getElementById("ticketInfo");
-
-            if (searchSection) {
-                searchSection.classList.add("hidden");
-            } else {
-                console.warn('Element with id "searchSection" not found');
-            }
-
-            if (ticketInfoElement) {
-                ticketInfoElement.classList.remove("hidden");
-            } else {
-                console.warn('Element with id "ticketInfo" not found');
-            }
+            // Chuyển đổi giao diện (Ẩn tìm kiếm -> Hiện kết quả)
+            toggleSection(true);
 
         } catch (error) {
-            alert(error.message);
+            Swal.fire({ icon: 'error', title: 'Lỗi', text: error.message });
         }
     }
 
+    // Hàm Reset Form
     function resetForm() {
-        const elements = ["ticketId", "phoneNumber"];
-        elements.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.value = "";
-            } else {
-                console.warn(`Element with id "${id}" not found`);
-            }
-        });
+        document.getElementById("ticketId").value = "";
+        document.getElementById("phoneNumber").value = "";
+        toggleSection(false);
+    }
 
+    // Hàm ẩn hiện section
+    function toggleSection(isShowResult) {
         const searchSection = document.getElementById("searchSection");
         const ticketInfoElement = document.getElementById("ticketInfo");
 
-        if (searchSection) {
+        if (isShowResult) {
+            searchSection.classList.add("hidden");
+            ticketInfoElement.classList.remove("hidden");
+        } else {
             searchSection.classList.remove("hidden");
-        } else {
-            console.warn('Element with id "searchSection" not found');
-        }
-
-        if (ticketInfoElement) {
             ticketInfoElement.classList.add("hidden");
-        } else {
-            console.warn('Element with id "ticketInfo" not found');
         }
     }
 
-    // Gán các hàm cho các nút tương ứng
-    const searchButton = document.querySelector('button[onclick="fetchTicketInfo()"]');
+    // Gán sự kiện (Event Listener)
+    // Lưu ý: Nên gán ID cho nút thay vì query theo onclick
+    const searchButton = document.querySelector('button[onclick="fetchTicketInfo()"]') || document.getElementById('btnSearchTicket');
     if (searchButton) {
-        searchButton.onclick = fetchTicketInfo;
-    } else {
-        console.warn('Search button not found');
+        searchButton.onclick = function(e) {
+            e.preventDefault(); // Ngăn reload form
+            fetchTicketInfo();
+        };
     }
 
-    const resetButton = document.querySelector('button[onclick="resetForm()"]');
+    const resetButton = document.querySelector('button[onclick="resetForm()"]') || document.getElementById('btnResetTicket');
     if (resetButton) {
-        resetButton.onclick = resetForm;
-    } else {
-        console.warn('Reset button not found');
+        resetButton.onclick = function(e) {
+            e.preventDefault();
+            resetForm();
+        };
     }
 });

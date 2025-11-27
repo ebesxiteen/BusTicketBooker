@@ -1,6 +1,14 @@
+:root {
+    --primary-color: #10b981; 
+    --primary-dark: #064e3b; 
+}
 
 *::-webkit-scrollbar {
     display: none;
+}
+
+#buttonList {
+    background-color: var(--primary-color) !important;
 }
 
 #buttonList button {

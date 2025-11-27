@@ -1,15 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+    --primary-color: #10b981;       /* Xanh GreenBus */
+    --primary-hover: #059669;       /* Xanh đậm */
+    --bg-light: #f0fdf4;            /* Nền xanh siêu nhạt */
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* --- CONTAINER CHÍNH (Áp dụng hiệu ứng FadeInUp) --- */
+.thankyou-card {
+    background-color: white;
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    
+    /* Animation bạn cung cấp */
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* --- ICON TÍCH XANH (Áp dụng hiệu ứng ScaleCheck) --- */
+.success-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background-color: #d1fae5; /* Vòng tròn nền xanh nhạt */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+    
+    /* Animation nảy lên (delay 0.3s để xuất hiện sau cái khung) */
+    animation: scaleCheck 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s backwards;
+}
+
+.success-icon {
+    color: var(--primary-color);
+    font-size: 40px; /* Kích thước icon */
+}
+
+/* --- TYPOGRAPHY --- */
+h1 {
+    color: var(--primary-color);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    color: var(--text-gray);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* --- NÚT VỀ TRANG CHỦ --- */
+.btn-home {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+}
+
+.btn-home:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.5);
+}
+
+/* --- CÁC KEYFRAMES CỦA BẠN (GIỮ NGUYÊN) --- */
 @keyframes scaleCheck {
-    0% { transform: scale(0); }
+    0% { transform: scale(0); opacity: 0; }
     50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+    100% { transform: scale(1); opacity: 1; }
 }
-.animate-scale-check {
-    animation: scaleCheck 0.5s ease-out;
-}
+
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(40px); }
     to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in-up {
-    animation: fadeInUp 0.5s ease-out;
 }

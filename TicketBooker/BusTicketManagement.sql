@@ -1,28 +1,30 @@
--- Table: User
+-- PHẦN 1: CLEANUP VÀ KHỞI TẠO DATABASE
+DROP DATABASE IF EXISTS ticketbooker;
+CREATE DATABASE ticketbooker;
+USE ticketbooker;
+
+-- PHẦN 2: TẠO SCHEMA MỚI (ĐÃ GỘP BẢNG ACCOUNT VÀO USERS)
+
+-- 1. Table: Users (Gộp Profile, Auth, và Security)
 CREATE TABLE Users (
     userId INT AUTO_INCREMENT PRIMARY KEY,
     fullName VARCHAR(255) NOT NULL,
-    phone VARCHAR(11) UNIQUE,
+    phone VARCHAR(15), 
     address VARCHAR(255),
     dateOfBirth DATE,
     gender ENUM('MALE', 'FEMALE', 'OTHER'),
     profilePhoto BLOB,
-    userStatus ENUM('ACTIVE', 'INACTIVE') NOT NULL
+    userStatus ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
+    
+    -- CÁC TRƯỜNG TỪ BẢNG ACCOUNT CŨ
+    email VARCHAR(100) UNIQUE,        
+    password VARCHAR(100),            -- Lưu BCrypt Hash (có thể NULL cho tài khoản Google)
+    role VARCHAR(20) DEFAULT 'USER',  -- ADMIN, STAFF, USER
+    provider VARCHAR(50) DEFAULT 'LOCAL', -- LOCAL, GOOGLE, FACEBOOK
+    enabled BIT(1) DEFAULT 1          
 );
 
--- Table: Account
-CREATE TABLE Account (
-    accountId INT AUTO_INCREMENT PRIMARY KEY,
-    userId INT,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE,
-    role ENUM('CUSTOMER', 'STAFF', 'MANAGER') NOT NULL,
-    accountStatus ENUM('ACTIVE', 'INACTIVE') NOT NULL,
-    FOREIGN KEY (userId) REFERENCES Users(userId)
-);
-
--- Table: Routes
+-- 2. Table: Routes
 CREATE TABLE Routes (
     routeId INT AUTO_INCREMENT PRIMARY KEY,
     departureLocation VARCHAR(100) NOT NULL,
@@ -31,7 +33,17 @@ CREATE TABLE Routes (
     routeStatus ENUM('ACTIVE', 'INACTIVE') NOT NULL
 );
 
--- Table: Buses
+-- 3. Table: Driver
+CREATE TABLE Driver (
+    driverId INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    licenseNumber VARCHAR(20) UNIQUE NOT NULL,
+    phone VARCHAR(15) UNIQUE,
+    address VARCHAR(255),
+    driverStatus ENUM('ACTIVE', 'INACTIVE') NOT NULL
+);
+
+-- 4. Table: Buses
 CREATE TABLE Buses (
     busId INT AUTO_INCREMENT PRIMARY KEY,
     routeId INT,
@@ -42,43 +54,7 @@ CREATE TABLE Buses (
     FOREIGN KEY (routeId) REFERENCES Routes(routeId)
 );
 
--- Table: Driver
-CREATE TABLE Driver (
-    driverId INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    licenseNumber VARCHAR(20) UNIQUE NOT NULL,
-    phone VARCHAR(11) UNIQUE,
-    address VARCHAR(255),
-    driverStatus ENUM('ACTIVE', 'INACTIVE') NOT NULL
-);
-
--- Table: Trips
-CREATE TABLE Trips (
-    tripId INT AUTO_INCREMENT PRIMARY KEY,
-    routeId INT NOT NULL,
-    busId INT not null,
-    driverId INT not null ,
-    departureStation VARCHAR(100) not null,
-    arrivalStation VARCHAR(100) not null,
-    departureTime DATETIME NOT NULL,
-    arrivalTime DATETIME,
-    price INT not null,
-    availableSeats INT not null,
-    tripStatus ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED') NOT NULL,
-    FOREIGN KEY (routeId) REFERENCES Routes(routeId),
-    FOREIGN KEY (busId) REFERENCES Buses(busId),
-    FOREIGN KEY (driverId) REFERENCES Driver(driverId)
-);
--- Table: Seats
-CREATE TABLE Seats (
-    seatId INT AUTO_INCREMENT PRIMARY KEY,
-    tripId INT NOT NULL,
-    seatCode VARCHAR(10) NOT NULL,
-    FOREIGN KEY (tripId) REFERENCES Trips(tripId)
-);
-
-
--- Table: Invoices
+-- 5. Table: Invoices
 CREATE TABLE Invoices (
     invoiceId INT AUTO_INCREMENT PRIMARY KEY,
     totalAmount INT,
@@ -87,11 +63,37 @@ CREATE TABLE Invoices (
     paymentMethod ENUM('CREDITCARD', 'EWALLET', 'CASH') NOT NULL
 );
 
--- Table: Tickets
+-- 6. Table: Trips
+CREATE TABLE Trips (
+    tripId INT AUTO_INCREMENT PRIMARY KEY,
+    routeId INT NOT NULL,
+    busId INT NOT NULL,
+    driverId INT NOT NULL,
+    departureStation VARCHAR(100) NOT NULL,
+    arrivalStation VARCHAR(100) NOT NULL,
+    departureTime DATETIME NOT NULL,
+    arrivalTime DATETIME,
+    price INT NOT NULL,
+    availableSeats INT NOT NULL,
+    tripStatus ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED') NOT NULL,
+    FOREIGN KEY (routeId) REFERENCES Routes(routeId),
+    FOREIGN KEY (busId) REFERENCES Buses(busId),
+    FOREIGN KEY (driverId) REFERENCES Driver(driverId)
+);
+
+-- 7. Table: Seats
+CREATE TABLE Seats (
+    seatId INT AUTO_INCREMENT PRIMARY KEY,
+    tripId INT NOT NULL,
+    seatCode VARCHAR(10) NOT NULL,
+    FOREIGN KEY (tripId) REFERENCES Trips(tripId)
+);
+
+-- 8. Table: Tickets (bookerId trỏ về Users)
 CREATE TABLE Tickets (
     ticketId INT AUTO_INCREMENT PRIMARY KEY,
     tripId INT NOT NULL,
-    bookerId INT NOT NULL,
+    bookerId INT NOT NULL, 
     invoiceId INT,
     customerName VARCHAR(100) NOT NULL,
     customerPhone VARCHAR(15) NOT NULL,
@@ -99,7 +101,7 @@ CREATE TABLE Tickets (
     qrCode VARCHAR(255),
     ticketStatus ENUM('BOOKED', 'CANCELLED', 'USED') NOT NULL,
     FOREIGN KEY (tripId) REFERENCES Trips(tripId),
-    FOREIGN KEY (bookerId) REFERENCES Account(accountId),
+    FOREIGN KEY (bookerId) REFERENCES Users(userId), 
     FOREIGN KEY (invoiceId) REFERENCES Invoices(invoiceId),
     FOREIGN KEY (seatId) REFERENCES Seats(seatId)
 );

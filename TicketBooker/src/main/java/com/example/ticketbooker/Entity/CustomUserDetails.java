@@ -1,61 +1,47 @@
 package com.example.ticketbooker.Entity;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
-
-@Data
 public class CustomUserDetails implements UserDetails {
-    private Account account;
-    private Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(Account account) {
-        this.account = account;
-        this.authorities = Collections.singleton(
-                new SimpleGrantedAuthority("ROLE_" + account.getRole().name()));
+    private Users user; // Đổi Account -> Users
+
+    public CustomUserDetails(Users user) {
+        this.user = user;
     }
 
-
+    // Hàm getter quan trọng để SecurityUtils gọi
+    public Users getUser() {
+        return user;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        // Lấy quyền từ bảng Users
+        return Collections.singleton(new SimpleGrantedAuthority(user.getRole()));
     }
 
     @Override
     public String getPassword() {
-        return account.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return account.getUsername();
+        return user.getEmail(); // Dùng Email làm Username
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
+    public boolean isAccountNonExpired() { return true; }
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
+    public boolean isAccountNonLocked() { return true; }
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
+    public boolean isCredentialsNonExpired() { return true; }
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return user.isEnabled(); }
 }

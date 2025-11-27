@@ -1,3 +1,9 @@
+:root {
+  --primary-color: #10b981;       /* Màu chính (Nút, Header) */
+  --primary-hover: #059669;       /* Màu khi di chuột */
+  --secondary-color: #d1fae5;     /* Màu nền nhạt */
+  --text-white: #ffffff;
+}
 *, ::before, ::after {
   --tw-border-spacing-x: 0;
   --tw-border-spacing-y: 0;
@@ -797,7 +803,7 @@ video {
 
 .bg-violet-800 {
   --tw-bg-opacity: 1;
-  background-color: rgb(91 33 182 / var(--tw-bg-opacity));
+  background-color: var(--primary-color);
 }
 
 .bg-white {
@@ -1049,4 +1055,29 @@ video {
     font-size: 1.25rem;
     line-height: 1.75rem;
   }
+
+  .btn-primary, .bg-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--text-white) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+}
 }

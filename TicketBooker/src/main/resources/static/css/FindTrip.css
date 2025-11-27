@@ -1,4 +1,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- KHAI BÁO MÀU (Dự phòng nếu file này load riêng) --- */
+:root {
+    --primary-color: #10b981;       /* Xanh GreenBus */
+    --primary-hover: #059669;       /* Xanh đậm */
+    --focus-ring: rgba(16, 185, 129, 0.25); /* Viền sáng khi bấm input */
+}
+
 body {
     font-family: 'Inter', sans-serif;
+    background-color: #f8fafc; /* Màu nền xám rất nhạt cho hiện đại */
+}
+
+/* --- TÙY CHỈNH CHO CÁC Ô NHẬP LIỆU (INPUT/SELECT) --- */
+/* Khi người dùng bấm vào ô nhập, viền sẽ chuyển xanh lá */
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px var(--focus-ring) !important;
+    outline: none;
+}
+
+/* --- TÙY CHỈNH NÚT TÌM KIẾM --- */
+/* Nếu nút tìm kiếm của bạn có class .btn-search hoặc nằm trong form */
+button[type="submit"], .btn-search {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+button[type="submit"]:hover, .btn-search:hover {
+    background-color: var(--primary-hover) !important;
+    transform: translateY(-2px); /* Hiệu ứng nhấc nhẹ nút lên */
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); /* Đổ bóng xanh */
+}
+
+/* --- THANH TIẾN TRÌNH (STEPPER) NẾU CÓ --- */
+/* Ví dụ: Chọn tuyến -> Chọn ghế -> Thanh toán */
+.step-active {
+    background-color: var(--primary-color) !important;
+    color: white;
+}
+.step-completed {
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
 }

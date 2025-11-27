@@ -1,23 +1,17 @@
 package com.example.ticketbooker.DTO.Users;
 
-import com.example.ticketbooker.Entity.Users;
+import java.util.List;
+
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.ArrayList;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@AllArgsConstructor // Lombok tự sinh Constructor đầy đủ
+@NoArgsConstructor  // Lombok tự sinh Constructor rỗng
 public class UserResponse {
     private int usersCount;
-    private ArrayList<Users> listUsers;
-
-    public UserResponse(Integer usersCount, ArrayList<Users> listUsers) {
-        this.usersCount = usersCount;
-        this.listUsers = listUsers;
-    }
-    public UserResponse() {
-        this.usersCount = 0;
-        this.listUsers = new ArrayList<>();
-    }
+    private List<UserDTO> listUsers;
 }

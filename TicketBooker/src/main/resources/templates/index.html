@@ -1,11 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUBA</title>
+    <title>GreenBus - Trang chủ</title>
+    
+    <meta http-equiv="refresh" content="0; url=/greenbus">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0fdf4; /* Nền xanh nhạt */
+            color: #047857;
+        }
+        .loading-message {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>hello weo com</h1>
+    <div class="loading-message">
+        Đang chuyển hướng đến trang chủ GreenBus...
+        <p class="text-sm mt-3"><a th:href="@{/greenbus}" style="color: #10b981;">Nhấn vào đây nếu không tự chuyển</a></p>
+    </div>
+    
+    <script th:inline="javascript">
+        window.location.replace(/*[[@{/greenbus}]]*/ '/greenbus');
+    </script>
 </body>
 </html>

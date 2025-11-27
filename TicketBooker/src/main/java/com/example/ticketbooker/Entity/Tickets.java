@@ -1,17 +1,30 @@
 package com.example.ticketbooker.Entity;
 
 import com.example.ticketbooker.Util.Enum.TicketStatus;
+
 import jakarta.annotation.Nullable;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @Entity
 @Table(name = "tickets")
+@NoArgsConstructor  // Lombok tự sinh Constructor rỗng
+@AllArgsConstructor // Lombok tự sinh Constructor đầy đủ
 public class Tickets {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +38,7 @@ public class Tickets {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookerId")
     @Nullable
-    private Account booker;
+    private Users booker;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoiceId")
@@ -47,28 +60,4 @@ public class Tickets {
     @Column(name = "ticketStatus", nullable = false)
     @Enumerated(EnumType.STRING)
     private TicketStatus ticketStatus;
-
-    public Tickets() {
-        this.id = null;
-        this.trip = new Trips();
-        this.booker = new Account();
-        this.invoice = null;
-        this.customerName = "";
-        this.customerPhone = "";
-        this.seat = new Seats();
-        this.qrCode = null;
-        this.ticketStatus = TicketStatus.BOOKED;
-    }
-
-    public Tickets(Integer id, Trips trip, Account booker, Invoices invoice, String customerName, String customerPhone, Seats seat, String qrCode, TicketStatus ticketStatus) {
-        this.id = id;
-        this.trip = trip;
-        this.booker = booker;
-        this.invoice = invoice;
-        this.customerName = customerName;
-        this.customerPhone = customerPhone;
-        this.seat = seat;
-        this.qrCode = qrCode;
-        this.ticketStatus = ticketStatus;
-    }
 }

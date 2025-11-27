@@ -1,4 +1,68 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* --- KHAI BÁO MÀU GREENBUS --- */
+:root {
+    --primary-color: #10b981;       /* Xanh GreenBus */
+    --primary-hover: #059669;       /* Xanh đậm */
+    --light-green: #d1fae5;         /* Nền xanh nhạt */
+    --border-focus: rgba(16, 185, 129, 0.5);
+}
+
 body {
     font-family: 'Roboto', sans-serif;
+    background-color: #f9fafb; /* Màu nền xám nhạt dịu mắt */
+}
+
+/* --- KHUNG CHỌN PHƯƠNG THỨC THANH TOÁN --- */
+/* Ví dụ: Thẻ div bao quanh lựa chọn Ví điện tử / Thẻ ATM */
+.payment-method-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Khi người dùng chọn phương thức này -> Viền xanh + Nền xanh nhạt */
+.payment-method-card.active, 
+.payment-method-card:hover {
+    border-color: var(--primary-color) !important;
+    background-color: var(--light-green) !important;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1);
+}
+
+/* Icon tích xanh (Checkmark) khi chọn */
+.check-icon {
+    color: var(--primary-color);
+}
+
+/* --- FORM NHẬP THÔNG TIN --- */
+input:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px var(--border-focus) !important;
+    outline: none;
+}
+
+/* --- NÚT THANH TOÁN (QUAN TRỌNG) --- */
+.btn-pay {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 8px;
+    padding: 12px 24px;
+    border: none;
+    width: 100%; /* Nút to full chiều ngang */
+    transition: background-color 0.3s;
+}
+
+.btn-pay:hover {
+    background-color: var(--primary-hover) !important;
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+}
+
+/* --- TỔNG TIỀN --- */
+.total-amount {
+    color: var(--primary-hover); /* Màu xanh đậm cho số tiền */
+    font-size: 1.5rem;
+    font-weight: bold;
 }

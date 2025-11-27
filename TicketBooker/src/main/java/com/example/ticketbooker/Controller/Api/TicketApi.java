@@ -1,16 +1,24 @@
 package com.example.ticketbooker.Controller.Api;
 
-import com.example.ticketbooker.DTO.Ticket.*;
-import com.example.ticketbooker.DTO.Users.UserIdRequest;
-import com.example.ticketbooker.DTO.Users.UserResponse;
-import com.example.ticketbooker.Entity.Tickets;
-import com.example.ticketbooker.Service.TicketService;
-import com.example.ticketbooker.Util.Enum.TicketStatus;
-import com.example.ticketbooker.Util.Mapper.TicketMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.ticketbooker.DTO.Ticket.AddTicketRequest;
+import com.example.ticketbooker.DTO.Ticket.PaymentInforRequest;
+import com.example.ticketbooker.DTO.Ticket.PaymentInforResponse;
+import com.example.ticketbooker.DTO.Ticket.TicketDTO;
+import com.example.ticketbooker.DTO.Ticket.TicketIdRequest;
+import com.example.ticketbooker.DTO.Ticket.TicketResponse;
+import com.example.ticketbooker.DTO.Ticket.UpdateTicketRequest;
+import com.example.ticketbooker.Service.TicketService;
+import com.example.ticketbooker.Util.Enum.TicketStatus;
+import com.example.ticketbooker.Util.Mapper.TicketMapper;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -19,44 +27,43 @@ public class TicketApi {
     @Autowired
     private TicketService ticketsService;
 
+    // 1. Hủy vé (SỬA LOGIC)
     @DeleteMapping("/cancel-ticket")
     public boolean cancelTicket(@RequestBody TicketIdRequest id) {
-        boolean result = false;
         try {
-            UpdateTicketRequest updated = TicketMapper.toUpdateDTO(TicketMapper.fromResponse(this.ticketsService.getTicketById(id)).get(0));
-            updated.setTicketStatus(TicketStatus.CANCELLED);
-            result = this.ticketsService.updateTicket(updated);
+            // Bước 1: Lấy thông tin vé hiện tại (Trả về Response chứa List DTO)
+            TicketResponse response = this.ticketsService.getTicketById(id);
+
+            // Bước 2: Kiểm tra xem có vé không
+            if (response.getTicketsCount() > 0) {
+                // Lấy DTO đầu tiên
+                TicketDTO ticketDTO = response.getListTickets().get(0);
+
+                // Bước 3: Convert DTO -> UpdateRequest (Dùng hàm mới viết trong Mapper)
+                UpdateTicketRequest updated = TicketMapper.toUpdateDTO(ticketDTO);
+                
+                // Bước 4: Đổi trạng thái và cập nhật
+                updated.setTicketStatus(TicketStatus.CANCELLED);
+                return this.ticketsService.updateTicket(updated);
+            }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            result = false;
+            e.printStackTrace();
         }
-        return result;
+        return false;
     }
 
+    // 2. Tạo vé mới
     @PostMapping("/create-ticket")
     public boolean createTicket(@RequestBody AddTicketRequest request) {
-        boolean result = false;
         try {
-            result = this.ticketsService.addTicket(request);
+            return this.ticketsService.addTicket(request);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            result = false;
+            return false;
         }
-        return result;
     }
 
-//    @PostMapping("/book-ticket")
-//    public boolean bookTicket(@RequestParam int tripId, @RequestParam int bookerId, @RequestParam String tcustomerName, ) {
-//        boolean result = false;
-//        try {
-//            result = this.ticketsService.addTicket(request);
-//        } catch (Exception e) {
-//            System.out.println(e.getMessage());
-//            result = false;
-//        }
-//        return result;
-//    }
-
+    // 3. Lấy thông tin thanh toán
     @PostMapping("/payment-infor")
     public ResponseEntity<PaymentInforResponse> paymentInfor(@RequestBody PaymentInforRequest request) {
         try {
@@ -70,5 +77,4 @@ public class TicketApi {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
 }

@@ -4,151 +4,86 @@
       layout:decorate="~{View/Layout/AdminLayout.html}">
 <head>
     <meta charset="UTF-8">
-    <title>Form Vé</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Thông tin Xe - GreenBus</title>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
 <div layout:fragment="content">
-    <div class="container mx-auto p-4">
-        <h1 th:if="${busDTO.id} == null" class="text-2xl font-bold mb-4">Form Thêm Xe</h1>
-        <h1 th:if="${busDTO.id} != null" class="text-2xl font-bold mb-4">Form Sửa Xe</h1>
+    <div class="container mx-auto p-6 max-w-3xl">
+        
+        <h1 class="text-3xl font-bold mb-6 text-emerald-700 border-b pb-2">
+            <span th:if="${busDTO.id} == null"><i class="fas fa-plus-circle mr-2"></i>Thêm Xe Mới</span>
+            <span th:if="${busDTO.id} != null"><i class="fas fa-edit mr-2"></i>Cập Nhật Thông Tin Xe</span>
+        </h1>
 
-        <!-- Form để thêm mới (khi busDTO.id là null) -->
-        <form th:if="${busDTO.id} == null" th:action="@{/admin/buses/add}" method="post" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-            <!-- Routes ID -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="routeIdNew">Mã Tuyến</label>
-                <select name="routeId" id="routeIdNew" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="" disabled selected>Chọn mã tuyến</option>
-                    <option th:each="route : ${routes}"
-                            th:value="${route.routeId}"
-                            th:text="${route.routeId} + ' - ' + ${route.departureLocation} + ' - ' + ${route.arrivalLocation}"
-                            th:selected="${route.routeId == busDTO.routeId?.routeId}"></option>
-                </select>
-            </div>
-            <!-- License Plate -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="licensePlateNew">Biển Số Xe</label>
-                <input type="text" name="licensePlate" id="licensePlateNew" th:field="*{busDTO.licensePlate}" required
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-            <!-- Bus Type -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="busTypeNew">Trạng Thái Xe</label>
-                <select name="busType" id="busTypeNew" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="BEDSEAT"
-                            th:selected="${busDTO.busType == T(com.example.ticketbooker.Util.Enum.BusType).BEDSEAT}">
-                        BEDSEAT
-                    </option>
-                    <option value="SEAT"
-                            th:selected="${busDTO.busType == T(com.example.ticketbooker.Util.Enum.BusType).SEAT}">
-                        SEAT
-                    </option>
-                </select>
-            </div>
-            <!-- Capacity -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="capacityNew">Số Chỗ Ngồi</label>
-                <input type="number" name="capacity" id="capacityNew" th:field="*{busDTO.capacity}" required
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-            <!-- Bus Status -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="busStatusNew">Trạng Thái Xe</label>
-                <select name="busStatus" id="busStatusNew" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="ACTIVE"
-                            th:selected="${busDTO.busStatus == T(com.example.ticketbooker.Util.Enum.BusStatus).ACTIVE}">
-                        ACTIVE
-                    </option>
-                    <option value="INACTIVE"
-                            th:selected="${busDTO.busStatus == T(com.example.ticketbooker.Util.Enum.BusStatus).INACTIVE}">
-                        INACTIVE
-                    </option>
-                </select>
-            </div>
-            <div class="flex items-center justify-between">
-                <button type="submit"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Thực hiện
-                </button>
-                <a href="/admin/buses"
-                   class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Quay lại</a>
-            </div>
-        </form>
+        <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4 border border-gray-200">
+            
+            <form th:action="${busDTO.id == null} ? @{/admin/buses/add} : @{/admin/buses/update}" 
+                  th:object="${busDTO}" method="post">
 
-        <!-- Form để chỉnh sửa (khi busDTO.id không null) -->
-        <form th:if="${busDTO.id} != null" th:action="@{/admin/buses/update}" method="post"
-              class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-            <!-- Ticket ID -->
-            <input type="number" name="id" th:value="${busDTO.id}" required
-                   class="hidden shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            <!-- Route ID -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="routeId">Mã Tuyến</label>
-                <select name="routeId" id="routeId" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="" disabled selected>Chọn mã tuyến</option>
-                    <option th:each="route : ${routes}"
-                            th:value="${route.routeId}"
-                            th:text="${route.routeId} + ' - ' + ${route.departureLocation} + ' - ' + ${route.arrivalLocation}"
-                            th:selected="${route.routeId == busDTO.routeId.routeId}"></option>
-                </select>
-            </div>
-            <!-- License Plate -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="licensePlate">Biển Số Xe</label>
-                <input type="text" name="licensePlate" id="licensePlate" th:field="*{busDTO.licensePlate}" required
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-            <!-- Bus Type -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="busType">Trạng Thái Xe</label>
-                <select name="busType" id="busType" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="BEDSEAT"
-                            th:selected="${busDTO.busType == T(com.example.ticketbooker.Util.Enum.BusType).BEDSEAT}">
-                        BEDSEAT
-                    </option>
-                    <option value="SEAT"
-                            th:selected="${busDTO.busType == T(com.example.ticketbooker.Util.Enum.BusType).SEAT}">
-                        SEAT
-                    </option>
-                </select>
-            </div>
-            <!-- Capacity -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="capacity">Số Chỗ Ngồi</label>
-                <input type="number" name="capacity" id="capacity" th:field="*{busDTO.capacity}" required
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-            <!-- Bus Status -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="busStatus">Trạng Thái Xe</label>
-                <select name="busStatus" id="busStatus" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    <option value="ACTIVE"
-                            th:selected="${busDTO.busStatus == T(com.example.ticketbooker.Util.Enum.BusStatus).ACTIVE}">
-                        ACTIVE
-                    </option>
-                    <option value="INACTIVE"
-                            th:selected="${busDTO.busStatus == T(com.example.ticketbooker.Util.Enum.BusStatus).INACTIVE}">
-                        INACTIVE
-                    </option>
-                </select>
-            </div>
+                <input type="hidden" th:if="${busDTO.id} != null" th:field="*{id}">
 
-            <div class="flex items-center justify-between">
-                <button type="submit"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Cập nhật
-                </button>
-                <a href="/admin/buses"
-                   class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">Quay lại</a>
-            </div>
-        </form>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tuyến Xe (Route)</label>
+                    <div class="relative">
+                        <select th:field="*{routeId}" required
+                                class="block appearance-none w-full bg-white border border-gray-300 hover:border-emerald-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline focus:border-emerald-500">
+                            <option value="" disabled selected>-- Chọn Tuyến Xe --</option>
+                            <option th:each="route : ${routes}"
+                                    th:value="${route.routeId}"
+                                    th:text="${'Tuyến ' + route.routeId + ': ' + route.departureLocation + ' ➝ ' + route.arrivalLocation}">
+                            </option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Biển Số Xe</label>
+                        <input type="text" th:field="*{licensePlate}" required placeholder="VD: 51B-123.45"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Số Chỗ Ngồi</label>
+                        <input type="number" th:field="*{capacity}" required min="10" max="60"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Loại Xe</label>
+                        <select th:field="*{busType}" required
+                                class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white">
+                            <option value="SEAT">Ghế Ngồi (SEAT)</option>
+                            <option value="BEDSEAT">Giường Nằm (BEDSEAT)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Trạng Thái</label>
+                        <select th:field="*{busStatus}" required
+                                class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white">
+                            <option value="ACTIVE">Hoạt động (ACTIVE)</option>
+                            <option value="INACTIVE">Bảo trì (INACTIVE)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-100">
+                    <a href="/admin/buses" 
+                       class="text-gray-500 hover:text-gray-700 font-bold text-sm px-4 py-2 transition">
+                        Hủy bỏ
+                    </a>
+                    <button type="submit"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow-md transition transform hover:-translate-y-0.5">
+                        <i class="fas fa-save mr-2"></i>Lưu Thông Tin
+                    </button>
+                </div>
+
+            </form>
+        </div>
     </div>
 </div>
 </body>

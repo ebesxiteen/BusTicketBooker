@@ -3,44 +3,42 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{View/Layout/AdminLayout.html}">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thống Kê</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ Thống Kê - GreenBus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
 <div layout:fragment="content">
-<div class="container mx-auto mt-10">
-  <div class="text-center mb-10">
-    <h1 class="text-4xl font-bold text-gray-800">Trang Thống Kê</h1>
-    <p class="text-lg text-gray-600 mt-2">Chọn loại thống kê bạn muốn xem</p>
-  </div>
-
-  <div class="flex flex-col items-center space-y-8">
-    <!-- Thống Kê Doanh Thu -->
-    <div class="w-full max-w-sm">
-      <a href="/admin/statistics/revenue"
-         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-6 px-12 w-full block text-center rounded-lg shadow-lg text-xl">
-        Thống Kê Doanh Thu
-      </a>
+<div class="container mx-auto mt-10 p-6">
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-bold text-emerald-800">BẢNG ĐIỀU KHIỂN THỐNG KÊ</h1>
+        <p class="text-lg text-gray-600 mt-2">Chọn loại báo cáo bạn muốn xem chi tiết</p>
     </div>
 
-    <!-- Thống Kê Vé Bán Ra -->
-    <div class="w-full max-w-sm">
-      <a href="/admin/statistics/ticket"
-         class="bg-green-500 hover:bg-green-700 text-white font-bold py-6 px-12 w-full block text-center rounded-lg shadow-lg text-xl">
-        Thống Kê Vé Bán Ra
-      </a>
-    </div>
+    <div class="flex flex-wrap justify-center items-stretch gap-8">
+        
+        <div class="w-full max-w-sm">
+            <a th:href="@{/admin/statistics/revenue}"
+               class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 px-12 w-full block text-center rounded-lg shadow-lg text-xl transition-all duration-300 transform hover:scale-[1.02]">
+                <i class="fas fa-money-bill-wave mr-2"></i> Thống Kê Doanh Thu
+            </a>
+        </div>
 
-    <!-- Thống Kê Chuyến Đi -->
-    <div class="w-full max-w-sm">
-      <a href="/admin/statistics/trip"
-         class="bg-red-500 hover:bg-red-700 text-white font-bold py-6 px-12 w-full block text-center rounded-lg shadow-lg text-xl">
-        Thống Kê Chuyến Đi
-      </a>
+        <div class="w-full max-w-sm">
+            <a th:href="@{/admin/statistics/ticket}"
+               class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-6 px-12 w-full block text-center rounded-lg shadow-lg text-xl transition-all duration-300 transform hover:scale-[1.02]">
+                <i class="fas fa-ticket-alt mr-2"></i> Thống Kê Vé Bán Ra
+            </a>
+        </div>
+
+        <div class="w-full max-w-sm">
+            <a th:href="@{/admin/statistics/trip}"
+               class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-6 px-12 w-full block text-center rounded-lg shadow-lg text-xl transition-all duration-300 transform hover:scale-[1.02]">
+                <i class="fas fa-route mr-2"></i> Thống Kê Chuyến Đi
+            </a>
+        </div>
     </div>
-  </div>
 </div>
 </div>
 </body>

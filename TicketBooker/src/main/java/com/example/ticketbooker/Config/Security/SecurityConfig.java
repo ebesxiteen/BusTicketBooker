@@ -1,166 +1,113 @@
 package com.example.ticketbooker.Config.Security;
 
-import com.example.ticketbooker.Entity.Account;
-import com.example.ticketbooker.Repository.AccountRepo;
-import com.example.ticketbooker.Service.ServiceImp.AccountServiceImp;
-import com.example.ticketbooker.Service.ServiceImp.CustomOAuthUserService;
-import com.example.ticketbooker.Service.ServiceImp.CustomUserDetailsService;
-import com.example.ticketbooker.Util.RedirectToPasswordCreationException;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.io.IOException;
+import com.example.ticketbooker.Service.ServiceImp.CustomOAuthUserService;
+import com.example.ticketbooker.Service.ServiceImp.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Để dùng được @PreAuthorize ở Controller
 public class SecurityConfig {
-    private final CustomOAuthUserService customOAuthUserService;
 
-    public SecurityConfig(CustomOAuthUserService customOAuthUserService) {
-        this.customOAuthUserService = customOAuthUserService;
-    }
+        @Autowired
+        private CustomOAuthUserService customOAuthUserService;
 
+        @Autowired
+        private CustomUserDetailsService customUserDetailsService;
 
-    @Bean
-    public CustomUserDetailsService customUserDetailsService() {
-        return new CustomUserDetailsService();
-    }
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-        return NoOpPasswordEncoder.getInstance();
-    }
+        @Autowired
+        private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler; // Dùng chung cho cả 2
 
-    @Bean
-    public CustomAccessDeniedHandler customAccessDeniedHandler() {
-        return new CustomAccessDeniedHandler();
-    }
+        @Autowired
+        private CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    @Bean
-    public CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler() {
-        return new CustomAuthenticationSuccessHandler();  // Define the success handler here
-    }
+    // 1. Password Encoder
+        @Bean
+        public BCryptPasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
+    // 2. Authentication Provider
 
+        @Bean
+        public DaoAuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+                authProvider.setUserDetailsService(customUserDetailsService);
+                authProvider.setPasswordEncoder(passwordEncoder());
+                return authProvider;
+        }
 
+    // 3. Authentication Manager
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+                return authConfig.getAuthenticationManager();
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(customUserDetailsService())
-                .passwordEncoder(passwordEncoder());
-        return authenticationManagerBuilder.build();
-    }
+    // 4. Security Filter Chain
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        // Public URLs
+                        .requestMatchers("/admin/routes/get-routes",
+                        "/", "/greenbus/**", "/auth/**", "/register", "/login", "/logout", 
+                        "/access-denied", "/404", "/error",
+                        "/css/**", "/js/**", "/images/**", "/webjars/**", "/components/**",
+                        "/api/**", "/vnpay/**", "/zalopay/**"
+                        ).permitAll()
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/fuba","/register","/access-denied","/404", "/api/accounts/exist",
-                        "/zalopay","/vnpay","/submitOrder","/vnpay-payment-return",
-                        "/admin/trips/*","/api/**",
-                        "/css/**","/js/**","/components/**",
-                        "/admin/routes/get-routes",
-//                        "/admin/**",
-                        "/vnpay/**", "/payment/**")
-                                .permitAll()
-                        .requestMatchers("/fuba/**").permitAll() // Các URL khong yêu cầu đăng nhập
-                        .requestMatchers("/favicon.icon").permitAll()
-                        .requestMatchers("/auth").anonymous()
-                                .requestMatchers("/admin/**").hasRole("MANAGER")
-//                                .requestMatchers("").hasRole("CUSTOMER")
-//                                .requestMatchers("").hasRole("STAFF")
-                        .anyRequest().authenticated() // Các URL còn lại cần xác thực
-//                        .anyRequest().permitAll()
+                        // Admin URLs
+                        .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "MANAGER")
+
+                        // Authenticated URLs
+                        .anyRequest().authenticated()
                 )
+
+                // --- CẤU HÌNH ĐĂNG NHẬP THƯỜNG (LOCAL) ---
+                .formLogin(form -> form
+                .loginPage("/auth")
+                .loginProcessingUrl("/perform_login") // Action trong form html phải trỏ vào đây
+                .successHandler(customAuthenticationSuccessHandler) // <--- Dùng Handler chung
+                .failureUrl("/auth?error=true")
+                .permitAll()
+                )
+
+            // --- CẤU HÌNH ĐĂNG NHẬP OAUTH2 (GOOGLE) ---
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/auth")
                         .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuthUserService) // Sử dụng CustomOAuth2UserService
+                        .userService(customOAuthUserService) // Service xử lý lưu user Google vào DB
                         )
-                        .successHandler(customAuthenticationSuccessHandler())
+                        .successHandler(customAuthenticationSuccessHandler) // <--- Dùng Handler chung
+                        .failureUrl("/auth?error=true")
                 )
-                .csrf(AbstractHttpConfigurer::disable)
-                .formLogin((form) -> form
-                        .loginPage("/auth")
-                        .failureUrl("/auth?error")
-                        .successHandler(customAuthenticationSuccessHandler())
+
+            // --- LOGOUT ---
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/greenbus")
+                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
-                .rememberMe((remember) -> remember
-                        .key("uniqueAndSecret") // Mã khóa để bảo vệ cookie
-                        .tokenValiditySeconds(1209600) // Thời gian tồn tại cookie (mặc định là 2 tuần)
-                ) // Kích hoạt tính năng remember-me
-                .logout((logout) -> logout
-                        .logoutUrl("/logout") // Đường dẫn để đăng xuất
-                        .logoutSuccessUrl("/fuba") // Chuyển hướng sau khi đăng xuất
-                        .deleteCookies("JSESSIONID") // Xóa cookie sau khi đăng xuất
-                )
-                .exceptionHandling(exception -> exception
-                        .accessDeniedPage("/404")
-                        .accessDeniedHandler(customAccessDeniedHandler()) // Xử lý Access Denied
+
+            // --- XỬ LÝ LỖI ---
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                        .accessDeniedPage("/access-denied")
                 );
-        return http.build();
-    }
-    @ExceptionHandler(RedirectToPasswordCreationException.class)
-    public void handleRedirectToPasswordCreationException(
-            RedirectToPasswordCreationException ex, HttpServletResponse response) throws IOException {
-        // Redirect người dùng đến trang tạo mật khẩu mới
-        response.sendRedirect(ex.getRedirectUrl());
-    }
 
+                return http.build();
+        }
 }
-
-
-
-//package com.example.ticketbooker.Config.Security;
-//
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-//import org.springframework.security.web.SecurityFilterChain;
-//
-//@Configuration
-//@EnableWebSecurity
-//public class SecurityConfig {
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .authorizeHttpRequests((requests) -> requests
-////                        .requestMatchers("/", "/admin/**").permitAll()
-////                        .anyRequest().authenticated()
-//                                .anyRequest().permitAll()
-//                )
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .formLogin((form) -> form
-//                        .loginPage("/auth")
-//                        .permitAll()
-//                )
-//                .logout((logout) -> logout
-//                        .permitAll()
-//                );
-//
-//        return http.build();
-//    }
-//}

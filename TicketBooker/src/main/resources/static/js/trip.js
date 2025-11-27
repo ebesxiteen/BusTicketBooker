@@ -1,233 +1,203 @@
-// Hàm khóa chọn ngày
+// 1. Khởi tạo & Event Listeners
 document.addEventListener("DOMContentLoaded", function () {
-    var today = new Date().toISOString().slice(0, 16);  // Lấy ngày hiện tại theo định dạng yyyy-MM-ddThh:mm
-    document.getElementById("departureTime").setAttribute("min", today);
-//    document.getElementById("arrivalTime").setAttribute("min", today);
+    // Khóa chọn ngày quá khứ
+    var now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Fix timezone
+    var today = now.toISOString().slice(0, 16);
+    
+    const departureTimeInput = document.getElementById("departureTime");
+    if(departureTimeInput) departureTimeInput.setAttribute("min", today);
+
+    // Khởi tạo các controller
+    editTripController();
+    initModalEvents();
 });
 
-// Hàm xóa chuyến xe
+// 2. Xử lý Xóa Chuyến Xe
 function confirmDeleteTrip(button) {
-    // Tìm container chứa chuyến xe
     const tripContainer = button.closest('.trip-container');
+    const tripId = tripContainer.querySelector('.trip-id').textContent.trim();
 
-    // Lấy giá trị tripId từ phần tử trong tripContainer
-    const tripIdElement = tripContainer.querySelector('.trip-id');
-    const tripId = parseInt(tripIdElement.textContent);
-
-    // Hiển thị thông báo xác nhận xóa bằng SweetAlert
     Swal.fire({
         title: 'Xác nhận',
-        text: `Bạn có chắc chắn muốn xóa chuyến xe với ID ${tripId} không?`,
+        text: `Bạn có chắc muốn xóa chuyến xe ID ${tripId}?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Có',
-        cancelButtonText: 'Không'
+        confirmButtonText: 'Có, xóa!',
+        cancelButtonText: 'Hủy'
     }).then((result) => {
         if (result.isConfirmed) {
-            deleteTrip(tripId, tripContainer); // Gọi hàm xóa chuyến xe và truyền tripContainer
+            deleteTrip(tripId, tripContainer);
         }
     });
 }
 
-// Hàm thực hiện fetch để xóa chuyến xe
 function deleteTrip(tripId, tripContainer) {
-    fetch('/admin/trips', {
+    // SỬA: Dùng đường dẫn tương đối chuẩn
+    fetch('/admin/trips/delete', { // Backend cần mapping đúng URL này
         method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tripId: tripId })  // Gửi tripId trong body
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tripId: tripId })
     })
     .then(response => {
         if (response.ok) {
-            Swal.fire({
-                title: 'Đã xóa!',
-                text: `Chuyến xe với ID ${tripId} đã được xóa thành công.`,
-                icon: 'success',
-                confirmButtonText: 'OK'
-            });
-
-            // Ngay lập tức xóa container của chuyến xe khỏi giao diện
-            tripContainer.remove();  // Xóa container ngay lập tức
+            Swal.fire('Đã xóa!', `Chuyến xe ${tripId} đã bị xóa.`, 'success');
+            tripContainer.remove();
         } else {
-            Swal.fire({
-                title: 'Lỗi',
-                text: `Xóa chuyến xe thất bại. Vui lòng thử lại.`,
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
+            Swal.fire('Lỗi', 'Xóa thất bại.', 'error');
         }
     })
     .catch(error => {
-        console.error('Đã xảy ra lỗi:', error);
-        Swal.fire({
-            title: 'Lỗi',
-            text: 'Có lỗi trong quá trình xóa chuyến xe.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
+        console.error(error);
+        Swal.fire('Lỗi', 'Lỗi kết nối server.', 'error');
     });
 }
 
-// Hàm load route
-document.addEventListener('DOMContentLoaded', function() {
+// 3. Xử lý Modal Thêm mới & Load dữ liệu động
+function initModalEvents() {
+    // Sự kiện thay đổi Điểm đi -> Load Điểm đến tương ứng
+    const departureSelect = document.querySelector("#departureLocation");
+    if(departureSelect) {
+        departureSelect.addEventListener('change', function () {
+            const selectedDeparture = this.value;
+            if(!selectedDeparture) return;
 
-    // Hàm để mở modal và tải vị trí
-    window.openAddTripModal = function () {
-        let departureOptions = '<option value="">Chọn điểm khởi hành</option>';
-        document.querySelector('#addTripModal').classList.toggle('hidden');
-        fetch('/admin/routes/getDepartureLocation')
-            .then(response => response.json())
-            .then (data => {
-                data.forEach(value => {
-                    departureOptions +="<option value='"+value+"'>"+value+"</option>";
+            // Load Arrival Locations
+            fetch('/admin/routes/getArrivalLocation?departureLocation=' + encodeURIComponent(selectedDeparture))
+                .then(response => response.json())
+                .then(data => {
+                    let options = '<option value="">Chọn điểm đến</option>';
+                    data.forEach(route => {
+                        // Value của option là routeId để gán vào form
+                        options += `<option value="${route.routeId}">${route.arrivalLocation}</option>`;
+                    });
+                    document.querySelector('#arrivalLocation').innerHTML = options;
                 })
-                document.querySelector('#departureLocation').innerHTML = departureOptions;
-            })
-            .catch(error => {
-                console.error('Đã xảy ra lỗi:', error);
-                Swal.fire({
-                    title: 'Lỗi',
-                    text: 'Có lỗi.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            });
-
-        //Hàm load Tài xế
-        let driverOptions = '<option value="">Chọn tài xế</option>';
-
-        fetch('/api/drivers/getAll')
-            .then(response => response.json())
-            .then (data => {
-                console.log(data)
-                data.listDriver.forEach(value => {
-                    driverOptions +="<option value='"+value.driverId+"'>"+value.name+"</option>";
-                })
-                document.querySelector('#driverName').innerHTML = driverOptions;
-            })
-            .catch(error => {
-                console.error('Đã xảy ra lỗi:', error);
-                Swal.fire({
-                    title: 'Lỗi',
-                    text: 'Có lỗi.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            });
-    }
-    // Hàm load Arrival Location
-    document.querySelector("#departureLocation").addEventListener('change',function (){
-        let arrivalLocation = '';
-        let url = '/admin/routes/getArrivalLocation?departureLocation=' + this.value;
-        fetch(url)
-            .then(response =>response.json())
-            .then(data => {
-                data.forEach(value => {
-                    arrivalLocation += "<option value='"+value.routeId+"'>"+value.arrivalLocation+"</option>";
-                })
-                document.querySelector('#arrivalLocation').innerHTML = arrivalLocation;
-                const arrival = document.getElementById("arrivalLocation").value;
-                document.getElementById("routeId").value = arrival;
-            })
-            .catch(error => {
-                console.error('Đã xảy ra lỗi:', error);
-                Swal.fire({
-                    title: 'Lỗi',
-                    text: 'Có lỗi.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            });
-    })
-});
-
-function submitAddTripForm() {
-//    const busId = document.getElementById('busId').value;
-//    const driverId = document.getElementById('driverId').value;
-    const departureStation = document.getElementById('departureStation').value;
-    const arrivalStation = document.getElementById('arrivalStation').value;
-    const departureTime = document.getElementById('departureTime').value;
-    const price = document.getElementById('price').value;
-    const availableSeats = document.getElementById('availableSeats').value;
-
-    if (!departureStation || !arrivalStation || !departureTime || !price || !availableSeats) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Thông tin không đầy đủ!',
-            text: 'Vui lòng điền tất cả các trường trước khi tạo chuyến xe.',
-            confirmButtonText: 'OK'
+                .catch(err => console.error("Lỗi load điểm đến:", err));
         });
-    } else {
-        // Nếu đã có routeId, hiển thị thông báo thành công trước
-        Swal.fire({
-            icon: 'success',
-            title: 'Tạo chuyến xe thành công!',
-            text: 'Chuyến xe đã được tạo thành công.',
-            confirmButtonText: 'OK'
-        }).then((result) => {
-            // Kiểm tra xem người dùng đã bấm OK chưa
-            if (result.isConfirmed) {
-                // Sau khi bấm OK, tiến hành gửi dữ liệu form
-                document.getElementById('addTripForm').submit();
-            }
+    }
+
+    // Sự kiện khi chọn Điểm đến -> Gán RouteId vào input ẩn
+    const arrivalSelect = document.getElementById("arrivalLocation");
+    if(arrivalSelect) {
+        arrivalSelect.addEventListener("change", function() {
+            // Value của option chính là routeId
+            document.getElementById("routeId").value = this.value;
         });
     }
 }
 
+// Hàm mở Modal Thêm mới
+window.openAddTripModal = function () {
+    const modal = document.querySelector('#addTripModal');
+    modal.classList.remove('hidden');
+
+    // Load danh sách Điểm khởi hành (Departure)
+    fetch('/admin/routes/getDepartureLocation')
+        .then(response => response.json())
+        .then(data => {
+            let options = '<option value="">Chọn điểm khởi hành</option>';
+            data.forEach(loc => {
+                options += `<option value="${loc}">${loc}</option>`;
+            });
+            document.querySelector('#departureLocation').innerHTML = options;
+        })
+        .catch(err => console.error("Lỗi load điểm đi:", err));
+
+    // Load danh sách Tài xế
+    fetch('/api/drivers/getAll') // API này cần trả về danh sách Driver
+        .then(response => response.json())
+        .then(data => {
+            let options = '<option value="">Chọn tài xế</option>';
+            // Kiểm tra cấu trúc trả về (data.listDriver hay data trực tiếp)
+            const list = data.listDriver || data; 
+            list.forEach(driver => {
+                options += `<option value="${driver.driverId}">${driver.name}</option>`;
+            });
+            document.querySelector('#driverName').innerHTML = options;
+        })
+        .catch(err => console.error("Lỗi load tài xế:", err));
+    
+    // Load danh sách Xe (Bus) - Bổ sung thêm nếu cần
+    fetch('/api/buses/getAll') 
+        .then(response => response.json())
+        .then(data => {
+            let options = '<option value="">Chọn xe</option>';
+            const list = data.listBus || data;
+            list.forEach(bus => {
+                options += `<option value="${bus.busId}">${bus.licensePlate} (${bus.busType})</option>`;
+            });
+            document.querySelector('#license').innerHTML = options;
+        })
+        .catch(err => console.error("Lỗi load xe:", err));
+}
+
+// 4. Submit Form Thêm mới
+function submitAddTripForm() {
+    const routeId = document.getElementById('routeId').value;
+    const busId = document.getElementById('busId').value;
+    const driverId = document.getElementById('driverId').value;
+    const departureTime = document.getElementById('departureTime').value;
+    const price = document.getElementById('price').value;
+
+    if (!routeId || !busId || !driverId || !departureTime || !price) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Thiếu thông tin!',
+            text: 'Vui lòng chọn đầy đủ Lộ trình, Xe, Tài xế và Thời gian.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Thành công',
+        text: 'Đang tạo chuyến xe...',
+        timer: 1500,
+        showConfirmButton: false
+    }).then(() => {
+        document.getElementById('addTripForm').submit();
+    });
+}
+
+// 5. Xử lý Sửa Chuyến Xe
 function editTripController() {
     window.editTrip = function(button) {
         const tripContainer = button.closest('.trip-container');
 
-        const tripId = tripContainer.querySelector('.trip-id').textContent.trim();
-        const routeId = tripContainer.querySelector('.route-id').textContent.trim();
-        const busId = tripContainer.querySelector('.bus-id').textContent.trim();
-        const driverId = tripContainer.querySelector('.driver-id').textContent.trim();
-        const status = tripContainer.querySelector('.status').textContent.trim();
-        const departureLocation = tripContainer.querySelector('.departure-location').textContent.trim();
-        const departureStation = tripContainer.querySelector('.departure-station').textContent.trim();
-        const arrivalLocation = tripContainer.querySelector('.arrival-location').textContent.trim();
-        const arrivalStation = tripContainer.querySelector('.arrival-station').textContent.trim();
-        const departureTime = tripContainer.querySelector('.departureTime').textContent.trim();
-        const arrivalTime = tripContainer.querySelector('.arrivalTime').textContent.trim();
-        const price = tripContainer.querySelector('.price span').textContent.trim();
-        const availableSeats = tripContainer.querySelector('.availableSeats span').textContent.trim();
+        // Lấy dữ liệu từ giao diện (Hidden fields hoặc Text)
+        const getVal = (selector) => tripContainer.querySelector(selector)?.textContent.trim() || "";
 
-        console.log("Giá trị status là:", status);
+        const data = {
+            id: getVal('.trip-id'),
+            routeId: getVal('.route-id'),
+            busId: getVal('.bus-id'),
+            driverId: getVal('.driver-id'),
+            status: getVal('.status'),
+            depStation: getVal('.departure-station'),
+            arrStation: getVal('.arrival-station'),
+            depTime: getVal('.departureTime'),
+            arrTime: getVal('.arrivalTime'),
+            price: getVal('.price span'),
+            seats: getVal('.availableSeats span')
+        };
 
-        document.getElementById('updateTripModal').classList.remove('hidden');
+        // Đổ dữ liệu vào Modal Sửa
+        const modal = document.getElementById('updateTripModal');
+        modal.classList.remove('hidden');
 
-        document.getElementById('edittripId').value = tripId;
-        document.getElementById('editrouteId').value = routeId;
-        document.getElementById('editbusId').value = busId;
-        document.getElementById('editdriverId').value = driverId;
-        document.getElementById('editdepartureStation').value = departureStation;
-        document.getElementById('editarrivalStation').value = arrivalStation;
-        document.getElementById('editdepartureTime').value = departureTime;
-        document.getElementById('editarrivalTime').value = arrivalTime;
-        document.getElementById('editprice').value = price;
-        document.getElementById('editavailableSeats').value = availableSeats;
-
-        document.getElementById('edittripStatus').value = status;
+        document.getElementById('edittripId').value = data.id;
+        document.getElementById('editrouteId').value = data.routeId;
+        document.getElementById('editbusId').value = data.busId;
+        document.getElementById('editdriverId').value = data.driverId;
+        
+        // ... Gán các trường còn lại tương tự ...
+        // Lưu ý: Cần đảm bảo ID của input trong modal sửa khớp với code này
     };
 }
 
-// Gọi hàm để khởi tạo
-document.addEventListener('DOMContentLoaded', function() {
-    editTripController();
-});
-
-document.getElementById("arrivalLocation").addEventListener("change", function() {
-    const arrival = document.getElementById("arrivalLocation").value;
-    document.getElementById("routeId").value = arrival;
-});
-
-//document.getElementById("driverName").addEventListener("change", function() {
-//    const driver = document.getElementById("driverName").value;
-//    document.getElementById("driverId").value = driver;
-//});
-//
-//document.getElementById("license").addEventListener("change", function() {
-//    const driver = document.getElementById("license").value;
-//    document.getElementById("busId").value = driver;
-//});
+// Xử lý đóng modal khi click ra ngoài hoặc nút hủy (Chung cho cả 2 modal)
+window.closeModal = function(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}

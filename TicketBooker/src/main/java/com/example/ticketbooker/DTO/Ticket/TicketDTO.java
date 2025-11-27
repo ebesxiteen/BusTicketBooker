@@ -1,9 +1,9 @@
 package com.example.ticketbooker.DTO.Ticket;
 
+import com.example.ticketbooker.DTO.Users.UserDTO;
 import com.example.ticketbooker.Entity.Invoices;
 import com.example.ticketbooker.Entity.Seats;
 import com.example.ticketbooker.Entity.Trips;
-import com.example.ticketbooker.Entity.Users; // <--- SỬA: Import Users
 import com.example.ticketbooker.Util.Enum.TicketStatus;
 
 import lombok.AllArgsConstructor;
@@ -11,19 +11,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
 @Builder
-public class UpdateTicketRequest {
-    private int id;
-    private Trips trip;
-    private Users booker; 
+@AllArgsConstructor
+@NoArgsConstructor
+public class TicketDTO {
+    private Integer id;
     
+    // Dùng UserDTO thay vì Users Entity để che giấu password
+    private UserDTO booker; 
+    
+    // Nếu chăm chỉ, bạn nên tạo cả TripDTO, SeatDTO. 
+    // Tạm thời dùng Entity cho Trip/Seat/Invoice cũng được nếu chúng không chứa dữ liệu nhạy cảm.
+    private Trips trip;
+    private Seats seat;
     private Invoices invoice;
+    
     private String customerName;
     private String customerPhone;
-    private Seats seat;
     private String qrCode;
     private TicketStatus ticketStatus;
 }

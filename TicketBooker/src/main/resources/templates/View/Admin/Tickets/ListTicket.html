@@ -1,111 +1,120 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{View/Layout/AdminLayout.html}">
-
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý Vé</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script>
-        function deleteTicket(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa vé này?')) {
-                fetch(`/api/tickets/${id}`, {
-                    method: 'DELETE'
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            alert('Xóa vé thành công!');
-                            window.location.reload();
-                        } else {
-                            alert('Xóa vé thất bại!');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Xóa vé thất bại!');
-                    });
-            }
-        }
-    </script>
+    <title>Quản lý Vé - GreenBus</title>
 </head>
-
-<body>
+<body class="bg-gray-50">
 <div layout:fragment="content">
-    <h1 class="text-2xl font-bold mb-4">Danh Sách Vé</h1>
+    <div class="container mx-auto py-8 px-4">
+        
+        <h1 class="text-3xl font-bold mb-6 text-emerald-700 border-b pb-2">Danh Sách Vé</h1>
 
-    <div class="flex justify-between mb-4">  <!-- Added flex container -->
-        <form action="#" method="get" class="inline-block"> <!-- Added inline-block -->
-            <label for="tripId" class="mr-2">Lọc theo chuyến:</label>
-            <select name="tripId" id="tripId" class="px-3 py-2 border rounded-md">
-                <option value="" th:text="'Chọn chuyến đi'"></option>
-                <option th:each="trip : ${trips}" th:value="${trip.id}" th:text="${trip.id} + ' ' + ${trip.departureStation} + ' - ' + ${trip.arrivalStation}"></option>
-            </select>
-            <button type="submit" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md">Lọc</button>
-        </form>
+        <div class="flex justify-between mb-4 items-center"> 
+            
+            <form th:action="@{/admin/tickets}" method="get" class="inline-block flex items-center space-x-2">
+                <label for="tripId" class="text-gray-700 font-semibold">Lọc theo chuyến:</label>
+                <select name="tripId" id="tripId" class="px-3 py-2 border rounded-md focus:border-emerald-500 transition">
+                    <option value="" th:text="'Chọn chuyến đi'"></option>
+                    <option th:each="trip : ${trips}" th:value="${trip.id}" 
+                            th:text="${'ID ' + trip.id + ': ' + trip.departureStation + ' ➝ ' + trip.arrivalStation}"
+                            th:selected="${param.tripId != null and param.tripId.equals(trip.id)}"></option>
+                </select>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition font-semibold">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+            </form>
 
-        <!-- Nút để xuất file Excel (now aligned to the right) -->
-        <a th:href="@{/admin/tickets/export/excel(tripId=${param.tripId != null ? param.tripId : ''})}" class="px-4 py-2 bg-green-500 text-white rounded-md inline-block">Xuất Excel</a> <!-- Added inline-block -->
+            <a th:href="@{/admin/tickets/export/excel(tripId=${param.tripId != null ? param.tripId : ''})}" 
+               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md inline-block font-semibold shadow-md transition">
+                <i class="fas fa-file-excel mr-1"></i> Xuất Excel
+            </a>
+        </div>
+
+        <div class="overflow-x-auto shadow-lg rounded-lg bg-white border border-gray-200">
+            <table class="min-w-full text-center">
+                <thead>
+                <tr class="bg-emerald-50 text-emerald-700 uppercase text-sm leading-normal font-bold">
+                    <th class="py-3 px-4 border-b">Ticket ID</th>
+                    <th class="py-3 px-4 border-b">Trip ID</th>
+                    <th class="py-3 px-4 border-b">Booker ID</th>
+                    <th class="py-3 px-4 border-b">Tên Khách Hàng</th>
+                    <th class="py-3 px-4 border-b">SĐT</th>
+                    <th class="py-3 px-4 border-b">Ghế</th>
+                    <th class="py-3 px-4 border-b">Trạng Thái</th>
+                    <th class="py-3 px-4 border-b">Hành Động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ticket : ${ticketResponse.listTickets}" class="text-center border-b hover:bg-gray-50 transition">
+                    <td class="py-2 px-4" th:text="${ticket.id}"></td>
+                    <td class="py-2 px-4" th:text="${ticket.trip.id}"></td>
+                    <td class="py-2 px-4 font-semibold text-blue-600" th:text="${ticket.booker.userId}"></td> <td class="py-2 px-4" th:text="${ticket.customerName}"></td>
+                    <td class="py-2 px-4" th:text="${ticket.customerPhone}"></td>
+                    <td class="py-2 px-4" th:text="${ticket.seat.seatCode}"></td> <td class="py-2 px-4">
+                        <span th:text="${ticket.ticketStatus}"
+                              th:classappend="${ticket.ticketStatus.name() == 'USED'} ? 'bg-green-500 text-white px-2 py-1 rounded' :
+                                               (ticket.ticketStatus.name() == 'CANCELLED' ? 'bg-red-500 text-white px-2 py-1 rounded' :
+                                               'bg-yellow-500 text-white px-2 py-1 rounded')">
+                        </span>
+                    </td>
+                    <td class="py-2 px-4">
+                        <div class="flex justify-center space-x-3">
+                            <a th:href="@{/admin/tickets/details/{id}(id=${ticket.id})}" title="Xem chi tiết"
+                               class="text-blue-500 hover:text-blue-700 transition transform hover:scale-110">
+                                <i class="fas fa-eye text-lg"></i>
+                            </a>
+                            <button th:data-id="${ticket.id}" onclick="deleteTicket(this.dataset.id)"
+                                    class="text-red-500 hover:text-red-700 transition transform hover:scale-110" title="Xóa">
+                                <i class="fas fa-trash-alt text-lg"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-center mt-6" th:if="${ticketResponse.totalPages > 1}">
+            <nav class="flex space-x-1 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+                <a th:each="i : ${#numbers.sequence(0, ticketResponse.totalPages - 1)}"
+                   th:href="@{/admin/tickets(page=${i}, tripId=${param.tripId != null ? param.tripId : ''})}"
+                   th:text="${i + 1}"
+                   class="px-3 py-1 rounded transition text-sm font-medium"
+                   th:classappend="${ticketResponse.currentPage - 1 == i} ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'">
+                </a>
+            </nav>
+        </div>
+
+
     </div>
-
-    <table class="min-w-full bg-white">
-        <thead>
-        <tr>
-            <th class="py-2 px-4 border-b">Ticket ID</th>
-            <th class="py-2 px-4 border-b">Trip ID</th>
-            <th class="py-2 px-4 border-b">Booker ID</th>
-            <th class="py-2 px-4 border-b">Invoice ID</th>
-            <th class="py-2 px-4 border-b">Customer Name</th>
-            <th class="py-2 px-4 border-b">Customer Phone</th>
-            <th class="py-2 px-4 border-b">Seat ID</th>
-            <th class="py-2 px-4 border-b">QR Code</th>
-            <th class="py-2 px-4 border-b">Ticket Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="ticket : ${ticketResponse.listTickets}" class="text-center">
-            <td class="py-2 px-4 border-b" th:text="${ticket.id}"></td>
-            <td class="py-2 px-4 border-b" th:text="${ticket.trip.id}"></td>
-            <td class="py-2 px-4 border-b" th:text="${ticket.booker.id}"></td>
-            <td class="py-2 px-4 border-b" th:text="${ticket.invoice.id}"></td>
-            <td class="py-2 px-4 border-b" th:text="${ticket.customerName}"></td>
-            <td class="py-2 px-4 border-b" th:text="${ticket.customerPhone}"></td>
-            <td class="py-2 px-4 border-b" th:text="${ticket.seat.id}"></td>
-            <td class="py-2 px-4 border-b" th:text="${ticket.qrCode}"></td>
-            <td class="py-2 px-4 border-b">
-                <span th:text="${ticket.ticketStatus}"
-                      th:classappend="${ticket.ticketStatus == T(com.example.ticketbooker.Util.Enum.TicketStatus).USED} ? 'bg-green-500 text-white px-2 py-1 rounded' :
-                                           (${ticket.ticketStatus == T(com.example.ticketbooker.Util.Enum.TicketStatus).CANCELLED} ? 'bg-red-500 text-white px-2 py-1 rounded' :
-                                           'bg-yellow-500 text-white px-2 py-1 rounded')">
-                </span>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-
-    <!-- Pagination controls -->
-    <div class="flex justify-center mt-4">
-        <ul class="flex">
-            <!-- Hiển thị trang "Previous" -->
-            <li th:if="${ticketResponse.currentPage > 1}">
-                <a th:href="@{/admin/tickets(page=${ticketResponse.currentPage - 1})}" class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300">&lt; Previous</a>
-            </li>
-
-            <!-- Hiển thị 3 trang trước và 3 trang sau trang hiện tại -->
-            <li th:each="i : ${#numbers.sequence(ticketResponse.currentPage - 3 > 1 ? ticketResponse.currentPage - 3 : 1, ticketResponse.currentPage + 3 < ticketResponse.totalPages ? ticketResponse.currentPage + 3 : ticketResponse.totalPages)}"
-                class="mx-1">
-                <a th:href="@{/admin/tickets(page=${i - 1})}" th:text="${i}"
-                   class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
-                   th:classappend="${ticketResponse.currentPage == i} ? 'bg-blue-500 text-white'"></a>
-            </li>
-
-            <!-- Hiển thị trang "Next" -->
-            <li th:if="${ticketResponse.currentPage < ticketResponse.totalPages}">
-                <a th:href="@{/admin/tickets(page=${ticketResponse.currentPage + 1})}" class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300">Next &gt;</a>
-            </li>
-        </ul>
-    </div>
-
-
 </div>
 </body>
 </html>
+<script>
+    // Hàm xóa vé (Cần fix để gửi TicketIdRequest DTO)
+    function deleteTicket(id) {
+        if (!confirm('Bạn có chắc chắn muốn xóa vé ID ' + id + ' không?')) return;
+
+        // Xóa vé sử dụng TicketIdRequest DTO (gửi JSON)
+        fetch(`/api/tickets/delete`, { // Giả định API DELETE chấp nhận body
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id }) 
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Xóa vé thành công!');
+                window.location.reload();
+            } else {
+                alert('Xóa vé thất bại!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Lỗi hệ thống khi xóa vé!');
+        });
+    }
+</script>

@@ -5,6 +5,8 @@
             navbarController();
 
             function navbarController() {
+                // Hàm này tự động lấy URL nên không cần sửa
+                // Nếu URL là /greenbus/admin thì nó sẽ tự hiện chữ greenbus
                 window.addEventListener("load", pathShowControl());
 
                 function pathShowControl() {
@@ -37,8 +39,11 @@
 
                     listCollapseToggle.forEach(toggle => {
                         toggle.addEventListener("click", function () {
-                            let targetId = toggle.getAttribute("data-fuba-target");
-                            document.querySelector(targetId).classList.toggle("md:w-full")
+                            let targetId = toggle.getAttribute("data-greenbus-target");
+                            
+                            if (targetId) {
+                                document.querySelector(targetId).classList.toggle("md:w-full");
+                            }
                         });
                     });
                 }

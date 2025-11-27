@@ -1,32 +1,51 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <title>Tạo đơn hàng</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <title>Thanh Toán Thất Bại</title>
+    <style>
+        /* Ghi đè màu Chủ đạo GreenBus */
+        :root {
+            --bs-primary: #10b981;
+            --bs-danger: #dc3545; /* Đỏ tiêu chuẩn */
+        }
+        .text-danger { color: var(--bs-danger) !important; }
+        .btn-primary { 
+            background-color: var(--bs-primary) !important; 
+            border-color: var(--bs-primary) !important;
+            --bs-btn-hover-bg: #059669;
+            --bs-btn-hover-border-color: #047857;
+        }
+    </style>
 </head>
 
 <body>
 <div class="container">
     <div class="row justify-content-center mt-5">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <img th:src="@{/vnpay-logo.png}" style="width: 200px">
-                    <h2 class="card-title">Tạo Đơn Hàng</h2>
-                    <form th:action="@{/submitOrder}" method="post">
-                        <div class="form-group">
-                            <label for="amount">Số tiền:</label>
-                            <input type="number" class="form-control" id="amount" name="amount" required value="299999">
-                        </div>
-                        <div class="form-group">
-                            <label for="orderInfo">Thông tin đơn hàng:</label>
-                            <input type="text" class="form-control" id="orderInfo" name="orderInfo" required value="Thanh toan don hang 2923">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Thanh toán</button>
-                    </form>
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-body p-5 text-center">
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-times-circle text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <h2 class="card-title text-danger mb-3 font-weight-bold">THANH TOÁN THẤT BẠI</h2>
+                    
+                    <p class="text-secondary mb-4">
+                        Đã xảy ra lỗi trong quá trình xử lý đơn hàng hoặc giao dịch đã bị hủy.
+                    </p>
+                    <p class="text-sm text-muted mb-4" th:text="${errorMessage} ?: 'Vui lòng kiểm tra lại thông tin và thử thanh toán lại.'"></p>
+
+                    <h5 class="text-lg text-primary mb-3">GreenBus</h5>
+                    
+                    <a th:href="@{/greenbus}" class="btn btn-primary btn-block mt-4">
+                        <i class="fas fa-undo mr-2"></i> Quay lại trang chủ
+                    </a>
                 </div>
             </div>
         </div>

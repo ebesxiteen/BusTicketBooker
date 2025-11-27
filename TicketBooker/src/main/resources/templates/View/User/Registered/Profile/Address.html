@@ -1,14 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{View/Layout/ProfileLayout.html}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{View/User/Registered/Profile/ProfileLayout.html}">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+    <title>Địa Chỉ Của Bạn - GreenBus</title>
+    </head>
 <body>
     <div layout:fragment="profileContent">
-        <main class="flex-1 p-8 flex flex-col">
-            <p> Đây là trang Address</p>
+        <main class="w-full p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-3xl font-bold text-gray-800 border-b pb-3 mb-6">
+                <i class="fas fa-map-marker-alt text-emerald-600 mr-2"></i>Địa Chỉ (Sổ địa chỉ)
+            </h2>
+            
+            <div class="space-y-4">
+                <p class="text-lg text-gray-700">Đây là nơi bạn có thể quản lý các địa chỉ nhận/trả hàng hoặc địa điểm lưu trú thường xuyên.</p>
+
+                <div class="border border-gray-300 rounded-lg p-4 bg-gray-50 hover:shadow-md transition duration-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-gray-800">Địa chỉ Mặc định (Nhà)</h4>
+                            <p class="text-gray-600 mt-1">273 Đ. An Dương Vương, Phường 3, Quận 5, Hồ Chí Minh</p>
+                            <p class="text-sm text-emerald-600 font-medium mt-2">Mới được sử dụng gần đây</p>
+                        </div>
+                        <div class="space-x-2">
+                            <button class="text-blue-500 hover:text-blue-700 font-medium text-sm">Sửa</button>
+                            <button class="text-red-500 hover:text-red-700 font-medium text-sm">Xóa</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="mt-4 w-full py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition">
+                    <i class="fas fa-plus-circle mr-2"></i> Thêm địa chỉ mới
+                </button>
+            </div>
         </main>
     </div>
 </body>

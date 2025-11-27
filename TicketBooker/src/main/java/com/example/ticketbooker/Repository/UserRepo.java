@@ -1,20 +1,25 @@
 package com.example.ticketbooker.Repository;
 
-import com.example.ticketbooker.Entity.Users;
-import com.example.ticketbooker.Util.Enum.Gender;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
+import com.example.ticketbooker.Entity.Users;
+import com.example.ticketbooker.Util.Enum.Gender;
 
 @Repository
 public interface UserRepo extends JpaRepository<Users, Integer> {
-    ArrayList<Users> findAll();
-    Page<Users> findAll(Pageable pageable);
-    ArrayList<Users> findAllByGender(Gender gender);
-    ArrayList<Users> findAllByAddress(String address);
-    ArrayList<Users> findByFullNameLike(String fullname);
-    ArrayList<Users> findAllById(int userId);
+    
+    // 1. Hàm quan trọng nhất cho đăng nhập
+    Users findByEmail(String email);
+
+    // 2. Các hàm tìm kiếm khác (đang được Service gọi)
+    List<Users> findByFullNameLike(String name);
+    
+    List<Users> findAllByGender(Gender gender);
+    
+    List<Users> findAllByAddress(String address);
+    
+    List<Users> findAllById(int id);
 }

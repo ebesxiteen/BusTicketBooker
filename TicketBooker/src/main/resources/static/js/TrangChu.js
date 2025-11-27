@@ -1,53 +1,63 @@
-(
-    function () {
-        document.addEventListener("DOMContentLoaded", function () {
-            loadSelectData();
+(function () {
+    document.addEventListener("DOMContentLoaded", function () {
+        loadSelectData();
 
+        function loadSelectData() {
+            getRoutes();
 
-            function loadSelectData() {
-                getRoutes();
-
-                function getRoutes() {
-                    // Use a relative path so the script works regardless of the server port
-                    const fetchUrl = "/admin/routes/get-routes";
-                    fetch(fetchUrl, {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"}
-                    }).then(respone => {
-                        if (respone.ok) {
-                            return respone.json();
-                        } else {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
-                    }).then(data => {
+            function getRoutes() {
+                // Đảm bảo URL này được public trong SecurityConfig
+                const fetchUrl = "/admin/routes/get-routes"; 
+                fetch(fetchUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" }
+                }).then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                }).then(data => {
+                    if (data && data.list) {
                         preSetSelect(data.list);
-                    }).catch(e => console.log(e));
-                }
-
-                function preSetSelect(data) {
-                    const routeDeparture = document.querySelector(".selectFill.departure");
-                    const routeArrival = document.querySelector(".selectFill.arrival");
-                    routeDeparture.innerHTML = "";
-                    routeArrival.innerHTML = "";
-                    let departureNames = [];
-                    let arrivalNames = [];
-                    data.forEach(route => {
-                        departureNames.push(route.departureLocation);
-                        arrivalNames.push(route.arrivalLocation);
-                    });
-                    const listDepartures = [...new Set(departureNames)];
-                    const listArrivals = [...new Set(arrivalNames)];
-                    listDepartures.forEach(departureLocation => {
-                        routeDeparture.innerHTML += `<option value="${departureLocation}">${departureLocation}</option>`;
-                    });
-                    listArrivals.forEach(arrivalLocation => {
-                        routeArrival.innerHTML += `<option value="${arrivalLocation}">${arrivalLocation}</option>`;
-                    });
-                }
+                    }
+                }).catch(e => console.log("Lỗi tải tuyến đường:", e));
             }
-        });
-    }
-)();
+
+            function preSetSelect(data) {
+                const routeDeparture = document.querySelector(".selectFill.departure");
+                const routeArrival = document.querySelector(".selectFill.arrival");
+                
+                // Kiểm tra null trước khi thao tác
+                if (!routeDeparture || !routeArrival) return;
+
+                routeDeparture.innerHTML = "";
+                routeArrival.innerHTML = "";
+                
+                let departureNames = [];
+                let arrivalNames = [];
+                
+                data.forEach(route => {
+                    departureNames.push(route.departureLocation);
+                    arrivalNames.push(route.arrivalLocation);
+                });
+                
+                // Dùng Set để lọc trùng
+                const listDepartures = [...new Set(departureNames)];
+                const listArrivals = [...new Set(arrivalNames)];
+                
+                listDepartures.forEach(loc => {
+                    routeDeparture.innerHTML += `<option value="${loc}">${loc}</option>`;
+                });
+                
+                listArrivals.forEach(loc => {
+                    routeArrival.innerHTML += `<option value="${loc}">${loc}</option>`;
+                });
+            }
+        }
+    });
+})();
+
 // Mobile menu toggle
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');

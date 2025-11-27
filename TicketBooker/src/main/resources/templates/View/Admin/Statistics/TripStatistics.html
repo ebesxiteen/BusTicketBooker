@@ -3,74 +3,104 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{View/Layout/AdminLayout.html}">
 <head>
-    <title>Trip Statistics</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống Kê Chuyến Đi - GreenBus</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script> </head>
-<body class="font-sans">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="font-sans bg-gray-50">
 <div layout:fragment="content">
-<h1 class="text-2xl font-bold mb-4 text-center">Thống Kê Chuyến Đi</h1>
-<div th:if="${stats != null}" class="container mx-auto flex justify-center items-start gap-8">
-    <div class="form-details w-1/3">
-        <form th:action="@{/admin/statistics/trip}" method="get" class="space-y-4">
-            <label for="period" class="block mb-2">Thống Kê Theo:</label>
-            <select id="period" name="period" class="w-full p-2 border rounded">
-                <option value="Day">Ngày</option>
-                <option value="Month">Tháng</option>
-                <option value="Year">Năm</option>
-            </select>
-            <label for="date" class="block mb-2">Ngày:</label>
-            <input type="date" id="date" name="date" class="w-full p-2 border rounded" th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"/>
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">Lấy Số Liệu</button>
-        </form>
-        <p>Thống Kê Theo: <span th:text="${stats.period}"></span></p>
-        <p>Ngày Đã Chọn: <span th:text="${#temporals.format(stats.selectedDate, 'dd/MM/yyyy')}"></span></p>
-        <p>Số Chuyến Đi Kỳ Này: <span th:text="${stats.currentPeriodTripCount}"></span></p>
-        <p>Số Chuyến Kỳ Trước: <span th:text="${stats.previousPeriodTripCount}"></span></p>
-        <div class="mt-4">
-            <a href="/admin/statistics" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700">Trở về</a>
+    
+    <h1 class="text-3xl font-bold mb-6 text-emerald-700 border-b pb-2">Thống Kê Số Lượng Chuyến Đi</h1>
+
+    <div th:if="${stats != null}" class="container mx-auto flex justify-center items-start gap-8 p-4">
+        
+        <div class="form-details w-1/3 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            
+            <form th:action="@{/admin/statistics/trip}" method="get" class="space-y-4">
+                <div>
+                    <label for="period" class="block mb-2 text-gray-700 font-semibold">Thống Kê Theo:</label>
+                    <select id="period" name="period" class="w-full p-2 border rounded shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                        <option value="Day" th:selected="${stats.period == 'Day'}">Ngày</option>
+                        <option value="Month" th:selected="${stats.period == 'Month'}">Tháng</option>
+                        <option value="Year" th:selected="${stats.period == 'Year'}">Năm</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="date" class="block mb-2 text-gray-700 font-semibold">Ngày/Tháng/Năm:</label>
+                    <input type="date" id="date" name="date" class="w-full p-2 border rounded shadow-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition" 
+                           th:value="${#temporals.format(stats.selectedDate, 'yyyy-MM-dd')}"/>
+                </div>
+
+                <button type="submit" class="w-full px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 font-bold transition shadow-md">
+                    <i class="fas fa-chart-line mr-2"></i>Lấy Số Liệu
+                </button>
+            </form>
+            
+            <hr class="my-4 border-gray-200">
+
+            <div class="space-y-2 text-gray-800">
+                <p>Thống Kê Theo: <span class="font-semibold text-emerald-600" th:text="${stats.period}"></span></p>
+                <p>Ngày Đã Chọn: <span class="font-semibold" th:text="${#temporals.format(stats.selectedDate, 'dd/MM/yyyy')}"></span></p>
+                <p>Số Chuyến Đi Kỳ Này: <span class="font-bold text-3xl text-emerald-600" th:text="${#numbers.formatDecimal(stats.currentPeriodTripCount, 0, 'POINT', 0, 'COMMA')}"></span></p>
+                <p>Số Chuyến Kỳ Trước: <span class="font-bold text-xl text-gray-500" th:text="${#numbers.formatDecimal(stats.previousPeriodTripCount, 0, 'POINT', 0, 'COMMA')}"></span></p>
+            </div>
+
+            <div class="mt-6">
+                <a th:href="@{/admin/statistics}" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700 font-semibold transition">Trở về</a>
+            </div>
+        </div>
+
+        <div class="chart-container w-1/3 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 class="font-semibold text-gray-800 mb-4 border-l-4 border-emerald-500 pl-3">So sánh Số lượng chuyến</h3>
+            <canvas id="tripChart"></canvas>
         </div>
     </div>
-    <div class="chart-container w-1/3">
-        <canvas id="tripChart"></canvas>
-    </div>
-</div>
-<script th:inline="javascript">
-    var currentTripCount = /*[[${stats.currentPeriodTripCount}]]*/ 0;
-    var previousTripCount = /*[[${stats.previousPeriodTripCount}]]*/ 0;
-    var ctx = document.getElementById('tripChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Kỳ Này', 'Kỳ Trước'],
-            datasets: [{
-                label: 'Số Lượng Chuyến',
-                data: [currentTripCount, previousTripCount],
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(255, 99, 132, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true
-                }
+
+    <script th:inline="javascript">
+        var currentTripCount = /*[[${stats.currentPeriodTripCount}]]*/ 0;
+        var previousTripCount = /*[[${stats.previousPeriodTripCount}]]*/ 0;
+
+        var ctx = document.getElementById('tripChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Kỳ Này', 'Kỳ Trước'],
+                datasets: [{
+                    label: 'Số Lượng Chuyến',
+                    data: [currentTripCount, previousTripCount],
+                    // Đổi màu Blue -> Green/Gray
+                    backgroundColor: ['rgba(16, 185, 129, 0.7)', 'rgba(107, 114, 128, 0.5)'], // Emerald / Gray
+                    borderColor: ['rgba(16, 185, 129, 1)', 'rgba(107, 114, 128, 1)'],
+                    borderWidth: 1
+                }]
             },
-            plugins: {
-                legend: {
-                    display: true
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return value.toLocaleString('vi-VN'); }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' Số lượng: ' + context.parsed.x.toLocaleString('vi-VN');
+                            }
+                        }
+                    }
                 }
             }
-        }
-    });
-</script>
+        });
+    </script>
 </div>
 </body>
 </html>

@@ -4,196 +4,103 @@
       layout:decorate="~{View/Layout/AdminLayout.html}">
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý Chuyến xe</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Cập Nhật Chuyến Xe - GreenBus</title>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100">
+<body class="bg-gray-50">
 <div layout:fragment="content">
-    <div class="container mx-auto p-6">
-        <!-- Header Section -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Cập Nhật Chuyến Xe</h1>
-            <p class="text-gray-600">Vui lòng điền đầy đủ thông tin bên dưới</p>
-        </div>
+    <div class="container mx-auto p-6 max-w-4xl">
+        
+        <h1 class="text-3xl font-bold mb-6 text-emerald-700 border-b pb-2">
+            <span th:if="*{updateTripForm.tripId == null}"><i class="fas fa-plus-circle mr-2"></i>Thêm Chuyến Xe</span>
+            <span th:if="*{updateTripForm.tripId != null}"><i class="fas fa-edit mr-2"></i>Cập Nhật Chuyến Xe</span>
+        </h1>
 
-        <!-- Main Form -->
         <form th:action="@{/admin/trips/update}" th:object="${updateTripForm}" method="post"
-              class="bg-white shadow-lg rounded-xl px-8 pt-6 pb-8 mb-4 border border-gray-100">
+              class="bg-white shadow-lg rounded-xl px-8 pt-6 pb-8 mb-4 border border-gray-200">
+            
+            <input type="hidden" th:field="*{tripId}">
 
-            <!-- Grid Layout for Form Fields -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Route and Status Section -->
-                <div class="space-y-6">
 
-                    <!-- Route ID -->
+                <div class="space-y-6">
+                    
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="routeId">
-                            Mã số tuyến
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number"
-                               name="route.routeId"
-                               id="routeId"
-                               th:field="*{route.routeId}"
-                               required
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="routeId">Mã Tuyến</label>
+                        <input type="number" th:field="*{route.routeId}" required readonly
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 bg-gray-100 cursor-not-allowed">
                     </div>
 
-                    <!-- Trip Status -->
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="tripStatus">
-                            Trạng thái chuyến xe
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <select id="tripStatus" th:field="*{tripStatus}"
-                                class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
-                            <option th:value="${T(com.example.ticketbooker.Util.Enum.TripStatus).SCHEDULED}"
-                                    th:text="${T(com.example.ticketbooker.Util.Enum.TripStatus).SCHEDULED}"
-                                    th:selected="*{tripStatus == T(com.example.ticketbooker.Util.Enum.TripStatus).SCHEDULED}">
-                            </option>
-                            <option th:value="${T(com.example.ticketbooker.Util.Enum.TripStatus).CANCELLED}"
-                                    th:text="${T(com.example.ticketbooker.Util.Enum.TripStatus).CANCELLED}"
-                                    th:selected="*{tripStatus == T(com.example.ticketbooker.Util.Enum.TripStatus).CANCELLED}">
-                            </option>
-                            <option th:value="${T(com.example.ticketbooker.Util.Enum.TripStatus).COMPLETED}"
-                                    th:text="${T(com.example.ticketbooker.Util.Enum.TripStatus).COMPLETED}"
-                                    th:selected="*{tripStatus == T(com.example.ticketbooker.Util.Enum.TripStatus).COMPLETED}">
-                            </option>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="driverId">Mã Tài Xế</label>
+                        <input type="number" th:field="*{driver.driverId}" required
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="busId">Mã Số Xe</label>
+                        <input type="number" th:field="*{bus.id}" required
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="tripStatus">Trạng Thái Chuyến</label>
+                        <select th:field="*{tripStatus}"
+                                class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 bg-white">
+                            <option th:value="${T(com.example.ticketbooker.Util.Enum.TripStatus).SCHEDULED}">SCHEDULED</option>
+                            <option th:value="${T(com.example.ticketbooker.Util.Enum.TripStatus).CANCELLED}">CANCELLED</option>
+                            <option th:value="${T(com.example.ticketbooker.Util.Enum.TripStatus).COMPLETED}">COMPLETED</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Bus and Driver Section -->
                 <div class="space-y-6">
-                    <!-- Bus ID -->
+                    
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="busId">
-                            Mã số xe
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text"
-                               name="bus.id"
-                               id="busId"
-                               th:field="*{bus.id}"
-                               required
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="departureStation">Trạm Khởi Hành</label>
+                        <input type="text" th:field="*{departureStation}" required
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="arrivalStation">Trạm Đến</label>
+                        <input type="text" th:field="*{arrivalStation}" required
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
 
-                    <!-- Driver ID -->
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="driverId">
-                            Mã tài xế
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number"
-                               name="driver.driverId"
-                               id="driverId"
-                               th:field="*{driver.DriverId}"
-                               required
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="departureTime">Thời gian khởi hành</label>
+                        <input type="datetime-local" th:field="*{departureTime}" required
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
-                </div>
-
-                <!-- Station Information -->
-                <div class="space-y-6 md:col-span-2">
-                    <!-- Departure Station -->
+                    
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="departureStation">
-                            Điểm khởi hành
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text"
-                               name="departureStation"
-                               id="departureStation"
-                               th:field="*{departureStation}"
-                               required
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="arrivalTime">Thời gian đến</label>
+                        <input type="datetime-local" th:field="*{arrivalTime}"
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
 
-                    <!-- Arrival Station -->
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="arrivalStation">
-                            Điểm đến
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text"
-                               name="arrivalStation"
-                               id="arrivalStation"
-                               th:field="*{arrivalStation}"
-                               required
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="price">Giá vé</label>
+                        <input type="number" th:field="*{price}" required min="10000"
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
-                </div>
-
-                <!-- Time Information -->
-                <div class="space-y-6">
-                    <!-- Departure Time -->
+                    
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="departureTime">
-                            Thời gian khởi hành
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input type="datetime-local"
-                               id="departureTime"
-                               th:field="*{departureTime}"
-                               required
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="availableSeats">Chỗ trống</label>
+                        <input type="number" th:field="*{availableSeats}" required min="1"
+                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
-
-                    <!-- Arrival Time -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="arrivalTime">
-                            Thời gian kết thúc
-                        </label>
-                        <input type="datetime-local"
-                               name="arrivalTime"
-                               id="arrivalTime"
-                               th:field="*{arrivalTime}"
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200"></div>
-                </div>
-
-                <!-- Price and Seats -->
-                <div class="space-y-6">
-                    <!-- Price -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="price">
-                            Giá vé
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <input type="number"
-                                   name="price"
-                                   id="price"
-                                   th:field="*{price}"
-                                   required
-                                   class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 pl-4 pr-12 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
-                            <span class="absolute right-3 top-2.5 text-gray-500">VNĐ</span>
-                        </div>
-                    </div>
-
-                    <!-- Available Seats -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="availableSeats">
-                            Chỗ ngồi còn trống
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number"
-                               name="availableSeats"
-                               id="availableSeats"
-                               th:field="*{availableSeats}"
-                               required
-                               class="shadow-sm border border-gray-300 rounded-lg w-full py-2.5 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200">
-                    </div>
-                    <input type="hidden" name="tripId" id="tripId" th:field="*{tripId}" required>
-
                 </div>
             </div>
 
-            <!-- Form Actions -->
-            <div class="flex justify-center w-full h-10 my-4">
-                <button
-                        class="add-user-open px-3 font-semibold w-1/6 rounded-lg bg-green-500 hover:bg-green-600 text-white">
-                    Lưu
+            <div class="flex justify-end items-center gap-4 pt-6 mt-6 border-t border-gray-200">
+                <a href="/admin/trips"
+                   class="px-6 py-2 rounded-lg text-gray-500 hover:bg-gray-100 font-bold text-sm transition">
+                    Quay lại
+                </a>
+                <button type="submit"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition transform hover:-translate-y-0.5">
+                    <i class="fas fa-save mr-2"></i> Lưu Cập Nhật
                 </button>
             </div>
         </form>

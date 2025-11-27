@@ -1,30 +1,42 @@
 package com.example.ticketbooker.Entity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
-public class CustomOAuth2User extends DefaultOAuth2User {
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
-    private final Account account; // Dữ liệu người dùng từ cơ sở dữ liệu
+public class CustomOAuth2User implements OAuth2User {
 
-    public CustomOAuth2User(Account account, Map<String, Object> attributes) {
-        super(Collections.singleton(
-                new SimpleGrantedAuthority("ROLE_" + account.getRole().name())), attributes, "email"); // Sử dụng "email" làm key chính
-        this.account = account;
+    private OAuth2User oauth2User;
+    private Users user; // Đổi Account -> Users
+
+    public CustomOAuth2User(OAuth2User oauth2User, Users user) {
+        this.oauth2User = oauth2User;
+        this.user = user;
     }
 
-    public Account getAccount() {
-        return account;
+    @Override
+    public Map<String, Object> getAttributes() {
+        return oauth2User.getAttributes();
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return oauth2User.getAuthorities();
     }
 
     @Override
     public String getName() {
-        // Trả về tên người dùng hoặc giá trị từ OAuth2
-        return account.getUser().getFullName();
+        return oauth2User.getAttribute("name"); // Hoặc email
+    }
+    
+    public String getEmail() {
+        return oauth2User.getAttribute("email");
+    }
+
+    // Hàm getter để SecurityUtils gọi
+    public Users getUser() {
+        return user;
     }
 }

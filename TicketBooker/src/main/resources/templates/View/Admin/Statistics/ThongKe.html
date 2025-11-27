@@ -1,96 +1,91 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{View/Layout/AdminLayout.html}">>
+      layout:decorate="~{View/Layout/AdminLayout.html}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thống Kê</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Dashboard Thống Kê - GreenBus</title>
+    
     <script src="https://cdn.canvasjs.com/ga/canvasjs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <script th:inline="javascript">
         window.onload = function () {
+            // ✅ Đổi mã màu biểu đồ sang tông Xanh Lá (Emerald)
             CanvasJS.addColorSet("greenShades",
                 [//colorSet Array
-                    "#2F4F4F",
-                    "#008080",
-                    "#2E8B57",
-                    "#3CB371",
-                    "#90EE90"
+                    "#059669", // Xanh đậm
+                    "#10b981", // Xanh chính
+                    "#34d399", // Xanh nhạt
+                    "#F08080", // Đỏ (cho cảnh báo/lỗi nếu cần)
+                    "#7F6084"  // Màu tím cũ (Nếu cần giữ lại)
                 ]);
-            const chartData = /*[[${chartDataJson}]]*/ '[]';
-            const dataPoints = JSON.parse(chartData);
-            dataPoints.revenue.forEach(item => {
-                item.x = new Date(item.x); // Chuyển chuỗi ISO thành đối tượng Date
+                
+            // Lấy dữ liệu JSON từ Controller
+            const chartDataJson = /*[[${chartDataJson}]]*/ '[]'; 
+            const dataPoints = JSON.parse(chartDataJson);
+            
+            // Xử lý chuyển chuỗi ngày thành đối tượng Date
+            ['revenue', 'orderCounts', 'ticketCounts'].forEach(key => {
+                if(dataPoints[key]) {
+                    dataPoints[key].forEach(item => {
+                        item.x = new Date(item.x); 
+                    });
+                }
             });
-            dataPoints.orderCounts.forEach(item => {
-                item.x = new Date(item.x); // Chuyển chuỗi ISO thành đối tượng Date
-            });
-            dataPoints.ticketCounts.forEach(item => {
-                item.x = new Date(item.x); // Chuyển chuỗi ISO thành đối tượng Date
-            });
+
             var chart = new CanvasJS.Chart("chartContainer", {
                 theme:'light2',
                 backgroundColor: "transparent",
                 interactivityEnabled: true,
                 animationEnabled: true,
-                colorSet: "greenShades",
+                colorSet: "greenShades", // Áp dụng bảng màu Emerald
                 title:{
-                    fontFamily: 'Montserrat',
-                    fontWeight: 'bold',
                     text: "Thống Kê Số Lượng Vé, Hóa đơn và Doanh Thu"
                 },
+                
+                // Trục Y1 (Số lượng)
                 axisY:[{
                     title: "Số lượng",
-                    lineColor: "#C24642",
-                    tickColor: "#C24642",
-                    labelFontColor: "#C24642",
-                    titleFontColor: "#C24642",
+                    lineColor: "#059669", 
+                    tickColor: "#059669", 
+                    titleFontColor: "#059669",
                     includeZero: true,
-                    // suffix: "k",
-                    crosshair: {
-                        enabled: true
-                    }
+                    crosshair: { enabled: true }
                 }],
+                
+                // Trục Y2 (Doanh thu)
                 axisY2: {
                     title: "Doanh thu (VND)",
-                    lineColor: "#2E8B57",
-                    tickColor: "#2E8B57",
-                    labelFontColor: "#2E8B57",
-                    titleFontColor: "#2E8B57",
+                    lineColor: "#047857", 
+                    tickColor: "#047857",
+                    titleFontColor: "#047857",
                     includeZero: true,
-                    suffix: "VND",
-                    crosshair: {
-                        enabled: true
-                    }
+                    suffix: " VND",
+                    crosshair: { enabled: true }
                 },
+                
                 axisX:{
                     valueFormatString: "DD/MM/YYYY",
-                    crosshair: {
-                        enabled: true,
-                        snapToDataPoint: true
-                    }
+                    crosshair: { enabled: true, snapToDataPoint: true }
                 },
-                toolTip:{
-                    shared:true
-                },
+                
+                toolTip:{ shared:true },
                 legend:{
                     cursor:"pointer",
                     verticalAlign: "bottom",
                     horizontalAlign: "left",
-                    dockInsidePlotArea: true,
                     itemclick: toggleDataSeries
                 },
+                
                 data: [{
                     type: "line",
                     showInLegend: true,
                     name: "Số lượng vé",
-                    markerType: "square",
-                    xValueFormatString: "DD MMM, YYYY",
+                    color: "#10b981", // Xanh chính
                     axisYIndex:0,
-                    color: "#F08080",
                     dataPoints: dataPoints.ticketCounts
                 },
                 {
@@ -98,7 +93,7 @@
                     showInLegend: true,
                     name: "Số lượng Orders",
                     lineDashType: "dash",
-                    color: "#7F6084",
+                    color: "#34d399", // Xanh nhạt
                     dataPoints: dataPoints.orderCounts
                 },
                 {
@@ -107,11 +102,14 @@
                     name: "Doanh thu",
                     lineDashType: "line",
                     axisYType: 'secondary',
+                    color: "#059669", // Xanh đậm
                     dataPoints: dataPoints.revenue
                 }]
             });
             chart.render();
         }
+        
+        // Hàm toggle (ẩn/hiện series)
         function toggleDataSeries(e){
             if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
                 e.dataSeries.visible = false;
@@ -120,68 +118,65 @@
             }
             e.chart.render();
         }
-
     </script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50">
 <div layout:fragment="content">
 <div class="container mx-auto p-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <!-- Total Users Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-emerald-500">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-sm font-medium text-gray-600">Total Users</h2>
-                <i class="fas fa-users text-gray-400"></i>
+                <h2 class="text-sm font-bold text-gray-600 uppercase">Tổng Người Dùng</h2>
+                <i class="fas fa-users text-2xl text-emerald-500"></i>
             </div>
-            <div class="text-3xl font-bold" th:text="${totalUsers}">9,584</div>
-            <p class="text-sm text-green-500 flex items-center mt-2">
-<!--                <i class="fas fa-arrow-up mr-1"></i>-->
-<!--                6.3% up from yesterday-->
+            <div class="text-4xl font-extrabold text-gray-800" th:text="${totalUsers}"></div>
+            <p class="text-sm text-gray-400 mt-2">
+                <span class="text-emerald-500 font-semibold mr-1">Tài khoản</span> đã đăng ký.
             </p>
         </div>
 
-        <!-- New Orders Monthly Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-cyan-500">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-sm font-medium text-gray-600">New Orders Monthly</h2>
-                <i class="fas fa-shopping-cart text-gray-400"></i>
+                <h2 class="text-sm font-bold text-gray-600 uppercase">Đơn Hàng Mới (Tháng)</h2>
+                <i class="fas fa-shopping-cart text-2xl text-cyan-500"></i>
             </div>
-            <div class="text-3xl font-bold" th:text="${newMonthlyOrders}"></div>
-            <p class="text-sm text-green-500 flex items-center mt-2">
+            <div class="text-4xl font-extrabold text-gray-800" th:text="${newMonthlyOrders}"></div>
+            <p class="text-sm text-gray-400 mt-2">
+                Đơn hàng mới trong tháng này.
             </p>
         </div>
 
-        <!-- New Tickets Sold Monthly Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-sm font-medium text-gray-600">New Tickets Sold Monthly</h2>
-                <i class="fas fa-ticket-alt text-gray-400"></i>
+                <h2 class="text-sm font-bold text-gray-600 uppercase">Vé Bán Ra (Tháng)</h2>
+                <i class="fas fa-ticket-alt text-2xl text-indigo-500"></i>
             </div>
-            <div class="text-3xl font-bold" th:text="${newMonthlyTickets}"></div>
-            <p class="text-sm text-red-500 flex items-center mt-2">
+            <div class="text-4xl font-extrabold text-gray-800" th:text="${newMonthlyTickets}"></div>
+            <p class="text-sm text-gray-400 mt-2">
+                Vé được bán ra trong tháng này.
             </p>
         </div>
     </div>
-<!--    <select class="border rounded-md px-3 py-2 text-gray-700">-->
-<!--        <option>Daily</option>-->
-<!--        <option>Weekly</option>-->
-<!--        <option selected>Monthly</option>-->
-<!--        <option>Yearly</option>-->
-<!--    </select>-->
-    <!-- Sales Details Chart -->
-    <div class="bg-white rounded-lg shadow-md p-6 h-full">
+    
+    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg font-semibold text-gray-700">Dashboard</h2>
-            <form method="GET" action="/admin/statistics" class="flex items-center">
-                <input type="datetime-local" name="startDate" class="border rounded-md px-3 py-2 text-gray-700 mr-4">
-                <input type="datetime-local" name="endDate" class="border rounded-md px-3 py-2 text-gray-700 mr-4">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Lọc</button>
+            <h2 class="text-2xl font-semibold text-gray-800 border-l-4 border-emerald-500 pl-3">Biến Động Doanh Thu & Số Lượng</h2>
+            
+            <form method="GET" th:action="@{/admin/statistics}" class="flex items-center space-x-4">
+                <label class="text-sm text-gray-600">Từ:</label>
+                <input type="date" name="startDate" class="border rounded-md px-3 py-2 text-gray-700">
+                <label class="text-sm text-gray-600">Đến:</label>
+                <input type="date" name="endDate" class="border rounded-md px-3 py-2 text-gray-700">
+                <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition font-semibold">Lọc</button>
             </form>
         </div>
-        <div id="chartContainer" class="w-full h-96"></div>
+        
+        <div id="chartContainer" class="w-full h-[450px]"></div> 
     </div>
+
 </div>
 </div>
 </body>
 </html>
-

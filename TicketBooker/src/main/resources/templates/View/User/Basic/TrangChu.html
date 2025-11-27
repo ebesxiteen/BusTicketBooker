@@ -1,155 +1,107 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{View/Layout/UserLayout.html}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUBA Bus Lines</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <link rel="stylesheet" th:href="@{/css/TrangChu.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    <title>GreenBus Lines - Đặt vé xe khách trực tuyến</title>
 </head>
-<body class="bg-green-50">
+<body class="bg-gray-50"> 
 <div layout:fragment="content">
-    <!-- Banner Carousel -->
+    
     <div class="relative overflow-hidden">
         <div class="carousel flex">
             <div class="carousel-item">
                 <img src="https://cdn.futabus.vn/futa-busline-web-cms-prod/web_ca16250b69/web_ca16250b69.png?height=400&width=1920"
-                     alt="Banner 1" class="w-full object-cover min-h-[180px]">
+                     alt="Banner GreenBus" class="w-full object-cover min-h-[180px]">
             </div>
-
-        </div>
+            </div>
+        
         <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-            <button class="w-3 h-3 rounded-full bg-white opacity-50 hover:opacity-100 transition-opacity duration-200"></button>
-            <button class="w-3 h-3 rounded-full bg-white opacity-50 hover:opacity-100 transition-opacity duration-200"></button>
-            <button class="w-3 h-3 rounded-full bg-white opacity-50 hover:opacity-100 transition-opacity duration-200"></button>
+            <button class="w-3 h-3 rounded-full bg-white opacity-70 hover:opacity-100 transition-opacity duration-200"></button>
+            <button class="w-3 h-3 rounded-full bg-white opacity-70 hover:opacity-100 transition-opacity duration-200"></button>
+            <button class="w-3 h-3 rounded-full bg-white opacity-70 hover:opacity-100 transition-opacity duration-200"></button>
         </div>
     </div>
 
-    <!-- Booking Form -->
-    <form action="http://localhost:8080/fuba/search-trips" id="formSearchTrip" th:object="${searchData}" method="post" class="max-w-5xl mx-auto">
-        <div class="container mx-auto -mt-4 relative">
-            <div class="relative bg-white rounded-2xl shadow-sm border border-green-100">
-                <div class="p-6">
+    <form th:action="@{/greenbus/search-trips}" id="formSearchTrip" th:object="${searchData}" method="post" class="max-w-5xl mx-auto -mt-16 relative z-10">
+        <div class="container mx-auto relative bg-white rounded-2xl shadow-xl border border-gray-200">
+            <div class="p-8">
 
-                    <!-- Booking Form -->
-                    <div class="grid grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1.5">Điểm đi</label>
-                            <div class="relative">
-                                <select th:field="*{departure}"
-                                    class="selectFill departure w-full h-12 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-green-500">
-                                    <option value=""></option>
-                                </select>
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                         viewBox="0 0 24 24">
-                                        <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round"
-                                              stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1.5">Điểm đến</label>
-                            <div class="relative">
-                                <select th:field="*{arrival}"
-                                        class="selectFill arrival w-full h-12 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-purple-500">
-                                    <option value=""></option>
-                                </select>
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                         viewBox="0 0 24 24">
-                                        <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round"
-                                              stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="dateContainer" class="col-span-1">
-                            <label class="block text-sm text-gray-600 mb-1.5">Ngày đi</label>
-                            <div class="relative">
-                                <input th:field="*{departureDate}" type="datetime-local" placeholder="Thêm ngày đi"
-                                       class="rqData w-full h-12 px-4 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500">
-                            </div>
-                        </div>
-                        <script>
-                            // Get the current date and time
-                            const now = new Date();
-
-                            // Format the date and time to the required format (YYYY-MM-DDTHH:mm)
-                            const formattedDate = now.toISOString().slice(0, 16);
-
-                            // Set the 'min' attribute to the current date and time
-                            document.getElementById("departureDate").setAttribute("min", formattedDate);
-                        </script>
-
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1.5">Số vé</label>
-                            <div class="relative">
-                                <select th:field="*{ticketQuantity}"
-                                        class="rqData w-full h-12 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-purple-500">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                </select>
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-                                         viewBox="0 0 24 24">
-                                        <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round"
-                                              stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
+                <div class="grid grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1.5 font-medium">Điểm đi</label>
+                        <div class="relative">
+                            <select th:field="*{departure}" id="departure"
+                                    class="selectFill departure w-full h-12 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                                <option value="">Chọn điểm đi</option>
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-chevron-down"></i>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Searches -->
-                    <div class="mt-6">
-                        <div class="text-sm text-gray-600 mb-2"></div>
-                        <div class="inline-block bg-gray-50 rounded-lg px-4 py-2">
-<!--                            <div class="font-medium">TP. Hồ Chí Minh - Đà Nẵng</div>-->
-<!--                            <div class="text-sm text-gray-500">24/11/2024</div>-->
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1.5 font-medium">Điểm đến</label>
+                        <div class="relative">
+                            <select th:field="*{arrival}" id="arrival"
+                                    class="selectFill arrival w-full h-12 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                                <option value="">Chọn điểm đến</option>
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1.5 font-medium">Ngày đi</label>
+                        <input th:field="*{departureDate}" id="departureDate" type="datetime-local" 
+                               class="rqData w-full h-12 px-4 border border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1.5 font-medium">Số vé</label>
+                        <div class="relative">
+                            <select th:field="*{ticketQuantity}" id="ticketQuantity"
+                                    class="rqData w-full h-12 px-4 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Search Button -->
-                <div class="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2">
-                    <button type="submit" class="btn-submit-trip-search h-12 px-12 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
-                        Tìm chuyến xe
+                <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <div class="text-sm text-gray-600">
+                        </div>
+                    
+                    <button type="submit" class="h-12 px-10 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors shadow-md">
+                        <i class="fas fa-search mr-2"></i> Tìm chuyến xe
                     </button>
                 </div>
             </div>
         </div>
     </form>
 
-    <!-- Popular Routes Section -->
-    <div class="bg-white py-12">
+    <div class="bg-white py-12 mt-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
             <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-purple-700 mb-2">TUYẾN PHỐ BIẾN</h2>
+                <h2 class="text-3xl font-bold text-emerald-700 mb-2">TUYẾN PHỔ BIẾN</h2>
                 <p class="text-gray-600">Được khách hàng tin tưởng và lựa chọn</p>
             </div>
 
-            <!-- Routes Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Ho Chi Minh City Card -->
-                <div class="relative overflow-hidden rounded-2xl group">
+                <div class="relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer hover:shadow-xl transition duration-300 transform hover:scale-[1.01]">
                     <div class="aspect-w-16 aspect-h-9">
-                        <img
-                                src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=1470&auto=format&fit=crop"
-                                alt="Tp Hồ Chí Minh"
-                                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        >
+                        <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=1470&auto=format&fit=crop" alt="Địa điểm" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
                     </div>
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
                         <div class="absolute bottom-0 left-0 p-6 text-white">
@@ -159,14 +111,9 @@
                     </div>
                 </div>
 
-                <!-- Da Lat Card -->
-                <div class="relative overflow-hidden rounded-2xl group">
+                <div class="relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer hover:shadow-xl transition duration-300 transform hover:scale-[1.01]">
                     <div class="aspect-w-16 aspect-h-9">
-                        <img
-                                src="https://photo2.tinhte.vn/data/attachment-files/2022/09/6122278_da_lat_7.jpg"
-                                alt="Đà Lạt"
-                                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        >
+                        <img src="https://photo2.tinhte.vn/data/attachment-files/2022/09/6122278_da_lat_7.jpg" alt="Đà Lạt" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
                     </div>
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
                         <div class="absolute bottom-0 left-0 p-6 text-white">
@@ -176,14 +123,9 @@
                     </div>
                 </div>
 
-                <!-- Da Nang Card -->
-                <div class="relative overflow-hidden rounded-2xl group">
+                <div class="relative overflow-hidden rounded-2xl shadow-lg group cursor-pointer hover:shadow-xl transition duration-300 transform hover:scale-[1.01]">
                     <div class="aspect-w-16 aspect-h-9">
-                        <img
-                                src="https://ik.imagekit.io/tvlk/blog/2023/10/cau-vang-da-nang-13.jpg?tr=dpr-2,w-675"
-                                alt="Đà Nẵng"
-                                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        >
+                        <img src="https://ik.imagekit.io/tvlk/blog/2023/10/cau-vang-da-nang-13.jpg?tr=dpr-2,w-675" alt="Đà Nẵng" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
                     </div>
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
                         <div class="absolute bottom-0 left-0 p-6 text-white">
@@ -196,28 +138,27 @@
         </div>
     </div>
 
-    <!-- Why Choose Us Section -->
-    <div class="bg-purple-100 py-12 mt-12">
+    <div class="bg-gray-100 py-12 mt-8">
         <div class="container mx-auto px-4">
-            <h2 class="text-2xl font-bold text-purple-700 text-center mb-8">TẠI SAO CHỌN FUBA BUS LINES?</h2>
+            <h2 class="text-3xl font-bold text-emerald-700 text-center mb-8">TẠI SAO CHỌN GREENBUS?</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="text-center">
-                    <i class="fas fa-bus text-4xl text-purple-600 mb-4"></i>
+                <div class="text-center p-6 bg-white rounded-xl shadow-md">
+                    <i class="fas fa-bus text-4xl text-emerald-600 mb-4"></i>
                     <h3 class="font-semibold text-lg mb-2">Đội xe hiện đại</h3>
                     <p class="text-gray-600">Xe mới, tiện nghi và an toàn</p>
                 </div>
-                <div class="text-center">
-                    <i class="fas fa-map-marked-alt text-4xl text-purple-600 mb-4"></i>
+                <div class="text-center p-6 bg-white rounded-xl shadow-md">
+                    <i class="fas fa-map-marked-alt text-4xl text-emerald-600 mb-4"></i>
                     <h3 class="font-semibold text-lg mb-2">Nhiều tuyến đường</h3>
                     <p class="text-gray-600">Phủ sóng khắp các tỉnh thành</p>
                 </div>
-                <div class="text-center">
-                    <i class="fas fa-headset text-4xl text-purple-600 mb-4"></i>
+                <div class="text-center p-6 bg-white rounded-xl shadow-md">
+                    <i class="fas fa-headset text-4xl text-emerald-600 mb-4"></i>
                     <h3 class="font-semibold text-lg mb-2">Hỗ trợ 24/7</h3>
                     <p class="text-gray-600">Luôn sẵn sàng phục vụ quý khách</p>
                 </div>
-                <div class="text-center">
-                    <i class="fas fa-percent text-4xl text-purple-600 mb-4"></i>
+                <div class="text-center p-6 bg-white rounded-xl shadow-md">
+                    <i class="fas fa-percent text-4xl text-emerald-600 mb-4"></i>
                     <h3 class="font-semibold text-lg mb-2">Ưu đãi hấp dẫn</h3>
                     <p class="text-gray-600">Nhiều chương trình khuyến mãi</p>
                 </div>
@@ -225,126 +166,6 @@
         </div>
     </div>
 
-    <div class="bg-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-purple-700 mb-2">FUBA BUS LINES - CHẤT LƯỢNG LÀ DANH DỰ</h2>
-                <p class="text-gray-600">Được khách hàng tin tưởng và lựa chọn</p>
-            </div>
-
-            <!-- Stats Container -->
-            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
-                <!-- Stats Content -->
-                <div class="space-y-8 md:w-1/2">
-                    <!-- Passenger Stats -->
-                    <div class="flex items-start space-x-4">
-                        <div class="bg-red-50 rounded-full p-4">
-                            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold">Hơn 20 Triệu <span class="text-gray-600 font-normal">Lượt khách</span></h3>
-                            <p class="text-gray-600 mt-1">Phương Trang phục vụ hơn 20 triệu lượt khách bình quân 1 năm trên toàn quốc</p>
-                        </div>
-                    </div>
-
-                    <!-- Ticket Office Stats -->
-                    <div class="flex items-start space-x-4">
-                        <div class="bg-red-50 rounded-full p-4">
-                            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold">Hơn 350 <span class="text-gray-600 font-normal">Phòng vé - Bưu cục</span></h3>
-                            <p class="text-gray-600 mt-1">Phương Trang có hơn 350 phòng vé, trạm trung chuyển, bến xe,... trên toàn hệ thống</p>
-                        </div>
-                    </div>
-
-                    <!-- Bus Trip Stats -->
-                    <div class="flex items-start space-x-4">
-                        <div class="bg-red-50 rounded-full p-4">
-                            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold">Hơn 1,000 <span class="text-gray-600 font-normal">Chuyến xe</span></h3>
-                            <p class="text-gray-600 mt-1">Future Bus Asia phục vụ hơn 1,000 chuyến xe đường dài và liên tỉnh mỗi ngày</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Illustration -->
-                <div class="md:w-1/2">
-                    <img src="/components/2nguoi.png" alt="Futa Bus Illustration" class="w-full h-auto">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- News Section -->
-    <div class="bg-gray-100 py-16">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-purple-700 text-center mb-2">TIN TỨC & SỰ KIỆN</h2>
-            <p class="text-gray-600 text-center mb-12">Cập nhật những thông tin mới nhất về FUBA Bus Lines</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="relative">
-                        <img src="https://static.vinwonders.com/production/canh-dep-da-lat-thumb.jpg?height=200&width=400" alt="Mùa hoa nở ở Đà Lạt" class="w-full h-56 object-cover">
-                        <div class="absolute top-0 left-0 bg-purple-600 text-white px-3 py-1 rounded-br-lg text-sm font-semibold">Mới</div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="font-bold text-xl mb-3 text-gray-800">Mùa hoa nở</h3>
-                        <p class="text-gray-600 mb-4 line-clamp-3">Chào đón mùa hoa nở ở Đà Lạt cùng sự đồng hành của FUBA. Khám phá vẻ đẹp tuyệt vời của thành phố ngàn hoa.</p>
-                        <a href="#" class="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium">
-                            Đọc thêm
-                            <svg class="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="relative">
-                        <img src="https://tuyengiao.hagiang.gov.vn/upload/64711/20230209/grab1d21bha_giang_9.jpg?height=200&width=400" alt="Tuyến mới Sài Gòn - Hà Giang" class="w-full h-56 object-cover">
-                        <div class="absolute top-0 left-0 bg-purple-600 text-white px-3 py-1 rounded-br-lg text-sm font-semibold">Tuyến mới</div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="font-bold text-xl mb-3 text-gray-800">FUBA Bus Lines mở tuyến mới</h3>
-                        <p class="text-gray-600 mb-4 line-clamp-3">Khám phá tuyến đường mới từ Sài Gòn đến Hà Giang. Trải nghiệm hành trình tuyệt vời qua các cảnh đẹp của Việt Nam.</p>
-                        <a href="#" class="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium">
-                            Đọc thêm
-                            <svg class="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="relative">
-                        <img src="https://cafefcdn.com/203337114487263232/2021/1/20/photo-6-1611110372473862820849.jpg?height=200&width=400" alt="Phố Ý ở Phú Quốc" class="w-full h-56 object-cover">
-                        <div class="absolute top-0 left-0 bg-purple-600 text-white px-3 py-1 rounded-br-lg text-sm font-semibold">Điểm đến mới</div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="font-bold text-xl mb-3 text-gray-800">Phú Quốc mở cửa "phố Ý"</h3>
-                        <p class="text-gray-600 mb-4 line-clamp-3">Venice thu nhỏ giữa lòng Phú Quốc, còn chừng chờ gì nữa mà không nhanh đặt vé ngay. Khám phá vẻ đẹp Ý giữa lòng Việt Nam.</p>
-                        <a href="#" class="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium">
-                            Đọc thêm
-                            <svg class="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script th:src="@{/js/TrangChu.js}"></script>
 </div>
-
 </body>
 </html>

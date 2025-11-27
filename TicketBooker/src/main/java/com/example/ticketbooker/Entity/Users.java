@@ -1,17 +1,30 @@
 package com.example.ticketbooker.Entity;
 
+import java.sql.Date;
+
 import com.example.ticketbooker.Util.Enum.Gender;
 import com.example.ticketbooker.Util.Enum.UserStatus;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.sql.Date;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @Entity
 @Table(name = "users")
+@NoArgsConstructor  // Lombok tự tạo Constructor rỗng
+@AllArgsConstructor // Lombok tự tạo Constructor đầy đủ tham số
 public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +34,7 @@ public class Users {
     @Column(name = "fullName", nullable = false)
     private String fullName;
 
-    @Column(name = "phone",length = 11)
+    @Column(name = "phone", length = 15)
     private String phone;
 
     @Column(name = "address")
@@ -38,30 +51,22 @@ public class Users {
     @Column(name = "profilePhoto")
     private byte[] profilePhoto;
 
-
     @Column(name = "userStatus", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserStatus userStatus;
 
-    public Users() {
-        this.id = null;
-        this.fullName = "";
-        this.phone = "";
-        this.address = null;
-        this.dateOfBirth = null;
-        this.gender = null;
-        this.profilePhoto = null;
-        this.userStatus = UserStatus.ACTIVE;
-    }
+    @Column(name = "email", unique = true)
+    private String email;
 
-    public Users(Integer id, String fullName, String phone, String address, Date dateOfBirth, Gender gender, byte[] profilePhoto, UserStatus userStatus) {
-        this.id = id;
-        this.fullName = fullName;
-        this.phone = phone;
-        this.address = address;
-        this.dateOfBirth = dateOfBirth;
-        this.gender = gender;
-        this.profilePhoto = profilePhoto;
-        this.userStatus = userStatus;
-    }
+    @Column(name = "password")
+    private String password;
+
+    @Column(name = "role")
+    private String role; // USER, ADMIN, STAFF
+
+    @Column(name = "provider")
+    private String provider;
+
+    @Column(name = "enabled")
+    private boolean enabled;
 }

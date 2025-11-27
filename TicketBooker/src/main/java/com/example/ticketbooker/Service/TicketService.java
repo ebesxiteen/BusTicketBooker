@@ -1,26 +1,37 @@
 package com.example.ticketbooker.Service;
 
-import com.example.ticketbooker.DTO.Ticket.*;
-import com.example.ticketbooker.Util.Enum.TicketStatus;
-import org.springframework.data.domain.Pageable;
-
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+
+import com.example.ticketbooker.DTO.Ticket.AddTicketRequest;
+import com.example.ticketbooker.DTO.Ticket.PaymentInforRequest;
+import com.example.ticketbooker.DTO.Ticket.PaymentInforResponse;
+import com.example.ticketbooker.DTO.Ticket.TicketIdRequest;
+import com.example.ticketbooker.DTO.Ticket.TicketResponse;
+import com.example.ticketbooker.DTO.Ticket.TicketStatsDTO;
+import com.example.ticketbooker.DTO.Ticket.UpdateTicketRequest;
+import com.example.ticketbooker.Util.Enum.TicketStatus;
 
 public interface TicketService {
     boolean addTicket(AddTicketRequest dto);
     boolean updateTicket(UpdateTicketRequest dto);
     boolean deleteTicket(TicketIdRequest dto);
+    
     TicketResponse getAllTickets();
     TicketResponse getTicketById(TicketIdRequest dto);
     PaymentInforResponse getPaymentInfo(PaymentInforRequest request);
-    TicketResponse getTicketsByAccountId(int accountId);
-    TicketResponse searchTickets(int accountId, Integer ticketId, LocalDate departureDate, String route, TicketStatus status);
+
+    TicketResponse getTicketsByUserId(int userId); 
+
+    TicketResponse searchTickets(int userId, Integer ticketId, LocalDate departureDate, String route, TicketStatus status);
+    
     TicketStatsDTO getTicketStats(String period, LocalDate selectedDate);
-    TicketResponse getAllTickets(Pageable pageable); // Add Pageable parameter
-    public TicketResponse getTicketsByTripId(int tripId, Pageable pageable);
+    
+    TicketResponse getAllTickets(Pageable pageable);
+    TicketResponse getTicketsByTripId(int tripId, Pageable pageable);
+    
     ByteArrayInputStream exportTicketsToExcelByTripId(int tripId);
     ByteArrayInputStream exportAllTicketsToExcel();
 }

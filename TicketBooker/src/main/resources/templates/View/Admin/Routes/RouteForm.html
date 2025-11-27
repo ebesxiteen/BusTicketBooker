@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{View/Layout/AdminLayout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Form Tuyến Đường - GreenBus</title>
+</head>
+<body class="bg-gray-50">
+<div layout:fragment="content">
+    <div class="container mx-auto p-6 max-w-xl">
+        
+        <h1 class="text-3xl font-bold mb-6 text-emerald-700 border-b pb-2">
+            <span th:if="${routeDTO.routeId} == null"><i class="fas fa-plus-circle mr-2"></i>Form Thêm Tuyến Đường</span>
+            <span th:if="${routeDTO.routeId} != null"><i class="fas fa-edit mr-2"></i>Form Sửa Tuyến Đường</span>
+        </h1>
+
+        <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4 border border-gray-200">
+            
+            <form th:action="${routeDTO.routeId == null} ? @{/admin/routes/add} : @{/admin/routes/update}" 
+                  th:object="${routeDTO}" method="post">
+
+                <input type="hidden" th:if="${routeDTO.routeId} != null" th:field="*{routeId}">
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Điểm Khởi Hành</label>
+                    <input type="text" th:field="*{departureLocation}" required placeholder="Tên thành phố/tỉnh"
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Điểm Đến</label>
+                    <input type="text" th:field="*{arrivalLocation}" required placeholder="Tên thành phố/tỉnh"
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estimatedTime">Thời Gian Ước Tính</label>
+                    <input type="time" th:field="*{estimatedTime}" required
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="routeStatus">Trạng Thái</label>
+                    <select th:field="*{status}" required
+                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white">
+                        <option th:value="${T(com.example.ticketbooker.Util.Enum.RouteStatus).ACTIVE}"
+                                th:text="ACTIVE" th:selected="*{status == T(com.example.ticketbooker.Util.Enum.RouteStatus).ACTIVE}"></option>
+                        <option th:value="${T(com.example.ticketbooker.Util.Enum.RouteStatus).INACTIVE}"
+                                th:text="INACTIVE" th:selected="*{status == T(com.example.ticketbooker.Util.Enum.RouteStatus).INACTIVE}"></option>
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <a href="/admin/routes" 
+                       class="text-gray-500 hover:text-gray-700 font-bold text-sm px-4 py-2 transition">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                    </a>
+                    
+                    <button type="submit"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow-md transition transform hover:-translate-y-0.5">
+                        <i class="fas fa-save mr-2"></i> Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<script type="text/javascript" th:src="@{/js/RouteManagement.js}"></script>

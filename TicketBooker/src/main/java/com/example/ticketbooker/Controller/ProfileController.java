@@ -1,38 +1,32 @@
 package com.example.ticketbooker.Controller;
 
-import com.example.ticketbooker.DTO.Account.AccountDTO;
-import com.example.ticketbooker.DTO.Ticket.TicketResponse;
-import com.example.ticketbooker.DTO.Users.UpdateUserRequest;
-import com.example.ticketbooker.Entity.Account;
-import com.example.ticketbooker.Entity.CustomUserDetails;
-import com.example.ticketbooker.Service.AccountService;
-import com.example.ticketbooker.Service.OutSource.EmailService;
-import com.example.ticketbooker.Service.ServiceImp.CustomOAuthUserService;
-import com.example.ticketbooker.Service.ServiceImp.CustomUserDetailsService;
-import com.example.ticketbooker.Service.TicketService;
-import com.example.ticketbooker.Service.UserService;
-import com.example.ticketbooker.Util.Enum.TicketStatus;
-import com.example.ticketbooker.Util.Mapper.AccountMapper;
-import com.example.ticketbooker.Util.Mapper.UserMapper;
-import com.example.ticketbooker.Util.SecurityUtils;
-import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.thymeleaf.context.Context;
 
-import java.time.LocalDate;
+import com.example.ticketbooker.DTO.Ticket.TicketResponse;
+import com.example.ticketbooker.DTO.Users.UpdateUserRequest;
+import com.example.ticketbooker.DTO.Users.UserDTO;
+import com.example.ticketbooker.Entity.Users;
+import com.example.ticketbooker.Repository.UserRepo;
+import com.example.ticketbooker.Service.TicketService;
+import com.example.ticketbooker.Service.UserService;
+import com.example.ticketbooker.Util.SecurityUtils;
+import com.example.ticketbooker.Util.Enum.TicketStatus;
+import com.example.ticketbooker.Util.Mapper.UserMapper;
 
 @Controller
 @RequestMapping("/profile")
@@ -40,84 +34,82 @@ public class ProfileController {
 
     private final TicketService ticketService;
     private final UserService userService;
-    private final AccountService accountService;
-    private final CustomUserDetailsService customUserDetailsService;
-    private final CustomOAuthUserService customOAuthUserService;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepo userRepo;
 
     @Autowired
-    private EmailService emailService;
-    // Constructor injection    
-    @Autowired
-    public ProfileController(TicketService ticketService, AccountService accountService, UserService userService, CustomUserDetailsService customUserDetailsService, CustomOAuthUserService customOAuthUserService ,PasswordEncoder passwordEncoder) {
+    public ProfileController(TicketService ticketService, 
+                            UserService userService, 
+                            PasswordEncoder passwordEncoder,
+                            UserRepo userRepo) { 
         this.ticketService = ticketService;
-        this.accountService = accountService;
         this.userService = userService;
-        this.customUserDetailsService = customUserDetailsService;
-        this.customOAuthUserService = customOAuthUserService;
-        this.passwordEncoder = passwordEncoder; // Inject the existing PasswordEncoder bean
+        this.passwordEncoder = passwordEncoder;
+        this.userRepo = userRepo;
     }
 
+    // 1. Hiển thị thông tin
     @GetMapping("/info")
-    public String showInfo(HttpSession session, Model model) {
+    public String showInfo(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isLoggedIn = SecurityUtils.isLoggedIn();
-        if(!isLoggedIn) {
-            return  "redirect:/fuba";
+        
+        if (!SecurityUtils.isLoggedIn()) {
+            return "redirect:/greenbus";
         }
-        Object principal = authentication.getPrincipal();
-        Account account = SecurityUtils.extractAccount(principal);
-        UpdateUserRequest updateUserForm = UserMapper.toUpdateDTO(account.getUser());
-        model.addAttribute("email", account.getEmail());
-        model.addAttribute("username", account.getUsername());
+
+        Users user = SecurityUtils.extractUser(authentication.getPrincipal());
+        
+        // Convert sang DTO để hiển thị
+        UserDTO userDTO = UserMapper.toDTO(user);
+        UpdateUserRequest updateUserForm = UserMapper.toUpdateDTO(userDTO);
+
+        model.addAttribute("email", user.getEmail());
+        model.addAttribute("username", user.getFullName());
         model.addAttribute("updateUserForm", updateUserForm);
+        
         return "View/User/Registered/Profile/Info";
     }
+
+    // 2. Cập nhật thông tin
     @PostMapping("/info/update")
-    public String updateUser(@ModelAttribute("updateUserForm") UpdateUserRequest updateUserForm, Model model,
-                             @RequestParam("email") String email) {
+    public String updateUser(@ModelAttribute("updateUserForm") UpdateUserRequest updateUserForm, 
+                            @RequestParam("email") String email) {
+        
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = SecurityUtils.extractAccount(authentication.getPrincipal());
+        Users currentUser = SecurityUtils.extractUser(authentication.getPrincipal());
 
-        // Kiểm tra và cập nhật dữ liệu
-        if(email != null) {
-            AccountDTO accountdto = accountService.getAccountByEmail(email);
-            //Nếu email không thay đổi thì ko cần cập nhật
-            if(accountdto == null) {
-                accountdto = accountService.getAccountById(account.getId());
-                //Cập nhật email cho account
-                accountdto.setEmail(email);
+        if (currentUser != null) {
+            updateUserForm.setUserId(currentUser.getId());
+            
+            if (email != null && !email.isEmpty()) {
+                updateUserForm.setEmail(email);
             }
-            //Cập nhật user
-            accountdto.setUser(UserMapper.fromUpdate(updateUserForm));
-            //Cập nhật và lưu lại account
-            Account updatedAccount =  accountService.updateAccountWithUser(accountdto);
 
-            //Lấy lại user để cập nhật dữ liệu người đăng nhập
-            CustomUserDetails updatedUserDetails = (CustomUserDetails) customUserDetailsService.loadUserByUsername(updatedAccount.getUsername());
-            //Cập nhật user ở client
-            SecurityUtils.updateAuthentication(updatedUserDetails);
+            userService.updateUser(updateUserForm);
         }
         return "redirect:/profile/info";
     }
 
+    // 3. Lịch sử đặt vé
     @GetMapping("/history-booking")
     public String showHistoryBooking(@RequestParam(required = false) Integer ticketId,
-                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
-                                     @RequestParam(required = false) String route,
-                                     @RequestParam(required = false) TicketStatus status,
-                                     Model model) {
-        boolean isLoggedIn = SecurityUtils.isLoggedIn();
-        if(!isLoggedIn) {
-            return  "redirect:/fuba";
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
+                                    @RequestParam(required = false) String route,
+                                    @RequestParam(required = false) TicketStatus status,
+                                    Model model) {
+        
+        if (!SecurityUtils.isLoggedIn()) {
+            return "redirect:/greenbus";
         }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Account account = SecurityUtils.extractAccount(authentication.getPrincipal());
-        Integer accountId = account.getId();
-        TicketResponse ticketResponse = ticketService.searchTickets(accountId, ticketId, departureDate, route, status);
+        Users user = SecurityUtils.extractUser(authentication.getPrincipal());
+        
+        TicketResponse ticketResponse = ticketService.searchTickets(user.getId(), ticketId, departureDate, route, status);
+        
         model.addAttribute("ticketResponse", ticketResponse);
-        // Lấy tất cả các giá trị của TicketStatus
         model.addAttribute("ticketStatuses", TicketStatus.values());
+        
         return "View/User/Registered/Profile/TicketHistory";
     }
 
@@ -126,35 +118,46 @@ public class ProfileController {
         return "View/User/Registered/Profile/Address";
     }
 
+    // 4. Trang đổi mật khẩu
     @GetMapping("/change-password")
-    public String showTicketLookup() {
+    public String showChangePassword() {
         return "View/User/Registered/Profile/Password";
     }
 
+    // 5. XỬ LÝ ĐỔI MẬT KHẨU
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestParam String newPassword, @RequestParam String oldPassword) {
+        if (!SecurityUtils.isLoggedIn()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập lại!");
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isLoggedIn = SecurityUtils.isLoggedIn();
-        if(!isLoggedIn) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
-        }
-        try{
-            Account account = SecurityUtils.extractAccount(authentication.getPrincipal());
-            //Kiểm tra mật khẩu cũ nhập có chính xác không
-            if(!account.getPassword().equals(oldPassword)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Old password is incorrect");
-            }
-            //Kiểm tra mật khẩu mơi có trùng mk cũ không
-            if(account.getPassword().equals(newPassword)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("New password cannot be the same as the old password");
-            }
-            account.setPassword(newPassword);
-            accountService.updateAccount(AccountMapper.toDTO(account));
-            return ResponseEntity.ok("Password updated successfully");
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the password");
-        }
+        
+        // Lấy User entity trực tiếp từ SecurityUtils (đã chứa thông tin từ DB)
+        Users user = SecurityUtils.extractUser(authentication.getPrincipal());
 
+        try {
+            // A. Kiểm tra mật khẩu cũ (dùng passwordEncoder.matches)
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mật khẩu cũ không chính xác!");
+            }
+
+            // B. Kiểm tra trùng
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mật khẩu mới không được giống mật khẩu cũ!");
+            }
+
+            // C. Mã hóa & Lưu xuống DB
+            String encodedNewPassword = passwordEncoder.encode(newPassword);
+            user.setPassword(encodedNewPassword);
+            
+            userRepo.save(user);
+
+            return ResponseEntity.ok("Đổi mật khẩu thành công!");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi hệ thống: " + e.getMessage());
+        }
     }
-
 }

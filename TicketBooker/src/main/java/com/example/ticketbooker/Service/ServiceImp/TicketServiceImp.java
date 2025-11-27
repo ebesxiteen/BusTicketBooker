@@ -1,0 +1,288 @@
+package com.example.ticketbooker.Service.ServiceImp;
+
+import com.example.ticketbooker.DTO.Ticket.*;
+import com.example.ticketbooker.DTO.Users.UserResponse;
+import com.example.ticketbooker.Entity.Tickets;
+import com.example.ticketbooker.Entity.Users;
+import com.example.ticketbooker.Repository.TicketRepo;
+import com.example.ticketbooker.Service.TicketService;
+import com.example.ticketbooker.Util.Enum.TicketStatus;
+import com.example.ticketbooker.Util.Mapper.TicketMapper;
+import com.example.ticketbooker.Util.Mapper.UserMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+@Service
+public class TicketServiceImp implements TicketService {
+    @Autowired
+    private TicketRepo ticketRepository;
+
+    @Override
+    public boolean addTicket(AddTicketRequest dto) {
+        try {
+            Tickets ticket = TicketMapper.fromAdd(dto);
+            ticketRepository.save(ticket);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean updateTicket(UpdateTicketRequest dto) {
+        try {
+            Tickets ticket = TicketMapper.fromUpdate(dto);
+            ticketRepository.save(ticket);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean deleteTicket(TicketIdRequest dto) {
+        try {
+            ticketRepository.deleteById(dto.getId());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public TicketResponse getAllTickets() {
+        TicketResponse result = new TicketResponse();
+        try {
+            result = TicketMapper.toResponseDTO(this.ticketRepository.findAll());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return result;
+        }
+        return result;
+    }
+
+    @Override
+    public TicketResponse getTicketById(TicketIdRequest dto) {
+        TicketResponse result = new TicketResponse();
+        try {
+            result = TicketMapper.toResponseDTO(this.ticketRepository.findAllById(dto.getId()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return result;
+        }
+        return result;
+    }
+
+    @Override
+    public PaymentInforResponse getPaymentInfo(PaymentInforRequest request) {
+        try {
+            Optional<Tickets> ticketOptional = this.ticketRepository.findById(request.getTicketId());
+            if (ticketOptional.isPresent()) {
+                Tickets ticket = ticketOptional.get();
+
+                // Kiểm tra trạng thái của ticket
+                if (ticket.getTicketStatus() == TicketStatus.BOOKED) {
+                    // Kiểm tra số điện thoại
+                    if (ticket.getCustomerPhone().equals(request.getCustomerPhone())) {
+                        return TicketMapper.toPaymentInfor(ticket);
+                    } else {
+                        System.out.println("Số điện thoại không trùng khớp.");
+                    }
+                } else {
+                    System.out.println("Trạng thái ticket không hợp lệ: " + ticket.getTicketStatus());
+                }
+            } else {
+                System.out.println("Không tìm thấy ticket với ID: " + request.getTicketId());
+            }
+        } catch (Exception e) {
+            System.out.println("Lỗi trong quá trình xử lý: " + e.getMessage());
+        }
+        return null;
+    }
+
+
+
+    @Override
+    public TicketResponse getTicketsByAccountId(int accountId) {
+        TicketResponse result = new TicketResponse();
+        try {
+            List<Tickets> tickets = ticketRepository.findAllByBookerId(accountId);
+            result.setTicketsCount(tickets.size());
+            result.setListTickets(new ArrayList<>(tickets));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
+    }
+
+    @Override
+    public TicketResponse searchTickets(int accountId, Integer ticketId, LocalDate departureDate, String route, TicketStatus status) {
+        TicketResponse result = new TicketResponse();
+        try {
+            List<Tickets> tickets = ticketRepository.searchTickets(accountId, ticketId, departureDate, route, status);
+            result.setTicketsCount(tickets.size());
+            result.setListTickets(new ArrayList<>(tickets));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
+    }
+
+    @Override
+    public TicketStatsDTO getTicketStats(String period, LocalDate selectedDate) {
+        LocalDate previousDate = getPreviousDate(period, selectedDate);
+
+        int currentPeriodCount = getTicketCountByPeriod(period, selectedDate);
+        int previousPeriodCount = getTicketCountByPeriod(period, previousDate);
+
+        return TicketStatsDTO.builder()
+                .period(period)
+                .selectedDate(selectedDate)
+                .currentPeriodTicketCount(currentPeriodCount)
+                .previousPeriodTicketCount(previousPeriodCount)
+                .build();
+    }
+
+
+    private int getTicketCountByPeriod(String period, LocalDate date) {
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        switch (period) {
+            case "Day":
+                start = date.atStartOfDay();
+                end = date.plusDays(1).atStartOfDay();
+                break;
+            case "Month":
+                start = date.withDayOfMonth(1).atStartOfDay();
+                end = date.plusMonths(1).withDayOfMonth(1).atStartOfDay();
+                break;
+            case "Year":
+                start = date.withDayOfYear(1).atStartOfDay();
+                end = date.plusYears(1).withDayOfYear(1).atStartOfDay();
+                break;
+        }
+
+        return ticketRepository.countTicketsByPaymentTimeBetween(start, end);
+    }
+
+
+    private LocalDate getPreviousDate(String period, LocalDate date) {
+        switch (period) {
+            case "Day":
+                return date.minusDays(1);
+            case "Month":
+                return date.minusMonths(1);
+            case "Year":
+                return date.minusYears(1);
+            default:
+                return date;
+        }
+    }
+
+    @Override
+    public TicketResponse getAllTickets(Pageable pageable) {
+        Page<Tickets> ticketPage = ticketRepository.findAll(pageable);
+        return new TicketResponse(ticketPage);
+    }
+
+    @Override
+    public TicketResponse getTicketsByTripId(int tripId, Pageable pageable) {
+        Page<Tickets> ticketPage = ticketRepository.findAllByTripId(tripId, pageable);
+        return new TicketResponse(ticketPage);
+    }
+
+    @Override
+    public ByteArrayInputStream exportTicketsToExcelByTripId(int tripId) {
+        List<Tickets> tickets = ticketRepository.findAllByTripId(tripId);
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Tickets");
+
+            // Tạo hàng đầu tiên (header row)
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"Ticket ID", "Customer Name", "Customer Phone", "Seat ID", "Ticket Status"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+
+            // Thêm dữ liệu vé vào file
+            int rowIdx = 1;
+            for (Tickets ticket : tickets) {
+                Row row = sheet.createRow(rowIdx++);
+
+                row.createCell(0).setCellValue(ticket.getId());
+                row.createCell(1).setCellValue(ticket.getCustomerName());
+                row.createCell(2).setCellValue(ticket.getCustomerPhone());
+                row.createCell(3).setCellValue(ticket.getSeat().getId());
+                row.createCell(4).setCellValue(ticket.getTicketStatus().name());
+            }
+
+            // Ghi dữ liệu ra ByteArrayOutputStream
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public ByteArrayInputStream exportAllTicketsToExcel() {
+        List<Tickets> tickets = ticketRepository.findAll(); // Lấy toàn bộ danh sách vé
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Tickets");
+
+            // Tạo hàng đầu tiên (header row)
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"Ticket ID", "Customer Name", "Customer Phone", "Seat ID", "Ticket Status"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+
+            // Thêm dữ liệu vé vào file
+            int rowIdx = 1;
+            for (Tickets ticket : tickets) {
+                Row row = sheet.createRow(rowIdx++);
+
+                row.createCell(0).setCellValue(ticket.getId());
+                row.createCell(1).setCellValue(ticket.getCustomerName());
+                row.createCell(2).setCellValue(ticket.getCustomerPhone());
+                row.createCell(3).setCellValue(ticket.getSeat().getId());
+                row.createCell(4).setCellValue(ticket.getTicketStatus().name());
+            }
+
+            // Ghi dữ liệu ra ByteArrayOutputStream
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+}

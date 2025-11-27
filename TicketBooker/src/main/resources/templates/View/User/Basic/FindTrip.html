@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{View/Layout/UserLayout.html}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt vé xe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" th:src="@{/js/FindTrip.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/FindTrip.css}">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Lấy tất cả các phần tử chứa thời gian departureTime
+            var departureTimeElements = document.querySelectorAll('#departureTime');
+            // Lấy tất cả các phần tử chứa thời gian arrivalTime
+            var arrivalTimeElements = document.querySelectorAll('#arrivalTime');
+            // Lấy tất cả các phần tử chứa giá
+            var priceElements = document.querySelectorAll('#price');
+
+            // Hàm để định dạng thời gian
+            function formatTime(timeElement) {
+                var time = timeElement.textContent || timeElement.innerText;
+
+                if (time) {
+                    // Chuyển giá trị thành Date object
+                    var dateObj = new Date(time);
+
+                    // Lấy phần giờ và phút
+                    var hours = dateObj.getHours();
+                    var minutes = dateObj.getMinutes();
+
+                    // Định dạng lại giờ: thêm 0 nếu là số nhỏ hơn 10
+                    var formattedTime = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+
+                    // Cập nhật lại giá trị giờ đã định dạng vào phần tử
+                    timeElement.textContent = formattedTime;
+                }
+            }
+
+            // Hàm để định dạng giá tiền
+            function formatPrice(priceElement) {
+                var price = parseInt(priceElement.textContent.replace(/\D/g, ''), 10); // Lấy giá trị số
+                if (!isNaN(price)) {
+                    // Định dạng lại giá trị với dấu phẩy và thêm 'đ'
+                    priceElement.textContent = price.toLocaleString('vi-VN') + 'đ';
+                }
+            }
+
+            // Duyệt qua tất cả các phần tử departureTime và định dạng
+            departureTimeElements.forEach(function (element) {
+                formatTime(element);
+            });
+
+            // Duyệt qua tất cả các phần tử arrivalTime và định dạng
+            arrivalTimeElements.forEach(function (element) {
+                formatTime(element);
+            });
+
+            // Duyệt qua tất cả các phần tử price và định dạng
+            priceElements.forEach(function (element) {
+                formatPrice(element);
+            });
+        });
+    </script>
+
+</head>
+<body class="bg-gray-50">
+<div layout:fragment="content" class="h-[600px]">
+    <!-- Booking Form -->
+    <div class="max-w-5xl mx-auto p-4">
+        <!-- Search Results -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-6 gap-6">
+            <!-- Filters -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 col-span-2 max-h-[630px]">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-semibold text-lg">BỘ LỌC TÌM KIẾM</h3>
+                    <div class="flex items-center text-red-500 hover:text-red-600 cursor-pointer">
+                        <span class="mr-2">Bỏ lọc</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                <hr class="mb-2">
+                <!-- Giờ đi -->
+                <div class="mb-6">
+                    <h4 class="font-medium mb-3">Giờ đi</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                            <span class="ml-3 text-sm">Sáng sớm 00:00 - 06:00</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                            <span class="ml-3 text-sm">Buổi sáng 06:00 - 12:00</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                            <span class="ml-3 text-sm">Buổi chiều 12:00 - 18:00</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                            <span class="ml-3 text-sm">Buổi tối 18:00 - 24:00</span>
+                        </label>
+                    </div>
+                </div>
+                <hr class="mb-2">
+                <!-- Loại xe -->
+                <div class="mb-6">
+                    <h4 class="font-medium mb-3">Loại xe</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="px-4 py-2 rounded bg-white border border-gray-200 text-sm hover:border-purple-600 hover:text-purple-600 transition-colors">
+                            Ghế
+                        </button>
+                        <button class="px-4 py-2 rounded bg-white border border-gray-200 text-sm hover:border-purple-600 hover:text-purple-600 transition-colors">
+                            Giường
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results List -->
+            <div class="col-span-1 md:col-span-4 space-y-4 overflow-y-auto custom-scroll">
+                <!-- Route Header -->
+                <div class="route-preview text-xl font-medium mb-4"></div>
+
+                <!-- Route Cards -->
+                <div class="space-y-4">
+                    <div th:if="${responseTripDTO.tripsCount == 0}">
+                        <p>Chua co chuyen phu hop cho tuyen duong</p>
+                    </div>
+                    <div th:each="trip : ${responseTripDTO.listTrips}">
+                        <div th:if="${trip.departureTime.isAfter(currentDate)}" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <!-- Thời gian và hành trình -->
+                        <div class="grid grid-cols-[auto_1fr_auto] gap-4 items-center mb-6">
+                            <div class="flex items-center gap-3">
+                                <div id="departureTime" th:text="${trip.departureTime}" class="text-2xl font-bold"></div>
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="text-gray-500 text-center">
+                                <div th:text="${trip.route.estimatedTime}"></div>
+                                <div class="text-sm">(Asian/Ho Chi Minh)</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                                <div id="arrivalTime" th:text="${trip.arrivalTime}" class="text-2xl font-bold"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mb-4">
+                            <div th:text="${trip.departureStation}" class="text-gray-600"></div>
+                            <div th:text="${trip.arrivalStation}" class="text-gray-600"></div>
+                        </div>
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center gap-2 text-gray-500">
+                                <span th:text="${trip.bus.busType}"></span>
+                                <span th:text="${trip.availableSeats + ' chỗ ngồi'}" class="text-green-600 font-medium"></span>
+                            </div>
+                            <div id="price" th:text="${trip.price}" class="text-2xl font-bold text-red-500"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="flex gap-2">
+                                <button class="p-2 border border-gray-300 rounded-md">Trung chuyển</button>
+                                <button class="p-2 border border-gray-300 rounded-md">Chính sách</button>
+                            </div>
+                            <a th:href="@{/fuba/booking?tripId={id}(id=${trip.id})}"
+                               class="py-2 px-4 bg-purple-500 text-white font-medium rounded-md hover:bg-purple-700 btnSubmit">
+                                Chọn chuyến
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                    </DIV>
+            </div>
+
+            <style>
+                .custom-scroll {
+                    height: 500px; /* Chiều cao có thể cuộn */
+                    scrollbar-width: none; /* Ẩn thanh cuộn trên Firefox */
+                    -ms-overflow-style: none; /* Ẩn thanh cuộn trên IE/Edge */
+                }
+
+                .custom-scroll::-webkit-scrollbar {
+                    display: none; /* Ẩn thanh cuộn trên Chrome/Safari */
+                }
+            </style>
+
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+</html>

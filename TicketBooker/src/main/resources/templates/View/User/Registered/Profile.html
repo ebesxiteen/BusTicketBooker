@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+<head>
+    <title>Profile</title>
+</head>
+<body>
+
+    <h1>Chào mừng!</h1>
+    <p>Xin chào: <span th:text="${name}"></span></p>
+    <p>Email: <span th:text="${email}"></span></p>
+    <p>Role: <span th:text="${role}"></span></p>
+    <a href="/logout">Đăng xuất</a>
+</body>
+</html>

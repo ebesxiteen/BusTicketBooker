@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{View/Layout/AdminLayout.html}">
+
+<head>
+    <title>Danh sách chuyến xe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+</head>
+
+<body>
+    <div layout:fragment="content" class="mx-6">
+        <div class="flex w-full h-20">
+            <div class="flex w-1/2 h-full justify-start items-center">
+                <div class="font-bold text-3xl capitalize text-gray-700 italic">danh sách chuyến xe</div>
+            </div>
+            <div class="flex w-1/2 h-full justify-end items-center">
+                <button class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg"
+                    onclick="openAddTripModal()">
+                    Thêm
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal thêm chuyến xe -->
+        <div id="addTripModal" class="fixed z-10 inset-0 overflow-y-auto hidden" tabindex="-1"
+            aria-labelledby="modalLabel" aria-hidden="true">
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="bg-white shadow-lg rounded-lg w-full max-w-2xl p-6">
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <h5 class="text-lg font-bold" id="modalLabel">Thêm Chuyến Xe</h5>
+                        <button type="button" class="text-gray-500 hover:text-gray-700"
+                            onclick="document.getElementById('addTripModal').classList.add('hidden')">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addTripForm" method="POST" action="/admin/trips/create">
+                            <input type="hidden" id="tripId" name="tripId">
+
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div class="px-3">
+                                    <label for="departureLocation" class="block font-medium">Thành phố khởi hành</label>
+                                    <select class="block w-full border border-gray-300 rounded px-2 py-1"
+                                            id="departureLocation" name="departureLocation" required>
+                                        <option value="">Chọn thành phố khởi hành</option>
+                                        <!-- Các option sẽ được thêm qua JavaScript -->
+                                    </select>
+                                </div>
+
+                                <div class="px-3">
+                                    <label for="arrivalLocation" class="block font-medium">Thành phố đến</label>
+                                    <select class="block w-full border border-gray-300 rounded px-2 py-1"
+                                            id="arrivalLocation" name="arrivalLocation" required>
+                                        <option value=""></option>
+                                        <!-- Các option sẽ được thêm qua JavaScript -->
+                                    </select>
+                                </div>
+                                <!-- Input ẩn để gửi routeId -->
+                                <input type="hidden" id="routeId" name="route.RouteId" value="">
+                            </div>
+
+
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div class="px-3">
+                                    <label for="license" class="block font-medium">Biển số xe</label>
+                                    <select class="block w-full border border-gray-300 rounded px-2 py-1"
+                                            id="license" name="bus.Id" required>
+                                        <option value="">Chọn biển số xe</option>
+                                        <option th:each="bus : ${buses}"
+                                                th:value="${bus.Id}"
+                                                th:text="${bus.licensePlate}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="px-3">
+                                    <label for="driverName" class="block font-medium">Tên tài xế</label>
+                                    <select class="block w-full border border-gray-300 rounded px-2 py-1"
+                                            id="driverName" name="driver.driverId" required>
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid gap-4 mb-3">
+                                <div class="px-3">
+                                    <label for="departureStation" class="block font-medium">Điểm khởi hành</label>
+                                    <input type="text" class="block w-full border border-gray-300 rounded px-2 py-1"
+                                        id="departureStation" name="departureStation" required>
+                                </div>
+                            </div>
+                            <div class="grid gap-4 mb-3">
+                                <div class="px-3">
+                                    <label for="arrivalStation" class="block font-medium">Điểm đến</label>
+                                    <input type="text" class="block w-full border border-gray-300 rounded px-2 py-1"
+                                        id="arrivalStation" name="arrivalStation" required>
+                                </div>
+                            </div>
+
+                            <div class="grid gap-4 mb-3">
+                                <div class="px-3">
+                                    <label for="departureTime" class="block font-medium">Thời gian khởi hành</label>
+                                    <input type="datetime-local"
+                                        class="block w-full border border-gray-300 rounded px-2 py-1" id="departureTime"
+                                        name="departureTime" required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div class="px-3">
+                                    <label for="price" class="block font-medium">Giá vé</label>
+                                    <input type="number" class="block w-full border border-gray-300 rounded px-2 py-1"
+                                        id="price" name="price" required>
+                                </div>
+                                <div class="px-3">
+                                    <label for="availableSeats" class="block font-medium">Chỗ ngồi còn trống</label>
+                                    <input type="number" class="block w-full border border-gray-300 rounded px-2 py-1"
+                                        id="availableSeats" name="availableSeats" required>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="tripStatus" name="tripStatus" value="SCHEDULED">
+
+                            <div class="flex justify-end">
+                                <button type="button"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                                    onclick="submitAddTripForm()">
+                                    Lưu Chuyến Xe
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Bảng chuyến xe -->
+        <table class="table-auto w-full bg-white rounded-lg shadow-lg mb-6 border-collapse">
+            <thead>
+            <tr class="bg-gray-200">
+                <th class="px-4 py-2 border">Mã chuyến xe</th>
+                <th class="px-4 py-2 border">Mã tuyến</th>
+                <th class="px-4 py-2 border">Điểm đi</th>
+                <th class="px-4 py-2 border">Điểm đến</th>
+                <th class="px-4 py-2 border">Thời gian khởi hành</th>
+                <th class="px-4 py-2 border">Giá vé</th>
+                <th class="px-4 py-2 border">Chỗ trống</th>
+                <th class="px-4 py-2 border">Biển số xe</th>
+                <th class="px-4 py-2 border">Tài xế</th>
+                <th class="px-4 py-2 border">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Lặp qua danh sách chuyến xe -->
+            <tr th:each="trip : ${trips}" class="text-gray-700 hover:bg-gray-100">
+                <td class="px-4 py-2 text-center font-semibold border-b" th:text="${trip.id}"></td>
+                <td class="px-4 py-2 text-center font-semibold border-b" th:text="${trip.route.routeId}"></td>
+                <td class="px-4 py-2 text-center font-semibold border-b" th:text="${trip.route.departureLocation}"></td>
+                <td class="px-4 py-2 text-center font-semibold border-b" th:text="${trip.route.arrivalLocation}"></td>
+                <td class="px-4 py-2 text-center border-b">
+                    <span th:text="${trip.departureTime}"></span>
+                </td>
+                <td class="px-4 py-2 text-center font-semibold border-b" th:text="${trip.price} + ' VND'"></td>
+                <td class="px-4 py-2 text-center font-semibold border-b" th:text="${trip.availableSeats} + ' chỗ'"></td>
+                <td class="px-4 py-2 text-center border-b" th:text="${trip.bus.licensePlate}"></td>
+                <td class="px-4 py-2 text-center font-semibold border-b" th:text="${trip.driver.name}"></td>
+                <td class="py-2 text-center border-b">
+                    <a th:href="@{/admin/trips/details/{id}(id=${trip.id})}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded mr-2">Sửa</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Phân trang -->
+        <div class="pagination-container flex justify-center items-center mt-4">
+            <ul class="flex space-x-2">
+                <!-- Nút 'Trước' -->
+                <li th:if="${currentPage > 0}">
+                    <a th:href="@{'?page=' + (${currentPage} - 1) + '&size=' + ${size}}"
+                       class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Trước</a>
+                </li>
+
+                <!-- Chỉ hiển thị 3 trang trước và 3 trang sau -->
+                <li th:each="i : ${#numbers.sequence((currentPage - 3) > 0 ? (currentPage - 3) : 0, (currentPage + 3) < (totalPages - 1) ? (currentPage + 3) : (totalPages - 1))}">
+                    <a th:href="@{'?page=' + ${i} + '&size=' + ${size}}"
+                       th:classappend="${i == currentPage} ? 'bg-purple-600 text-white' : 'bg-gray-200 hover:bg-gray-300'"
+                       class="px-4 py-2 rounded">
+                        <span th:text="${i + 1}"></span>
+                    </a>
+                </li>
+
+                <!-- Nút 'Sau' -->
+                <li th:if="${currentPage < totalPages - 1}">
+                    <a th:href="@{'?page=' + (${currentPage} + 1) + '&size=' + ${size}}"
+                       class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Sau</a>
+                </li>
+            </ul>
+        </div>
+
+
+    </div>
+</body>
+
+</html>
+<script type="text/javascript" th:src="@{/js/trip.js}"></script>
+

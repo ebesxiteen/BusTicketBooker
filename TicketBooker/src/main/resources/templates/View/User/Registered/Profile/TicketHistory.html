@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{View/Layout/ProfileLayout.html}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div layout:fragment="profileContent">
+        <main class="flex-1 p-8 flex flex-col">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2 text-green-500">LỊCH SỬ MUA VÉ</h1>
+                    <p class="text-gray-600">Theo dõi và quản lý quá trình lịch sử mua vé của bạn</p>
+                </div>
+                <button class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-coral-600">
+                    Đặt vé
+                </button>
+            </div>
+
+            <!-- Search Filters -->
+            <form method="get" th:action="@{'/profile/history-booking'}">
+                <div class="grid grid-cols-5 gap-4 mb-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mã vé</label>
+                        <input type="text" name="ticketId" placeholder="Nhập Mã vé" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian</label>
+                        <input type="date" name="departureDate" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tuyến đường</label>
+                        <input type="text" name="route" class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                        <select name="status" class="w-full p-2 border rounded-lg">
+                            <option value="">Tất cả</option>
+                            <option th:each="status : ${ticketStatuses}" th:value="${status}" th:text="${status}"></option>
+                        </select>
+                    </div>
+                    <div class="flex items-end justify-center my-1">
+                        <button class="bg-green-500 text-white px-8 py-2 rounded-lg hover:bg-coral-600">Tìm</button>
+                    </div>
+                </div>
+            </form>
+
+
+            <!-- Table -->
+            <div class="bg-white rounded-lg shadow">
+                <div th:if="${ticketResponse.ticketsCount == 0}">
+                    <p>No tickets found for this account.</p>
+                </div>
+                <div th:if="${ticketResponse.ticketsCount > 0}" class="overflow-x-auto max-h-[300px] overflow-y-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border border-gray-200">Mã vé</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border border-gray-200">Tuyến đường</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border border-gray-200">Ngày đi</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border border-gray-200">Số tiền</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border border-gray-200">Thanh toán</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border border-gray-200">Trạng thái</th>
+                        </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tr th:each="ticket : ${ticketResponse.listTickets}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center border border-gray-200" th:text="${ticket.id}"></td>
+                            <td class="px-6 py-4 text-sm text-gray-500 text-center border border-gray-200" th:text="${ticket.trip.route.departureLocation} + ' - ' + ${ticket.trip.route.arrivalLocation}"></td> <!-- Adjust based on your Trip entity -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border border-gray-200" th:text="${ticket.trip.departureTime}"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center border border-gray-200" th:text="${ticket.trip.price}"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border border-gray-200" th:text="${ticket.invoice.paymentMethod}"></td> <!-- Adjust based on your Seat entity -->
+                            <td th:classappend="${ticket.ticketStatus == T(com.example.ticketbooker.Util.Enum.TicketStatus).BOOKED} ? 'bg-yellow-200 text-yellow-700 border-yellow-400' :
+                                (${ticket.ticketStatus == T(com.example.ticketbooker.Util.Enum.TicketStatus).USED} ? 'bg-green-200 text-green-700 border-green-400' :
+                                 'bg-red-200 text-red-700 border-red-400')"
+                                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center border border-gray-200"
+                                th:text="${ticket.ticketStatus}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

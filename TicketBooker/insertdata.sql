@@ -1,7 +1,8 @@
 USE ticketbooker;
 
 -- Mật khẩu: '123456' đã được mã hóa BCrypt
-SET @BCRYPT_PASS = '$2a$10$N.zmdr9k7uOCQb376NoUnutj8iAt6ValmpBk8oJ.a6Z.Tq/j/u7mC'; 
+SET @BCRYPT_PASS = '$2a$10$0JT96MJWgK9/0SquImmnDuV7r0T8.y.RMP27OtbHeC9dn1M1bYCMG';
+
 SET @FUTURE_DATE = DATE_ADD(CURDATE(), INTERVAL 2 DAY);
 
 INSERT INTO Users (fullName, email, password, phone, address, gender, dateOfBirth, role, provider, userStatus, enabled) VALUES 
@@ -12,7 +13,7 @@ INSERT INTO Users (fullName, email, password, phone, address, gender, dateOfBirt
 ('Trần Nhân Viên', 'staff@greenbus.vn', @BCRYPT_PASS, '0909000222', 'Quận 3, TP.HCM', 'FEMALE', '1995-05-05', 'STAFF', 'LOCAL', 'ACTIVE', 1),
 
 -- Customer (Local Account)
-('Lê Khách Hàng', 'customer@gmail.com', @BCRYPT_PASS, '0909000333', 'TP. Đà Lạt', 'FEMALE', '2000-10-10', 'USER', 'LOCAL', 'ACTIVE', 1), -- ✅ ĐÃ ĐỔI 'USER' THÀNH 'FEMALE' (ví dụ)
+('Lê Khách Hàng', 'customer@gmail.com', @BCRYPT_PASS, '0909000333', 'TP. Đà Lạt', 'FEMALE', '2000-10-10', 'USER', 'LOCAL', 'ACTIVE', 1), 
 
 -- Google User (No Password, for OAuth2 test)
 ('Google User Test', 'googleuser@gmail.com', NULL, NULL, NULL, 'MALE', NULL, 'USER', 'GOOGLE', 'ACTIVE', 1);

@@ -16,17 +16,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.ticketbooker.DTO.Ticket.TicketResponse;
 import com.example.ticketbooker.DTO.Users.UpdateUserRequest;
-import com.example.ticketbooker.DTO.Users.UserDTO;
 import com.example.ticketbooker.Entity.Users;
 import com.example.ticketbooker.Repository.UserRepo;
 import com.example.ticketbooker.Service.TicketService;
 import com.example.ticketbooker.Service.UserService;
 import com.example.ticketbooker.Util.SecurityUtils;
 import com.example.ticketbooker.Util.Enum.TicketStatus;
-import com.example.ticketbooker.Util.Mapper.UserMapper;
 
 @Controller
 @RequestMapping("/profile")
@@ -49,44 +48,56 @@ public class ProfileController {
     }
 
     // 1. Hiển thị thông tin
-    @GetMapping("/info")
+   @GetMapping("/info")
     public String showInfo(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        if (!SecurityUtils.isLoggedIn()) {
-            return "redirect:/greenbus";
-        }
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Users currentUser = SecurityUtils.extractUser(authentication.getPrincipal());
 
-        Users user = SecurityUtils.extractUser(authentication.getPrincipal());
-        
-        // Convert sang DTO để hiển thị
-        UserDTO userDTO = UserMapper.toDTO(user);
-        UpdateUserRequest updateUserForm = UserMapper.toUpdateDTO(userDTO);
-
-        model.addAttribute("email", user.getEmail());
-        model.addAttribute("username", user.getFullName());
-        model.addAttribute("updateUserForm", updateUserForm);
-        
-        return "View/User/Registered/Profile/Info";
+    if (currentUser == null) {
+        return "redirect:/auth";
     }
 
-    // 2. Cập nhật thông tin
-    @PostMapping("/info/update")
-    public String updateUser(@ModelAttribute("updateUserForm") UpdateUserRequest updateUserForm, 
-                            @RequestParam("email") String email) {
-        
+    // Lấy lại user mới nhất từ DB
+    Users freshUser = userRepo.findById(currentUser.getId())
+                              .orElseThrow(() -> new RuntimeException("User not found"));
+
+    UpdateUserRequest form = userService.mapToUpdateUserRequest(freshUser);
+
+    model.addAttribute("updateUserForm", form);
+    model.addAttribute("fullName", freshUser.getFullName());
+    
+    return "View/User/Registered/Profile/Info";
+    }
+   // 2. Cập nhật thông tin
+@PostMapping("/info/updates")
+    public String updateUser(@ModelAttribute("updateUserForm") UpdateUserRequest updateUserForm,
+                            RedirectAttributes redirectAttributes) {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users currentUser = SecurityUtils.extractUser(authentication.getPrincipal());
 
-        if (currentUser != null) {
-            updateUserForm.setUserId(currentUser.getId());
-            
-            if (email != null && !email.isEmpty()) {
-                updateUserForm.setEmail(email);
-            }
-
-            userService.updateUser(updateUserForm);
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không xác định được người dùng.");
+            return "redirect:/profile/info";
         }
+
+        // luôn update đúng user đang login
+        updateUserForm.setUserId(currentUser.getId());
+        // không cho đổi email ở đây: lấy lại từ user hiện tại
+        updateUserForm.setEmail(currentUser.getEmail());
+
+        try {
+            userService.updateUser(updateUserForm);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin thành công.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Cập nhật thông tin thất bại.");
+        }
+
+        return "redirect:/profile/info";
+    }
+    @GetMapping("/info/updates")
+    public String redirectInfoUpdate() {
         return "redirect:/profile/info";
     }
 

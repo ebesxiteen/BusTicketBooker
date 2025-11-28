@@ -1,6 +1,8 @@
 package com.example.ticketbooker.DTO.Users;
 
-import java.sql.Date;
+import java.time.LocalDate;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 import com.example.ticketbooker.Util.Enum.Gender;
 import com.example.ticketbooker.Util.Enum.UserStatus;
@@ -19,7 +21,8 @@ public class UserDTO {
     private String fullName;
     private String phone;
     private String address;
-    private Date dateOfBirth;
+    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    private LocalDate dateOfBirth;
     private Gender gender;
     private byte[] profilePhoto;
     private UserStatus status;

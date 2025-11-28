@@ -1,6 +1,6 @@
 package com.example.ticketbooker.Entity;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 import com.example.ticketbooker.Util.Enum.Gender;
 import com.example.ticketbooker.Util.Enum.UserStatus;
@@ -41,7 +41,7 @@ public class Users {
     private String address;
 
     @Column(name = "dateOfBirth")
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender")

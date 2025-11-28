@@ -4,177 +4,289 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập / Đăng ký - GreenBus</title>
-    
+
+    <!-- Tailwind + Icon + jQuery + SweetAlert -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/AdminLayout.css}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <style>
+        /* Giữ lại mấy màu bà map qua xanh */
         .bg-blue-600 { background-color: #10b981 !important; }
         .hover\:bg-blue-700:hover { background-color: #059669 !important; }
         .text-blue-600 { color: #10b981 !important; }
         .outline-blue-500 { outline-color: #10b981 !important; }
-        .bg-red-800 { background-color: #991b1b !important; } /* Màu thông báo lỗi */
-        .shadow-img { box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.5); } /* Bóng xanh cho ảnh */
+        .bg-red-800 { background-color: #991b1b !important; }
+
+        /* Container chính */
+        .login-container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* Panel nền xanh */
+        .panel-green {
+            background: linear-gradient(to bottom, #10b981, #059669);
+        }
     </style>
 </head>
+
 <body class="bg-gray-100 font-montserrat">
 
-<div class="flex h-screen font-montserrat items-center justify-center relative">
-    
-    <div class="login-container w-full max-w-7xl grid md:grid-cols-2 items-center h-full relative">
+<div class="min-h-screen flex items-center justify-center px-4">
+    <div class="login-container w-full max-w-6xl grid md:grid-cols-2 shadow-xl relative">
 
-        <form th:action="@{/perform_login}" method="post" class="login-form max-w-lg max-md:mx-auto w-full p-6 transition-all duration-1000 transform opacity-100">
-            <div class="mb-8">
-                <h3 class="text-gray-800 text-4xl font-extrabold">Đăng nhập</h3>
-                <p class="text-gray-800 text-sm mt-6">Truy cập tài khoản dễ dàng.</p>
-            </div>
+        <!-- CỘT TRÁI ------------------------------------------------------------>
+        <div class="relative flex items-center justify-center py-10 px-6 md:px-10 overflow-hidden">
 
-            <div class="relative flex items-center text-red-800 mb-4">
-                <p><span th:text="${error}"></span></p>
-            </div>
-            
-            <div>
-                <label for="email" class="text-gray-800 text-[15px] mb-2 block">Email</label>
+            <!-- FORM ĐĂNG NHẬP -->
+            <form th:action="@{/perform_login}" method="post"
+                  class="login-form w-full max-w-md transition-all duration-700 opacity-100">
+
+                <div class="mb-8">
+                    <h3 class="text-gray-800 text-3xl md:text-4xl font-extrabold">Đăng nhập</h3>
+                    <p class="text-gray-800 text-sm mt-4">Truy cập tài khoản dễ dàng.</p>
+                </div>
+
+                <!-- Thông báo lỗi -->
+                <div class="relative flex items-center text-red-800 mb-4 min-h-[20px]">
+                    <p><span th:text="${error}"></span></p>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-4">
+                    <label for="email"
+                           class="text-gray-800 text-[15px] mb-2 block">Email</label>
+                    <div class="relative flex items-center">
+                        <input id="email" name="username" type="text" required
+                               class="w-full text-sm text-gray-800 px-4 py-2.5 rounded-md border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                               placeholder="Nhập email của bạn"/>
+                        <i class="fas fa-envelope w-[18px] h-[18px] absolute right-4 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Mật khẩu -->
+                <div class="mb-4">
+                    <label for="password"
+                           class="text-gray-800 text-[15px] mb-2 block">Mật khẩu</label>
                 <div class="relative flex items-center">
-                    <input id="email" name="username" type="text" required 
-                           class="login-email w-full text-sm text-gray-800 bg-gray-100 focus:bg-transparent px-4 py-3.5 rounded-md outline-green-600 border border-gray-300" placeholder="Nhập email của bạn" />
-                    <i class="fas fa-envelope w-[18px] h-[18px] absolute right-4 text-gray-400"></i>
-                </div>
-            </div>
+                    <input id="password" name="password" type="password" required
+                        class="w-full text-sm text-gray-800 px-4 py-2.5 rounded-md border        border-gray-300
+                            focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                        placeholder="Nhập mật khẩu"/>
 
-            <div class="mt-4">
-                <label for="password" class="text-gray-800 text-[15px] mb-2 block">Mật khẩu</label>
-                <div class="relative flex items-center">
-                    <input id="password" name="password" type="password" required 
-                           class="login-password w-full text-sm text-gray-800 bg-gray-100 focus:bg-transparent px-4 py-3.5 rounded-md outline-green-600 border border-gray-300" placeholder="Nhập mật khẩu" />
-                    <i class="fas fa-lock w-[18px] h-[18px] absolute right-4 text-gray-400"></i>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap items-center justify-between mt-4">
-                <div class="flex items-center">
-                    <input id="remember-me" name="remember-me" type="checkbox" class="shrink-0 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded" />
-                    <label for="remember-me" class="ml-3 block text-sm text-gray-800">
-                        Ghi nhớ
-                    </label>
-                </div>
-                <div class="text-sm">
-                    <a th:href="@{/profile/reset-password}" class="text-emerald-600 font-semibold hover:underline">
-                        Quên mật khẩu?
-                    </a>
-                </div>
-            </div>
-
-            <div class="mt-8">
-                <button type="submit" class="w-full shadow-md py-3 px-6 text-sm tracking-wide font-semibold rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none transition">
-                    Đăng nhập
-                </button>
-            </div>
-            
-            <p class="text-sm mt-8 text-center text-gray-800">Chưa có tài khoản? <a href="javascript:void(0);" class="register-here text-emerald-600 font-semibold tracking-wide hover:underline ml-1">Đăng ký tại đây</a></p>
-            
-            <div class="mt-4 space-y-3">
-                <a th:href="@{/oauth2/authorization/facebook}" class="w-full px-5 py-2.5 flex items-center justify-center rounded-md text-white text-sm tracking-wider font-semibold border-none outline-none bg-[#4267B2] hover:bg-[#365899] transition">
-                    <i class="fab fa-facebook-f mr-4 text-lg"></i> Continue with Facebook
-                </a>
-                <a th:href="@{/oauth2/authorization/google}" class="w-full px-5 py-2.5 flex items-center justify-center rounded-md text-gray-800 text-sm tracking-wider font-semibold border border-gray-300 bg-white hover:bg-gray-100 transition">
-                    <img src="https://img.icons8.com/color/48/000000/google-logo.png" width="18" height="18" class="inline shrink-0 mr-4" alt="Google">
-                    Continue with Google
-                </a>
-            </div>
-        </form>
-
-        <div class="login-img h-full items-center relative transition-all duration-1000 max-md:before:hidden before:absolute before:bg-emerald-600 before:h-full before:w-full before:right-0 before:z-0">
-            <div class="md:mb-16 mb-8 z-10 mx-20 mt-40 relative text-white">
-                <h3 class="text-4xl font-extrabold text-white">GreenBus</h3>
-                <p class="text-lg mt-3">Đặt vé xe khách nhanh chóng và an toàn tuyệt đối.</p>
-            </div>
-        </div>
-
-        <div class="registration-form max-w-lg max-md:mx-auto w-full p-6 transition-all opacity-0 duration-1000 absolute right-0 z-50 pointer-events-none">
-            <h3 class="text-gray-800 text-4xl font-extrabold mb-8">Đăng ký</h3>
-            <form id="registration-form" onsubmit="event.preventDefault(); registerUser();">
-                <div class="space-y-4">
-                    <input name="fullName" type="text" id="register-name" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500" placeholder="Họ và tên" />
-                    <input name="email" type="email" id="register-email" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500" placeholder="Email" />
-                    <input name="phone" type="tel" id="register-phone" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500" placeholder="Số điện thoại" />
-                    <input name="password" id="register-password" type="password" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500" placeholder="Mật khẩu" />
-                    <span id="error-announcer" class="text-sm text-red-600 block"></span>
-                </div>
-                
-                <div class="flex items-center mt-6">
-                    <input id="register-terms" name="remember-me" type="checkbox" class="h-4 w-4 shrink-0 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded" required/>
-                    <label for="register-terms" class="text-gray-800 ml-3 block text-sm">
-                        Tôi chấp nhận <a href="javascript:void(0);" class="text-emerald-600 font-semibold hover:underline">Điều khoản</a>
-                    </label>
-                </div>
-
-                <div class="mt-6">
-                    <button type="submit" id="register-submit" class="w-full py-3 px-4 text-sm tracking-wider font-semibold rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none">
-                        Tạo tài khoản
+                    <!-- Nút show/hide password -->
+                    <button type="button" id="toggle-password"
+                        class="absolute right-4 text-gray-500 hover:text-gray-700">
+                        <i class="fa-solid fa-eye-slash"></i>
                     </button>
                 </div>
-                <p class="text-sm mt-4 text-center text-gray-800">Đã có tài khoản? <a href="javascript:void(0);" class="login-here text-emerald-600 font-semibold hover:underline ml-1">Đăng nhập</a></p>
-            </form>
-        </div>
-
-
-        <div class="registration-img h-full items-center relative transition-all duration-1000 max-md:hidden absolute bg-gradient-to-r from-emerald-800 to-emerald-900 before:h-full w-full left-0 z-10 pointer-events-none">
-            <div class="md:mb-16 mb-8 z-100 mx-20 mt-40 relative text-white">
-                <h3 class="text-4xl font-extrabold text-white">Đăng ký dễ dàng</h3>
-                <p class="text-lg mt-3">Chỉ vài bước đơn giản để bắt đầu đặt vé.</p>
             </div>
+
+                <!-- Ghi nhớ + Quên mật khẩu -->
+                <div class="flex flex-wrap items-center justify-between mt-2 mb-4">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox"
+                               class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"/>
+                        <label for="remember-me" class="ml-2 text-sm text-gray-800">
+                            Ghi nhớ
+                        </label>
+                    </div>
+                    <div class="text-sm mt-2 md:mt-0">
+                        <a th:href="@{/profile/reset-password}"
+                           class="text-emerald-600 font-semibold hover:underline">
+                            Quên mật khẩu?
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Nút đăng nhập -->
+                <button type="submit"
+                        class="w-full flex justify-center items-center rounded-md py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-sm font-semibold text-white shadow-sm focus:outline-none">
+                    Đăng nhập
+                </button>
+
+                <!-- Link sang đăng ký -->
+                <p class="text-sm mt-6 text-center text-gray-800">
+                    Chưa có tài khoản?
+                    <a href="javascript:void(0)"
+                       class="register-here text-emerald-600 font-semibold hover:underline ml-1">
+                        Đăng ký tại đây
+                    </a>
+                </p>
+            </form>
+
+            <!-- PANEL XANH KHI Ở CHẾ ĐỘ ĐĂNG KÝ (BÊN TRÁI) -->
+            <div class="registration-img panel-green absolute inset-0 flex items-center justify-center px-8 md:px-10 transition-all duration-700 opacity-0 pointer-events-none">
+                <div class="max-w-xs text-white">
+                    <h3 class="text-3xl md:text-4xl font-extrabold mb-3">Đăng ký dễ dàng</h3>
+                    <p class="text-sm md:text-base mb-6">
+                        Chỉ vài bước đơn giản để bắt đầu đặt vé cùng GreenBus.
+                    </p>
+
+                    <!-- Nút social bên panel xanh -->
+                    <div class="space-y-3">
+                        <a th:href="@{/oauth2/authorization/facebook}"
+                        class="w-full h-[52px] flex items-center justify-center gap-3
+                        px-4 rounded-md text-white text-sm font-semibold shadow-md
+                        bg-[#4267B2] hover:bg-[#365899] transition">
+                        <i class="fab fa-facebook-f text-lg"></i>
+                            Continue with Facebook
+                        </a>
+                        <a th:href="@{/oauth2/authorization/google}"
+                           class="w-full h-[52px]  flex items-center justify-center px-4 py-3 rounded-md text-green-950 text-sm font-semibold border border-gray-300 bg-white hover:bg-gray-100 transition text">
+                            <img src="https://img.icons8.com/color/48/000000/google-logo.png"
+                                 width="20" height="20" class="mr-3" alt="Google">
+                            Continue with Google
+                        </a>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
+        <!-- CỘT PHẢI ----------------------------------------------------------->
+        <div class="relative flex items-center justify-center py-10 px-6 md:px-10 overflow-hidden">
+
+            <!-- PANEL XANH KHI Ở CHẾ ĐỘ ĐĂNG NHẬP (BÊN PHẢI) -->
+            <div class="login-img panel-green absolute inset-0 flex items-center justify-center px-8 md:px-10 transition-all duration-700 opacity-100">
+                <div class="max-w-xs text-white">
+                    <h3 class="text-3xl md:text-4xl font-extrabold mb-3">GreenBus</h3>
+                    <p class="text-sm md:text-base">
+                        Đặt vé xe khách nhanh chóng và an toàn tuyệt đối.
+                    </p>
+
+                    <!-- Nút social bên panel xanh -->
+                    <div class="space-y-3 mt-8">
+                        <a th:href="@{/oauth2/authorization/facebook}"
+                        class="w-full h-[52px] flex items-center justify-center gap-3
+                            px-4 rounded-md text-white text-sm font-semibold shadow-md
+                            bg-[#4267B2] hover:bg-[#365899] transition">
+                        <i class="fab fa-facebook-f text-lg"></i>
+                            Continue with Facebook
+                        </a>
+
+                        <a th:href="@{/oauth2/authorization/google}"
+                           class="w-full h-[52px] flex items-center justify-center px-4 py-3 rounded-md text-green-950 text-sm font-semibold border border-gray-300 bg-white hover:bg-gray-100 transition">
+                            <img src="https://img.icons8.com/color/48/000000/google-logo.png"
+                                 width="18" height="18" class="mr-3" alt="Google">
+                            Continue with Google
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORM ĐĂNG KÝ -->
+            <div class="registration-form w-full max-w-md bg-white relative transition-all duration-700 opacity-0 pointer-events-none">
+                <h3 class="text-gray-800 text-3xl md:text-4xl font-extrabold mb-6">Đăng ký</h3>
+
+                <form id="registration-form" onsubmit="event.preventDefault(); registerUser();">
+                    <div class="space-y-4">
+                        <input name="fullName" type="text" id="register-name"
+                               class="w-full px-4 py-2.5 text-sm text-gray-800 rounded-md border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                               placeholder="Họ và tên"/>
+
+                        <input name="email" type="email" id="register-email"
+                               class="w-full px-4 py-2.5 text-sm text-gray-800 rounded-md border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                               placeholder="Email"/>
+
+                        <input name="phone" type="tel" id="register-phone"
+                               class="w-full px-4 py-2.5 text-sm text-gray-800 rounded-md border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                               placeholder="Số điện thoại"/>
+                        <div class="relative flex items-center">
+                        <input name="password" type="password" id="register-password"
+                               class="w-full px-3 py-2.5 pr-10 text-sm text-gray-800 rounded-md border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                               placeholder="Mật khẩu"/>
+                        <button type="button" id="toggle-register-password"
+                            class="absolute inset-y-0 right-4 flex items-center text-gray-500 hover:text-gray-700">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                        </div>
+                        <span id="error-announcer" class="text-sm text-red-600 block"></span>
+                        
+                    </div>
+
+                    <div class="flex items-center mt-5">
+                        <input id="register-terms" name="terms" type="checkbox"
+                               class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded" required/>
+                        <label for="register-terms" class="ml-3 text-sm text-gray-800">
+                            Tôi chấp nhận
+                            <a href="javascript:void(0)"
+                               class="text-emerald-600 font-semibold hover:underline">
+                                Điều khoản
+                            </a>
+                        </label>
+                    </div>
+
+                    <div class="mt-6">
+                        <button type="submit" id="register-submit"
+                                class="w-full flex justify-center items-center rounded-md py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-sm font-semibold text-white focus:outline-none">
+                            Tạo tài khoản
+                        </button>
+                    </div>
+
+                    <p class="text-sm mt-4 text-center text-gray-800">
+                        Đã có tài khoản?
+                        <a href="javascript:void(0)"
+                           class="login-here text-emerald-600 font-semibold hover:underline ml-1">
+                            Đăng nhập
+                        </a>
+                    </p>
+                </form>
+            </div>
+
+        </div>
+
     </div>
 </div>
 
 <script>
-    // Hàm JS Đăng ký (Sửa lỗi logic)
+    // Gọi API đăng ký
     async function registerUser() {
         const fullName = document.querySelector("#register-name").value;
         const email = document.querySelector("#register-email").value;
         const phone = document.querySelector("#register-phone").value;
         const password = document.querySelector("#register-password").value;
         const errorAnnouncer = document.querySelector("#error-announcer");
-        
-        errorAnnouncer.innerHTML = ''; // Clear previous errors
+        const termsChecked = document.querySelector("#register-terms").checked; 
 
-        // Basic Validation
+        errorAnnouncer.innerHTML = '';
+
         if (!fullName || !email || !phone || !password) {
             errorAnnouncer.innerHTML = 'Vui lòng điền đầy đủ thông tin.';
             return;
         }
 
-        // 1. Kiểm tra Email tồn tại
-        try {
-            const checkUrl = `/api/users/exist?email=${email}`; // Đã sửa API sang /api/users
-            const response = await fetch(checkUrl);
-
-            if (response.ok) { // Status 200 (Email Found)
-                errorAnnouncer.innerHTML = 'Email đã tồn tại.';
-                return;
-            }
-        } catch (error) {
-            console.error(error);
-            // Tiếp tục nếu lỗi mạng (coi như chưa tìm thấy)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            errorAnnouncer.innerHTML = 'Email không hợp lệ.';
+            return;
         }
-        
-        // 2. Chuẩn bị DTO
-        const addUserRequest = {
-            fullName: fullName,
-            email: email,
-            phone: phone,
-            password: password,
-            role: 'USER', // Mặc định là Khách hàng
-            status: 'ACTIVE'
-        };
 
-        // 3. Gửi Request Đăng ký
+        const phoneRegex = /^(0|\+84)(\d{9})$/;
+        if (!phoneRegex.test(phone)) {
+            errorAnnouncer.innerHTML = 'Số điện thoại không hợp lệ.';
+            return;
+        }
+
+        if (password.length < 6) {
+            errorAnnouncer.innerHTML = 'Mật khẩu phải có ít nhất 6 ký tự.';
+            return;
+        }
+
+        if (!termsChecked) {
+            errorAnnouncer.innerHTML = 'Bạn phải chấp nhận điều khoản trước khi đăng ký.';
+            return;
+        }
+
+        const addUserRequest = { fullName, email, phone, password };
+
         try {
-            const response = await fetch("/register",{
+            const response = await fetch('/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(addUserRequest)
@@ -187,23 +299,36 @@
                     icon: 'success',
                     confirmButtonText: 'OK'
                 }).then(() => {
-                     document.querySelector('.login-here').click(); // Chuyển sang form Login
+                    document.querySelector('.login-here').click();
                 });
+            } else if (response.status === 409) {
+                errorAnnouncer.innerHTML = 'Email đã được sử dụng.';
             } else {
-                Swal.fire({ title: 'Lỗi', text: 'Đăng ký thất bại do lỗi server.', icon: 'error' });
+                Swal.fire({
+                    title: 'Lỗi',
+                    text: 'Đăng ký thất bại do lỗi server.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
             }
-        } catch (e) {
-            Swal.fire({ title: 'Lỗi', text: 'Lỗi kết nối hệ thống.', icon: 'error' });
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Lỗi',
+                text: 'Không thể kết nối đến server.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         }
     }
-    
-    // Hàm xử lý UI trượt qua lại giữa Login và Register
+
+    // Chuyển đổi giữa login / register
     function toggleForms() {
         const logForm = document.querySelector('.login-form');
         const logImg = document.querySelector('.login-img');
         const regForm = document.querySelector('.registration-form');
         const regImg = document.querySelector('.registration-img');
-        
+
         logForm.classList.toggle('opacity-0');
         logForm.classList.toggle('opacity-100');
 
@@ -213,16 +338,51 @@
         regForm.classList.toggle('opacity-0');
         regForm.classList.toggle('opacity-100');
         regForm.classList.toggle('pointer-events-none');
-        
+
         regImg.classList.toggle('opacity-0');
         regImg.classList.toggle('opacity-100');
+        regImg.classList.toggle('pointer-events-none');
     }
 
-    // Gán sự kiện cho nút chuyển đổi
     document.querySelector('.register-here').addEventListener("click", toggleForms);
     document.querySelector('.login-here').addEventListener("click", toggleForms);
-    document.querySelector("#register-submit").addEventListener("click", registerUser);
-    
+    document.querySelector("#register-submit").addEventListener("click", function (e) {
+        e.preventDefault();
+        registerUser();
+    });
+    // Toggle hiển thị mật khẩu
+document.getElementById("toggle-password").addEventListener("click", function () {
+    const pwd = document.getElementById("password");
+    const icon = this.querySelector("i");
+
+    if (pwd.type === "password") {
+        pwd.type = "text";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    } else {
+        pwd.type = "password";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    }
+});
+
+// Toggle hiển thị mật khẩu REGISTER
+document.getElementById("toggle-register-password").addEventListener("click", function () {
+    const pwd = document.getElementById("register-password");
+    const icon = this.querySelector("i");
+
+    if (pwd.type === "password") {
+        pwd.type = "text";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    } else {
+        pwd.type = "password";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    }
+});
+
+
 </script>
 
 </body>

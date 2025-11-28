@@ -82,6 +82,10 @@ public class UserServiceImp implements UserService {
             // Set mặc định cho user mới
             if (user.getProvider() == null) user.setProvider("LOCAL");
             
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+
             logger.info("Adding new user: {}", user);
             this.usersRepo.save(user);
             return true;
@@ -103,6 +107,10 @@ public class UserServiceImp implements UserService {
             Users user = UserMapper.fromAdd(dto);
             if (user.getProvider() == null) user.setProvider("LOCAL");
             
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
+
             user = this.usersRepo.save(user);
             return user.getId();
         } catch (Exception e) {
@@ -119,9 +127,16 @@ public class UserServiceImp implements UserService {
                 logger.warn("Update failed: User ID not found");
                 return false;
             }
+            
 
             Users user = UserMapper.fromUpdate(dto);
+            if (dto.getStatus() == null) {
+                user.setUserStatus(UserStatus.ACTIVE);
+            } else {
+                user.setUserStatus(dto.getStatus());
+            }
             this.usersRepo.save(user);
+            System.out.println("=== UPDATE USER RUNNING, DTO = " + dto);
             logger.info("Updated user ID: {}", dto.getUserId()); // Giả sử DTO có getUserId
             return true;
         } catch (Exception e) {
@@ -235,4 +250,20 @@ public class UserServiceImp implements UserService {
         // ... (các logic khác)
         return usersRepo.save(user);
     }
+    @Override
+public UpdateUserRequest mapToUpdateUserRequest(Users user) {
+    UpdateUserRequest dto = new UpdateUserRequest();
+    dto.setUserId(user.getId());
+    dto.setFullName(user.getFullName());
+    dto.setEmail(user.getEmail());
+    dto.setPhone(user.getPhone());
+    dto.setAddress(user.getAddress());
+    dto.setDateOfBirth(user.getDateOfBirth());
+    dto.setGender(user.getGender());
+    dto.setStatus(user.getUserStatus());
+    dto.setRole(user.getRole());
+    return dto;
+}
+        
+
 }

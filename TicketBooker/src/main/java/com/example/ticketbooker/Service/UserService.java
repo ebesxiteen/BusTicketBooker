@@ -27,4 +27,6 @@ public interface UserService {
     UserResponse getAllUserByAddress(String address);
     UserResponse sortUserByName(UserResponse users);
     Users save(Users user);
+    UpdateUserRequest mapToUpdateUserRequest(Users user);
+
 }

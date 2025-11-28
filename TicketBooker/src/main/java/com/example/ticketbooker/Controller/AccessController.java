@@ -1,6 +1,7 @@
 package com.example.ticketbooker.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -48,9 +49,15 @@ public class AccessController {
             if (isCreated) {
                 return ResponseEntity.ok().build();
             }
+            else {
+            // addUser trả false -> thường là email đã tồn tại
+                return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
+            // Lỗi bất ngờ khác -> 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return ResponseEntity.badRequest().build();
     }
 }

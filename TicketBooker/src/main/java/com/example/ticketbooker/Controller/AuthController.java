@@ -32,7 +32,7 @@ public class AuthController {
     }
 
     // 2. Trang Profile (Thông tin cá nhân)
-    @GetMapping("/profile")
+    @GetMapping("/profile/")
     public String getUserProfile(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

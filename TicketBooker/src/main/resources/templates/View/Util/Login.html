@@ -260,14 +260,7 @@
             errorAnnouncer.innerHTML = 'Vui lòng điền đầy đủ thông tin.';
             return;
         }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            errorAnnouncer.innerHTML = 'Email không hợp lệ.';
-            return;
-        }
-
-        const phoneRegex = /^(0|\+84)(\d{9})$/;
+        const phoneRegex = /^(0[35789][0-9]{8})$/;
         if (!phoneRegex.test(phone)) {
             errorAnnouncer.innerHTML = 'Số điện thoại không hợp lệ.';
             return;
@@ -303,6 +296,8 @@
                 });
             } else if (response.status === 409) {
                 errorAnnouncer.innerHTML = 'Email đã được sử dụng.';
+            } else if (response.status === 400) {
+                errorAnnouncer.innerHTML = 'Email không hợp lệ.';
             } else {
                 Swal.fire({
                     title: 'Lỗi',

@@ -65,6 +65,8 @@ public class ProfileController {
 
     model.addAttribute("updateUserForm", form);
     model.addAttribute("fullName", freshUser.getFullName());
+    System.out.println("DOB from DB: " + freshUser.getDateOfBirth());
+
     
     return "View/User/Registered/Profile/Info";
     }
@@ -85,6 +87,12 @@ public class ProfileController {
         updateUserForm.setUserId(currentUser.getId());
         // không cho đổi email ở đây: lấy lại từ user hiện tại
         updateUserForm.setEmail(currentUser.getEmail());
+        
+        if (!updateUserForm.getPhone().matches("^(0[35789][0-9]{8})$")) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Số điện thoại không hợp lệ.");
+            return "redirect:/profile/info";
+        }
+
 
         try {
             userService.updateUser(updateUserForm);

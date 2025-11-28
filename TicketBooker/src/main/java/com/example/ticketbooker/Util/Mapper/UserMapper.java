@@ -60,30 +60,7 @@ public class UserMapper {
     }
 
     // ========================================================================
-    // 3. TỪ UPDATE REQUEST (CẬP NHẬT) -> ENTITY
-    // ========================================================================
-    public static Users fromUpdate(UpdateUserRequest dto) {
-        Users user = new Users();
-        user.setId(dto.getUserId()); // Bắt buộc phải có ID
-
-        // Chỉ map những trường KHÔNG NULL (để tránh ghi đè dữ liệu cũ bằng null)
-        if (dto.getFullName() != null) user.setFullName(dto.getFullName());
-        if (dto.getPhone() != null) user.setPhone(dto.getPhone());
-        if (dto.getAddress() != null) user.setAddress(dto.getAddress());
-        if (dto.getDateOfBirth() != null) user.setDateOfBirth(dto.getDateOfBirth());
-        if (dto.getGender() != null) user.setGender(dto.getGender());
-        if (dto.getProfilePhoto() != null) user.setProfilePhoto(dto.getProfilePhoto());
-        if (dto.getStatus() != null) user.setUserStatus(dto.getStatus());
-
-        // Cập nhật thông tin đăng nhập (nếu có gửi lên)
-        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
-        if (dto.getRole() != null) user.setRole(dto.getRole());
-
-        return user;
-    }
-
-    // ========================================================================
-    // 4. CHUYỂN DANH SÁCH ENTITY -> USER RESPONSE (CHỨA LIST DTO)
+    // 3. CHUYỂN DANH SÁCH ENTITY -> USER RESPONSE (CHỨA LIST DTO)
     // ========================================================================
     public static UserResponse toResponseDTO(List<Users> listEntities) {
         UserResponse response = new UserResponse();
@@ -106,7 +83,7 @@ public class UserMapper {
     }
 
     // ========================================================================
-    // 5. TỪ DTO -> UPDATE REQUEST (ĐỂ ĐỔ DỮ LIỆU LÊN FORM SỬA)
+    // 4. TỪ DTO -> UPDATE REQUEST (ĐỂ ĐỔ DỮ LIỆU LÊN FORM SỬA)
     // ========================================================================
     public static UpdateUserRequest toUpdateDTO(UserDTO dto) {
         if (dto == null) return null;

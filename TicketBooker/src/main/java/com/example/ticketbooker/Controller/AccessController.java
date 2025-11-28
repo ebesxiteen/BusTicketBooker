@@ -33,7 +33,6 @@ public class AccessController {
 
     @GetMapping("/register")
     public String register() {
-        // Trả về view đăng ký (bạn cần có file HTML này, hoặc dùng 404 như cũ để test)
         System.out.println("register page requested");
         return "View/Util/404Page";
     }
@@ -41,9 +40,17 @@ public class AccessController {
     // 2. Sửa logic Đăng ký (Register)
     @PostMapping("/register")
     public ResponseEntity<Object> registerUser(@RequestBody AddUserRequest addUserRequest) {
+        String email = addUserRequest.getEmail();
+        String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
+        if (email == null || !email.matches(EMAIL_REGEX)) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("INVALID_EMAIL");
+        }
         System.out.println("Received registration data: " + addUserRequest);
         try {
             // Gọi hàm addUser của UserService (hàm này đã xử lý check trùng email và mã hóa pass)
+            
             boolean isCreated = userService.addUser(addUserRequest);
             
             if (isCreated) {

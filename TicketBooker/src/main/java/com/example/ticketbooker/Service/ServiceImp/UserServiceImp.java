@@ -72,11 +72,13 @@ public class UserServiceImp implements UserService {
     @Override
     public boolean addUser(AddUserRequest dto) {
         try {
+
             // Kiểm tra email trùng lặp cho đăng ký thường
             if (usersRepo.findByEmail(dto.getEmail()) != null) {
                 logger.warn("Add user failed: Email {} already exists", dto.getEmail());
                 return false;
             }
+            
 
             Users user = UserMapper.fromAdd(dto);
             // Set mặc định cho user mới
@@ -122,27 +124,35 @@ public class UserServiceImp implements UserService {
     @Override
     public boolean updateUser(UpdateUserRequest dto) {
         try {
-            // Nên kiểm tra ID có tồn tại không trước khi map
-            if (!usersRepo.existsById(dto.getUserId())) { // Giả sử DTO có getUserId()
-                logger.warn("Update failed: User ID not found");
-                return false;
-            }
-            
+        Users user = usersRepo.findById(dto.getUserId())
+                .orElseThrow(() -> new RuntimeException("User ID not found"));
 
-            Users user = UserMapper.fromUpdate(dto);
-            if (dto.getStatus() == null) {
-                user.setUserStatus(UserStatus.ACTIVE);
-            } else {
-                user.setUserStatus(dto.getStatus());
-            }
-            this.usersRepo.save(user);
-            System.out.println("=== UPDATE USER RUNNING, DTO = " + dto);
-            logger.info("Updated user ID: {}", dto.getUserId()); // Giả sử DTO có getUserId
-            return true;
-        } catch (Exception e) {
-            logger.error("Error updating user: ", e);
-            return false;
+        // Chỉ update những field cho phép sửa
+        if (dto.getFullName() != null) user.setFullName(dto.getFullName());
+        if (dto.getPhone() != null) user.setPhone(dto.getPhone());
+        if (dto.getAddress() != null) user.setAddress(dto.getAddress());
+        if (dto.getDateOfBirth() != null) user.setDateOfBirth(dto.getDateOfBirth());
+        if (dto.getGender() != null) user.setGender(dto.getGender());
+        if (dto.getProfilePhoto() != null) user.setProfilePhoto(dto.getProfilePhoto());
+
+        // Status: nếu form không gửi thì giữ nguyên trạng thái cũ
+        if (dto.getStatus() != null) {
+            user.setUserStatus(dto.getStatus());
         }
+
+        // Email & role: tùy bà có cho sửa từ form hay không
+        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
+        if (dto.getRole() != null) user.setRole(dto.getRole());
+
+        // 👉 TUYỆT ĐỐI KHÔNG ĐỤNG TỚI password Ở ĐÂY
+
+        usersRepo.save(user);
+        logger.info("Updated user ID: {}", dto.getUserId());
+        return true;
+    } catch (Exception e) {
+        logger.error("Error updating user: ", e);
+        return false;
+    }
     }
 
     @Override
@@ -264,6 +274,6 @@ public UpdateUserRequest mapToUpdateUserRequest(Users user) {
     dto.setRole(user.getRole());
     return dto;
 }
-        
+    
 
 }

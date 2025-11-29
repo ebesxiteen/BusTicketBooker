@@ -2,6 +2,7 @@ package com.example.ticketbooker.Service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.ticketbooker.DTO.Users.AddUserRequest;
 import com.example.ticketbooker.DTO.Users.UpdateUserRequest;
@@ -28,5 +29,6 @@ public interface UserService {
     UserResponse sortUserByName(UserResponse users);
     Users save(Users user);
     UpdateUserRequest mapToUpdateUserRequest(Users user);
+    void updateAvatar(Integer id, MultipartFile avatarFile);
 
 }

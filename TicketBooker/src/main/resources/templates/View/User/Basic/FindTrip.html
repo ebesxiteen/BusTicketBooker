@@ -6,133 +6,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kết quả tìm kiếm - GreenBus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script th:src="@{/js/FindTrip.js}"></script>
     <link rel="stylesheet" th:href="@{/css/FindTrip.css}">
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Lấy tất cả các phần tử cần định dạng
-            var timeElements = document.querySelectorAll('.trip-time');
-            var priceElements = document.querySelectorAll('.trip-price');
-
-            // Định dạng giờ (HH:mm)
-            function formatTime(timeElement) {
-                var time = timeElement.textContent || timeElement.innerText;
-                if (time) {
-                    var dateObj = new Date(time);
-                    var hours = dateObj.getHours().toString().padStart(2, '0');
-                    var minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                    timeElement.textContent = hours + ':' + minutes;
-                }
-            }
-
-            // Định dạng giá tiền (VND)
-            function formatPrice(priceElement) {
-                var price = parseInt(priceElement.textContent.replace(/[^0-9]/g, ''));
-                if (!isNaN(price)) {
-                    priceElement.textContent = price.toLocaleString('vi-VN') + 'đ';
-                }
-            }
-
-            // Áp dụng định dạng
-            timeElements.forEach(formatTime);
-            priceElements.forEach(formatPrice);
-        });
-    </script>
 </head>
 <body class="bg-gray-50">
 <div layout:fragment="content" class="h-full">
     
     <div class="max-w-7xl mx-auto p-4 grid grid-cols-1 md:grid-cols-6 gap-6">
         
+        <!-- CỘT TRÁI: BỘ LỌC -->
         <div class="bg-white rounded-xl shadow-lg p-6 col-span-1 md:col-span-2 max-h-screen overflow-y-auto custom-scroll border border-gray-200">
             <h3 class="font-bold text-xl text-gray-800 mb-4 border-b pb-2 border-emerald-100">BỘ LỌC TÌM KIẾM</h3>
             
             <div class="flex justify-between items-center mb-6">
                 <h4 class="font-semibold text-lg">Lọc nhanh</h4>
-                <div class="flex items-center text-red-500 hover:text-red-700 cursor-pointer text-sm font-medium">
+                <div class="btn-reset-filter flex items-center text-red-500 hover:text-red-700 cursor-pointer text-sm font-medium">
                     <i class="fas fa-undo mr-1"></i> <span>Bỏ lọc</span>
                 </div>
             </div>
             
+            <!-- Giờ đi -->
             <div class="mb-6 border-b pb-4 border-gray-100">
                 <h4 class="font-medium mb-3 text-gray-700">Giờ đi</h4>
                 <div class="space-y-3 text-gray-600">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <label class="flex items-center cursor-pointer hover:text-emerald-600">
+                        <input type="checkbox" name="timeFilter" value="0-6" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                         <span class="ml-3 text-sm">Sáng sớm 00:00 - 06:00</span>
                     </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <label class="flex items-center cursor-pointer hover:text-emerald-600">
+                        <input type="checkbox" name="timeFilter" value="6-12" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                         <span class="ml-3 text-sm">Buổi sáng 06:00 - 12:00</span>
                     </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <label class="flex items-center cursor-pointer hover:text-emerald-600">
+                        <input type="checkbox" name="timeFilter" value="12-18" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                         <span class="ml-3 text-sm">Buổi chiều 12:00 - 18:00</span>
                     </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <label class="flex items-center cursor-pointer hover:text-emerald-600">
+                        <input type="checkbox" name="timeFilter" value="18-24" class="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                         <span class="ml-3 text-sm">Buổi tối 18:00 - 24:00</span>
                     </label>
                 </div>
             </div>
             
+            <!-- Khoảng giá (SLIDER V3) -->
+            <div class="mb-6 border-b pb-4 border-gray-100">
+                <h4 class="font-medium mb-3 text-gray-700">Khoảng giá</h4>
+                
+                <div class="flex justify-between text-sm font-bold text-emerald-700 mb-2">
+                    <span id="price-min-display">0 đ</span>
+                    <span id="price-max-display">2.000.000 đ</span>
+                </div>
+
+                <div class="range-slider">
+                    <div class="slider-track"></div>
+                    <input type="range" id="range-min" class="range-input" min="0" max="100" value="0">
+                    <input type="range" id="range-max" class="range-input" min="0" max="100" value="100">
+                </div>
+            </div>
+
+            <!-- Loại xe -->
             <div class="mb-6 border-b pb-4 border-gray-100">
                 <h4 class="font-medium mb-3 text-gray-700">Loại xe</h4>
                 <div class="flex flex-wrap gap-3">
-                    <button class="px-4 py-2 rounded-full bg-gray-50 border border-gray-300 text-sm font-medium hover:border-emerald-600 hover:text-emerald-600 transition-colors">
+                    <button type="button" data-value="SEAT" 
+                            class="btn-type-filter px-4 py-2 rounded-full bg-gray-50 border border-gray-300 text-sm font-medium hover:border-emerald-600 hover:text-emerald-600 transition-colors">
                         Ghế ngồi
                     </button>
-                    <button class="px-4 py-2 rounded-full bg-gray-50 border border-gray-300 text-sm font-medium hover:border-emerald-600 hover:text-emerald-600 transition-colors">
+                    <button type="button" data-value="BEDSEAT" 
+                            class="btn-type-filter px-4 py-2 rounded-full bg-gray-50 border border-gray-300 text-sm font-medium hover:border-emerald-600 hover:text-emerald-600 transition-colors">
                         Giường nằm
                     </button>
                 </div>
             </div>
-            
-            <div class="mb-6">
-                <h4 class="font-medium mb-3 text-gray-700">Khoảng giá</h4>
-                <p class="text-gray-500 text-sm">TBA: Sẽ cập nhật bộ lọc giá</p>
-            </div>
         </div>
 
+        <!-- CỘT PHẢI: KẾT QUẢ -->
         <div class="col-span-1 md:col-span-4 space-y-6 overflow-y-auto custom-scroll">
-            
             <div class="route-preview text-xl font-medium mb-4 text-gray-800">
-                <p th:if="${responseTripDTO.tripsCount == 0}">Không tìm thấy chuyến đi phù hợp</p>
-                <span th:unless="${responseTripDTO.tripsCount == 0}" class="text-xl font-bold text-emerald-700">
-                    [[${responseTripDTO.listTrips[0].departureStation}]] ➝ [[${responseTripDTO.listTrips[0].arrivalStation}]]
-                </span>
-                <span th:unless="${responseTripDTO.tripsCount == 0}" class="text-gray-500 font-normal text-lg ml-3">
-                    ([[${responseTripDTO.tripsCount}]] chuyến)
-                </span>
+                <p th:if="${responseTripDTO.tripsCount == 0}" class="bg-orange-50 border-l-4 border-orange-500 p-4 rounded shadow-sm text-orange-700 text-base">
+                    <i class="fas fa-search mr-2"></i> Không tìm thấy chuyến xe nào phù hợp.
+                </p>
+
+                <div th:if="${responseTripDTO.tripsCount > 0}" class="flex items-center flex-wrap">
+                    <span th:if="${searchData.departure != null && searchData.departure != ''}" 
+                          class="text-xl font-bold text-emerald-700 flex items-center">
+                        <span th:text="${searchData.departure}"></span>
+                        <i class="fas fa-long-arrow-alt-right mx-2 text-gray-400"></i>
+                        <span th:text="${searchData.arrival}"></span>
+                    </span>
+
+                    <span th:if="${searchData.departure == null || searchData.departure == ''}" 
+                          class="text-xl font-bold text-emerald-700">
+                        <i class="fas fa-map-marker-alt mr-2"></i>
+                        Các chuyến đi đến <span th:text="${searchData.arrival}"></span>
+                    </span>
+
+                    <span id="tripCountDisplay" class="text-gray-500 font-normal text-lg ml-3">
+                        ([[${responseTripDTO.tripsCount}]] chuyến)
+                    </span>
+                </div>
             </div>
 
             <div class="space-y-4">
-                
                 <div th:each="trip : ${responseTripDTO.listTrips}">
-                    <div th:if="${trip.departureTime.isAfter(currentDate)}" class="bg-white rounded-xl shadow-md border border-gray-100 p-6 transition duration-300 hover:shadow-lg hover:border-emerald-200">
+                    <!-- CẬP NHẬT: Dùng th:attr để gán data-price chắc chắn -->
+                    <div th:if="${trip.departureTime.isAfter(currentDate)}" 
+                         class="trip-item bg-white rounded-xl shadow-md border border-gray-100 p-6 transition duration-300 hover:shadow-lg hover:border-emerald-200 group"
+                         th:attr="data-hour=${trip.departureTime.hour}, data-type=${trip.bus.busType}, data-price=${trip.price}">
                         
                         <div class="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-4 items-center mb-6">
-                            
-                            <div class="flex items-center gap-3">
-                                <div id="departureTime" th:text="${trip.departureTime}" class="trip-time text-3xl font-bold text-gray-800"></div>
-                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <div class="flex flex-col items-center sm:items-start">
+                                <div class="flex items-center gap-3">
+                                    <div class="text-3xl font-bold text-gray-800" 
+                                         th:text="${#temporals.format(trip.departureTime, 'HH:mm')}"></div>
+                                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                </div>
+                                <div class="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1">
+                                    <i class="far fa-calendar-alt mr-1 text-xs"></i>
+                                    <span th:text="${#temporals.format(trip.departureTime, 'dd/MM/yyyy')}"></span>
+                                </div>
                             </div>
                             
                             <div class="text-gray-500 text-center text-sm">
                                 <i class="far fa-clock mr-1"></i> <span th:text="${trip.route.estimatedTime}"></span>
-                                <div>(Thời gian dự kiến)</div>
+                                <div>(Dự kiến)</div>
                             </div>
                             
-                            <div class="flex items-center gap-3 justify-end">
-                                <div class="w-2 h-2 rounded-full bg-orange-500"></div>
-                                <div id="arrivalTime" th:text="${trip.arrivalTime}" class="trip-time text-3xl font-bold text-gray-800"></div>
+                             <div class="flex flex-col items-center sm:items-end">
+                                <div class="flex items-center gap-3 justify-end">
+                                    <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                                    <div class="text-3xl font-bold text-gray-800" 
+                                         th:text="${#temporals.format(trip.arrivalTime, 'HH:mm')}"></div>
+                                </div>
+                                <div class="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1">
+                                    <i class="far fa-calendar-alt mr-1 text-xs"></i>
+                                    <span th:text="${#temporals.format(trip.arrivalTime, 'dd/MM/yyyy')}"></span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="flex justify-between mb-4 font-medium">
-                            <div th:text="${trip.departureStation}" class="text-gray-600"></div>
-                            <div th:text="${trip.arrivalStation}" class="text-gray-600"></div>
+                        <div class="flex justify-between mb-4 font-medium bg-gray-50 p-3 rounded-lg mt-2">
+                            <div class="text-gray-700">
+                                <span class="text-xs text-gray-500 uppercase block">Điểm đi</span>
+                                <span th:text="${trip.route.departureLocation}"></span>
+                            </div>
+                            <div class="text-right text-gray-700">
+                                <span class="text-xs text-gray-500 uppercase block">Điểm đến</span>
+                                <span th:text="${trip.route.arrivalLocation}"></span>
+                            </div>
                         </div>
                         
                         <div class="flex justify-between items-center mb-4 pt-4 border-t border-gray-100">
@@ -145,18 +169,23 @@
                         </div>
 
                         <div class="flex justify-between items-center text-sm">
-                            <div class="flex gap-2 text-gray-500">
-                                <button class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition">Trung chuyển</button>
-                                <button class="p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition">Chính sách</button>
+                            <div class="flex gap-2 text-gray-500 hidden sm:flex">
+                                <span class="text-xs bg-gray-100 px-2 py-1 rounded">Không cần thanh toán trước</span>
                             </div>
                             <a th:href="@{/greenbus/booking?tripId={id}(id=${trip.id})}"
-                               class="py-3 px-6 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition duration-300 transform hover:scale-[1.01] shadow-md">
+                               class="py-3 px-6 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition duration-300 transform hover:scale-[1.01] shadow-md w-full sm:w-auto text-center">
                                 Chọn chuyến
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <div id="noResultFilter" class="hidden text-center py-8 text-gray-500">
+                <i class="fas fa-filter text-4xl mb-3 text-gray-300"></i>
+                <p>Không có chuyến xe nào phù hợp với bộ lọc hiện tại.</p>
+            </div>
+            
         </div>
     </div>
 </div>

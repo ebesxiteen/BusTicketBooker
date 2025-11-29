@@ -1,5 +1,13 @@
 package com.example.ticketbooker.Service.ServiceImp;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.example.ticketbooker.DTO.Invoice.AddInvoiceDTO;
 import com.example.ticketbooker.DTO.Invoice.RequestInvoiceDTO;
 import com.example.ticketbooker.DTO.Invoice.ResponseInvoiceDTO;
@@ -9,23 +17,26 @@ import com.example.ticketbooker.Repository.InvoiceRepo;
 import com.example.ticketbooker.Service.InvoiceService;
 import com.example.ticketbooker.Util.Enum.PaymentStatus;
 import com.example.ticketbooker.Util.Mapper.InvoiceMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class InvoiceServiceImp implements InvoiceService {
     @Autowired
     private InvoiceRepo invoicesRepo;
+    
     @Override
     public int addInvoice(AddInvoiceDTO dto) {
         try {
-            Invoices invoices = InvoiceMapper.fromAdd(dto);
-            Invoices savedInvoice = this.invoicesRepo.save(invoices);
+                        // 1. Lấy trip, giá vé 1 ghế
+
+
+// 3. Tạo 1 invoice duy nhất
+Invoices invoice = new Invoices();
+invoice.setPaymentMethod(dto.getPaymentMethod());
+invoice.setPaymentStatus(PaymentStatus.PAID);
+invoice.setPaymentTime(LocalDateTime.now());
+invoice.setTotalAmount(dto.getTotalAmount());
+Invoices savedInvoice=invoicesRepo.save(invoice);
+
             return savedInvoice.getId();
         } catch (Exception e) {
             System.out.println(e.getMessage());

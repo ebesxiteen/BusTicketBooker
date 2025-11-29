@@ -3,7 +3,7 @@ DROP DATABASE IF EXISTS ticketbooker;
 CREATE DATABASE ticketbooker;
 USE ticketbooker;
 
--- PHẦN 2: TẠO SCHEMA MỚI (ĐÃ GỘP BẢNG ACCOUNT VÀO USERS)
+-- PHẦN 2: TẠO SCHEMA MỚI
 
 -- 1. Table: Users (Gộp Profile, Auth, và Security)
 CREATE TABLE Users (
@@ -13,7 +13,7 @@ CREATE TABLE Users (
     address VARCHAR(255),
     dateOfBirth DATE,
     gender ENUM('MALE', 'FEMALE', 'OTHER'),
-    profilePhoto BLOB,
+    profilePhoto LONGBLOB,
     userStatus ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
     
     -- CÁC TRƯỜNG TỪ BẢNG ACCOUNT CŨ
@@ -81,15 +81,16 @@ CREATE TABLE Trips (
     FOREIGN KEY (driverId) REFERENCES Driver(driverId)
 );
 
--- 7. Table: Seats
+-- 7. Table: Seats (ghế gắn với từng Trip)
 CREATE TABLE Seats (
     seatId INT AUTO_INCREMENT PRIMARY KEY,
     tripId INT NOT NULL,
     seatCode VARCHAR(10) NOT NULL,
-    FOREIGN KEY (tripId) REFERENCES Trips(tripId)
+    FOREIGN KEY (tripId) REFERENCES Trips(tripId),
+    CONSTRAINT uq_seat_trip UNIQUE (tripId, seatCode) -- mỗi ghế code chỉ xuất hiện 1 lần trong 1 trip
 );
 
--- 8. Table: Tickets (bookerId trỏ về Users)
+-- 8. Table: Tickets (một ticket có thể chứa nhiều Seats)
 CREATE TABLE Tickets (
     ticketId INT AUTO_INCREMENT PRIMARY KEY,
     tripId INT NOT NULL,
@@ -97,11 +98,27 @@ CREATE TABLE Tickets (
     invoiceId INT,
     customerName VARCHAR(100) NOT NULL,
     customerPhone VARCHAR(15) NOT NULL,
-    seatId INT NOT NULL,
     qrCode VARCHAR(255),
     ticketStatus ENUM('BOOKED', 'CANCELLED', 'USED') NOT NULL,
     FOREIGN KEY (tripId) REFERENCES Trips(tripId),
     FOREIGN KEY (bookerId) REFERENCES Users(userId), 
-    FOREIGN KEY (invoiceId) REFERENCES Invoices(invoiceId),
-    FOREIGN KEY (seatId) REFERENCES Seats(seatId)
+    FOREIGN KEY (invoiceId) REFERENCES Invoices(invoiceId)
+) ENGINE=InnoDB AUTO_INCREMENT=1;
+
+-- 9. Bảng trung gian: TicketSeats (mỗi ticket <-> nhiều seats)
+CREATE TABLE ticket_seats (
+    ticket_id INT NOT NULL,
+    seat_id   INT NOT NULL,
+    PRIMARY KEY (ticket_id, seat_id),
+
+    CONSTRAINT fk_ticketseats_ticket
+        FOREIGN KEY (ticket_id) REFERENCES Tickets(ticketId)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_ticketseats_seat
+        FOREIGN KEY (seat_id) REFERENCES Seats(seatId)
+        ON DELETE CASCADE,
+
+    -- Đảm bảo 1 ghế chỉ thuộc 1 vé:
+    CONSTRAINT uq_ticketseats_seat UNIQUE (seat_id)
 );

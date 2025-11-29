@@ -1,10 +1,10 @@
 package com.example.ticketbooker.DTO.Trips;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -17,4 +17,6 @@ public class ResponseTripByIdDTO {
     private String arrivalLocation;
     private String departureTime;
     private String totalPrice;
+    private Integer capacity;
+
 }

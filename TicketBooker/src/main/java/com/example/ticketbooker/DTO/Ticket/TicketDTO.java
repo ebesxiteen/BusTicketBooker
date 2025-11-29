@@ -2,7 +2,6 @@ package com.example.ticketbooker.DTO.Ticket;
 
 import com.example.ticketbooker.DTO.Users.UserDTO;
 import com.example.ticketbooker.Entity.Invoices;
-import com.example.ticketbooker.Entity.Seats;
 import com.example.ticketbooker.Entity.Trips;
 import com.example.ticketbooker.Util.Enum.TicketStatus;
 
@@ -19,14 +18,14 @@ public class TicketDTO {
     private Integer id;
     
     // Dùng UserDTO thay vì Users Entity để che giấu password
-    private UserDTO booker; 
+    private UserDTO booker;
     
     // Nếu chăm chỉ, bạn nên tạo cả TripDTO, SeatDTO. 
     // Tạm thời dùng Entity cho Trip/Seat/Invoice cũng được nếu chúng không chứa dữ liệu nhạy cảm.
     private Trips trip;
-    private Seats seat;
+    private String seatCodes;
     private Invoices invoice;
-    
+
     private String customerName;
     private String customerPhone;
     private String qrCode;

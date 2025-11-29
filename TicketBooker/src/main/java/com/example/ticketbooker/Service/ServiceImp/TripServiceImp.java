@@ -1,22 +1,28 @@
 package com.example.ticketbooker.Service.ServiceImp;
 
-import com.example.ticketbooker.DTO.Routes.SearchRouteRequest;
-import com.example.ticketbooker.DTO.Trips.*;
-import com.example.ticketbooker.DTO.Users.UserResponse;
-import com.example.ticketbooker.Entity.Routes;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.ticketbooker.DTO.Trips.AddTripDTO;
+import com.example.ticketbooker.DTO.Trips.RequestIdTripDTO;
+import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
+import com.example.ticketbooker.DTO.Trips.SearchTripRequest;
+import com.example.ticketbooker.DTO.Trips.TripDTO;
+import com.example.ticketbooker.DTO.Trips.TripStatsDTO;
+import com.example.ticketbooker.DTO.Trips.UpdateTripDTO;
 import com.example.ticketbooker.Entity.Trips;
 import com.example.ticketbooker.Repository.TripRepo;
 import com.example.ticketbooker.Service.RouteService;
 import com.example.ticketbooker.Service.TripService;
 import com.example.ticketbooker.Util.Mapper.TripMapper;
-import com.example.ticketbooker.Util.Mapper.UserMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Service
 public class TripServiceImp implements TripService {
@@ -100,13 +106,31 @@ public class TripServiceImp implements TripService {
     }
 
     @Override
+        @Transactional(readOnly = true)
     public ResponseTripDTO searchTrip(SearchTripRequest dto) {
         ResponseTripDTO result = new ResponseTripDTO();
         try {
-            Routes route = routeService.findByLocations(new SearchRouteRequest(dto.getDeparture(), dto.getArrival())).getList().get(0);
-            result = TripMapper.toResponseDTO(this.tripRepo.searchTrip(dto, route));
+
+            // LOGIC MỚI: Gọi query linh hoạt findTripsFlexible
+            int seats = dto.getTicketQuantity() > 0 ? dto.getTicketQuantity() : 1;
+
+            List<Trips> trips = tripRepo.findTripsFlexible(
+                    dto.getArrival(),
+                    dto.getDeparture(), // Giá trị này có thể là null hoặc rỗng
+                    dto.getDepartureDate(),
+                    seats
+            );
+            for (Trips t : trips) {
+                if (t.getRoute() != null) {
+                    t.getRoute().getEstimatedTime();
+                }
+            }
+
+            // Chuyển List sang ArrayList nếu Mapper yêu cầu
+            result = TripMapper.toResponseDTO(new ArrayList<>(trips));
+
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error searching trip: " + e.getMessage());
             return result;
         }
         return result;
@@ -166,5 +190,21 @@ public class TripServiceImp implements TripService {
             return result;
         }
         return result;
+    }
+
+    @Override
+    @Transactional
+    public void updateAvailableSeats(Integer tripId, int delta) {
+        Trips trip = tripRepo.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found: " + tripId));
+
+        Integer current = trip.getAvailableSeats();
+        if (current == null) current = 0;
+
+        int updated = current + delta;   // delta có thể âm hoặc dương
+        if (updated < 0) updated = 0;    // tránh số âm
+
+        trip.setAvailableSeats(updated);
+        tripRepo.save(trip);
     }
 }

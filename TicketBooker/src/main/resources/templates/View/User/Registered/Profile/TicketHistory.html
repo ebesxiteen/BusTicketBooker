@@ -1,87 +1,190 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{View/User/Registered/Profile/ProfileLayout.html}">
+      layout:decorate="~{View/Layout/ProfileLayout.html}">
 <head>
     <meta charset="UTF-8">
     <title>Lịch Sử Mua Vé - GreenBus</title>
-    </head>
+    <script th:src="@{/js/ticket-history.js}" defer></script>
+
+</head>
 <body>
-    <div layout:fragment="profileContent">
-        <main class="w-full p-8 bg-white rounded-xl shadow-lg border border-gray-200">
-            <h2 class="text-3xl font-bold text-gray-800 border-b pb-3 mb-6">
-                <i class="fas fa-history text-emerald-600 mr-2"></i>Lịch Sử Đặt Vé
-            </h2>
+<div layout:fragment="profileContent"
+     id="ticket-history-root"
+     th:attr="data-cancel-api=@{/api/tickets/cancel-ticket}">
+    <main class="w-full p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+        <h2 class="text-3xl font-bold text-gray-800 border-b pb-3 mb-6">
+            <i class="fas fa-history text-emerald-600 mr-2"></i>Lịch Sử Đặt Vé
+        </h2>
 
-            <form method="get" th:action="@{/profile/history-booking}" class="bg-gray-50 p-4 rounded-lg mb-6 shadow-inner">
-                <div class="grid grid-cols-5 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Mã vé</label>
-                        <input type="text" name="ticketId" placeholder="Nhập Mã vé" 
-                               class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Ngày đi</label>
-                        <input type="date" name="departureDate" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tuyến đường</label>
-                        <input type="text" name="route" placeholder="VD: Sài Gòn" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-                        <select name="status" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
-                            <option value="">Tất cả</option>
-                            <option th:each="status : ${ticketStatuses}" th:value="${status}" th:text="${status}"></option>
-                        </select>
-                    </div>
-                    <div class="flex items-end justify-center my-1">
-                        <button type="submit" class="bg-emerald-600 text-white w-full px-4 py-2 rounded-lg hover:bg-emerald-700 font-bold transition">
-                            <i class="fas fa-search"></i> Tìm
-                        </button>
-                    </div>
+        <!-- Form lọc -->
+        <form method="get" th:action="@{/profile/history-booking}" class="bg-gray-50 p-4 rounded-lg mb-6 shadow-inner">
+            <div class="grid grid-cols-5 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mã vé</label>
+                    <input type="text" name="ticketId" placeholder="Nhập Mã vé"
+                           class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+                           th:value="${filterTicketId}">
                 </div>
-            </form>
-
-
-            <div th:if="${ticketResponse.ticketsCount == 0}" class="text-center py-10">
-                <p class="text-xl text-gray-500">Bạn chưa có vé nào trong lịch sử.</p>
-                <a th:href="@{/greenbus/find-trip}" class="text-emerald-600 hover:text-emerald-800 font-bold mt-4 block">Đặt vé ngay!</a>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ngày đi</label>
+                    <input type="date" name="departureDate"
+                           class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+                           th:value="${filterDepartureDate}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tuyến đường</label>
+                    <input type="text" name="route" placeholder="VD: Sài Gòn"
+                           class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500"
+                           th:value="${filterRoute}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                    <select name="status"
+                            class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500">
+                        <option value="">Tất cả</option>
+                        <option th:each="st : ${ticketStatuses}"
+                                th:value="${st}"
+                                th:text="${st}"
+                                th:selected="${filterStatus != null and st == filterStatus}">
+                        </option>
+                    </select>
+                </div>
+                <div class="flex items-end justify-center my-1">
+                    <button type="submit"
+                            class="bg-emerald-600 text-white w-full px-4 py-2 rounded-lg hover:bg-emerald-700 font-bold transition">
+                        <i class="fas fa-search"></i> Tìm
+                    </button>
+                </div>
             </div>
-            
-            <div th:if="${ticketResponse.ticketsCount > 0}" class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-emerald-50 sticky top-0 z-10">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Mã vé</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider border">Tuyến đường</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Ngày đi</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Số tiền</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Trạng thái</th>
-                    </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                    <tr th:each="ticket : ${ticketResponse.listTickets}" class="hover:bg-gray-50">
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900 border" th:text="${ticket.id}"></td>
-                        
-                        <td class="px-6 py-4 text-sm text-gray-700 border" th:text="${ticket.trip.route.departureLocation} + ' ➝ ' + ${ticket.trip.route.arrivalLocation}"></td>
-                        
-                        <td class="px-6 py-4 text-sm text-gray-500 border" th:text="${#temporals.format(ticket.trip.departureTime, 'HH:mm dd/MM')}"></td>
-                        
-                        <td class="px-6 py-4 text-sm font-bold text-red-600 border" th:text="${#numbers.formatDecimal(ticket.trip.price, 0, 'POINT', 0, 'COMMA') + ' đ'}"></td>
-                        
-                        <td th:classappend="${ticket.ticketStatus.name() == 'BOOKED'} ? 'bg-yellow-100 text-yellow-700' :
-                                       (ticket.ticketStatus.name() == 'USED' ? 'bg-emerald-100 text-emerald-700' :
-                                       'bg-red-100 text-red-700')"
-                            class="px-6 py-4 whitespace-nowrap text-sm font-bold text-center border">
-                            <span th:text="${ticket.ticketStatus}"></span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                
-                </div>
-            
-        </main>
-    </div>
+        </form>
+
+        <!-- Không có vé -->
+        <div th:if="${ticketResponse.ticketsCount == 0}" class="text-center py-10">
+            <p class="text-xl text-gray-500">Bạn chưa có vé nào trong lịch sử.</p>
+            <a th:href="@{/greenbus}"
+               class="text-emerald-600 hover:text-emerald-800 font-bold mt-4 block">Đặt vé ngay!</a>
+        </div>
+
+        <!-- Có vé -->
+        <div th:if="${ticketResponse.ticketsCount > 0}"
+             class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-emerald-50 sticky top-0 z-10">
+                <tr>
+                    <th scope="col"
+                        class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Mã vé</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider border">Tuyến đường</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Ngày đi</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Số tiền</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Trạng thái</th>
+                    <!-- CỘT MỚI: THAO TÁC -->
+                    <th scope="col"
+                        class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Thao tác</th>
+                </tr>
+                </thead>
+
+                <tbody class="bg-white divide-y divide-gray-200">
+                <tr th:each="ticket : ${ticketResponse.listTickets}" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900 border"
+                        th:text="${ticket.id}"></td>
+
+                    <td class="px-6 py-4 text-sm text-gray-700 border"
+                        th:text="${ticket.trip.route.departureLocation} + ' ➝ ' + ${ticket.trip.route.arrivalLocation}"></td>
+
+                    <td class="px-6 py-4 text-sm text-gray-500 border"
+                        th:text="${#temporals.format(ticket.trip.departureTime, 'HH:mm dd/MM')}"></td>
+
+                    <td class="px-6 py-4 text-sm font-bold text-red-600 border"
+                        th:text="${#numbers.formatDecimal(ticket.trip.price, 0, 'POINT', 0, 'COMMA') + ' đ'}"></td>
+
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-center border"
+                        th:classappend="${ticket.ticketStatus.name() == 'BOOKED' 
+                                            ? ' bg-yellow-100 text-yellow-700'
+                                            : (ticket.ticketStatus.name() == 'USED' 
+                                                    ? ' bg-emerald-100 text-emerald-700'
+                                                    : ' bg-red-100 text-red-700')}">
+                        <span th:text="${ticket.ticketStatus}"></span>
+                    </td>
+
+                    <!-- Ô THAO TÁC -->
+                    <td class="px-6 py-4 text-center text-sm border">
+    <!-- Chỉ cho hủy nếu đang BOOKED -->
+    <button type="button"
+            th:if="${ticket.ticketStatus.name() == 'BOOKED'}"
+            class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-lg shadow-sm transition btn-cancel-ticket"
+            th:attr="data-ticket-id=${ticket.id}">
+        Hủy vé
+    </button>
+
+    <span th:if="${ticket.ticketStatus.name() != 'BOOKED'}"
+          class="text-xs text-gray-400 italic">
+        --
+    </span>
+</td>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+</div>
+
+<!-- =========== SCRIPT HỦY VÉ =========== -->
+
+<!-- URL API hủy vé (Thymeleaf sẽ tự thêm /greenbus nếu có context-path) -->
+<script th:inline="javascript">
+    const CANCEL_TICKET_API = /*[[@{/api/tickets/cancel-ticket}]]*/ "/api/tickets/cancel-ticket";
+
+    async function cancelTicket(ticketId) {
+        // debug cho chắc: log ra **Console của trình duyệt**, không phải terminal
+        console.log("Đang hủy vé", ticketId);
+
+        if (!ticketId) {
+            alert("Không xác định được mã vé.");
+            return;
+        }
+
+        const ok = confirm('Bà có chắc muốn hủy vé #' + ticketId + ' không?');
+        if (!ok) {
+            return;
+        }
+
+        try {
+            const response = await fetch(CANCEL_TICKET_API, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                // Nếu TicketIdRequest có field "ticketId"
+                body: JSON.stringify({ ticketId: ticketId })
+                // Nếu class TicketIdRequest là { Integer id; } thì đổi thành:
+                // body: JSON.stringify({ id: ticketId })
+            });
+
+            if (!response.ok) {
+                alert("Hủy vé thất bại (HTTP " + response.status + ").");
+                return;
+            }
+
+            const result = await response.json(); // TicketApi.cancelTicket trả boolean
+            if (result === true) {
+                alert("Đã hủy vé #" + ticketId + " thành công.");
+                window.location.reload();
+            } else {
+                alert("Không thể hủy vé. Có thể vé đã được sử dụng hoặc xảy ra lỗi.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Có lỗi khi gọi API hủy vé.");
+        }
+    }
+</script>
+
+
 </body>
 </html>

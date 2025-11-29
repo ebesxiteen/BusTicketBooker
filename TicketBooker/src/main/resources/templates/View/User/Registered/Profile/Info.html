@@ -17,9 +17,92 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 
                 <div class="md:col-span-1 flex flex-col items-center">
-                    <div class="w-40 h-40 rounded-full overflow-hidden mb-4 border-4 border-emerald-100 shadow-md">
-                        <img th:src="@{/components/noavt_male.png}" class="w-full h-full object-cover" alt="Avatar">
-                    </div>
+     <!-- Avatar hiện tại -->
+    <div class="w-40 h-40 rounded-full overflow-hidden mb-4 border-4 border-emerald-100 shadow-md">
+        <img th:src="@{'/profile/photo/' + ${updateUserForm.userId}}"
+             onerror="this.onerror=null; this.src='/components/noavt_male.png';"
+             class="w-full h-full object-cover"
+             alt="Avatar">
+    </div>
+
+    <!-- FORM ĐỔI ẢNH ĐẠI DIỆN -->
+    <form th:action="@{/profile/info/avatar}"
+          method="post"
+          enctype="multipart/form-data"
+          class="flex flex-col items-center gap-2">
+
+        <label class="cursor-pointer inline-flex items-center px-3 py-1.5 bg-emerald-50 text-emerald-700 
+                      text-sm font-medium rounded-lg border border-emerald-200 hover:bg-emerald-100 transition">
+            <i class="fas fa-camera mr-2"></i> Chọn ảnh mới
+            <input type="file"
+                   id="avatarFile"
+                   name="avatarFile"
+                   accept="image/*"
+                   class="hidden"
+                   onchange="
+                        (function(input) {
+                            var status = document.getElementById('avatar-file-status');
+                            var saveBtn = document.getElementById('avatar-save-btn');
+                            
+                            if (!status || !saveBtn) return;
+                            
+                            // luôn hiện dòng status khi có thao tác
+                            status.classList.remove('hidden');
+
+                            var file = input.files && input.files[0];
+                            if (!file) {
+                                status.textContent = 'Không có ảnh nào được chọn.';
+                                status.classList.remove('text-gray-500');
+                                status.classList.add('text-red-500');
+                                saveBtn.classList.add('hidden');
+                                return;
+                            }
+
+                            // kiểm tra loại file
+                            if (!file.type || !file.type.startsWith('image/')) {
+                                status.textContent = 'File được chọn không phải ảnh hợp lệ.';
+                                status.classList.remove('text-gray-500');
+                                status.classList.add('text-red-500');
+                                saveBtn.classList.add('hidden');
+                                input.value = '';
+                                return;
+                            }
+
+                            // (optional) giới hạn size 2MB
+                            var maxSize = 2 * 1024 * 1024;
+                            if (file.size > maxSize) {
+                                status.textContent = 'Ảnh quá lớn (>2MB). Vui lòng chọn ảnh nhỏ hơn.';
+                                status.classList.remove('text-gray-500');
+                                status.classList.add('text-red-500');
+                                saveBtn.classList.add('hidden');
+                                input.value = '';
+                                return;
+                            }
+
+                            // OK: hiện tên file + cho phép lưu
+                            status.textContent = 'Đã chọn: ' + file.name;
+                            status.classList.remove('text-red-500');
+                            status.classList.add('text-gray-500');
+                            saveBtn.classList.remove('hidden');
+                        })(this);
+                   ">
+        </label>
+
+        <!-- Text trạng thái file: ban đầu ẩn -->
+        <p id="avatar-file-status"
+           class="text-xs mt-1 hidden">
+        </p>
+
+        <!-- Nút Lưu: chỉ hiện khi file hợp lệ -->
+        <button type="submit"
+                id="avatar-save-btn"
+                class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg 
+                       font-semibold shadow-sm transition hidden">
+            Lưu ảnh đại diện
+        </button>
+    </form>
+
+
                     <div class="font-bold text-lg text-gray-800" th:text="${fullName}"></div>
                     <div class="text-sm text-gray-500" th:text="${email}"></div>
                 </div>
@@ -89,5 +172,6 @@
             </div>
         </main>
     </div>
+
 </body>
 </html>

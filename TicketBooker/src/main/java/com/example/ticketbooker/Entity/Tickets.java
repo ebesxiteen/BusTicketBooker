@@ -1,5 +1,8 @@
 package com.example.ticketbooker.Entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.example.ticketbooker.Util.Enum.TicketStatus;
 
 import jakarta.annotation.Nullable;
@@ -12,6 +15,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -50,9 +55,13 @@ public class Tickets {
     @Column(name = "customerPhone", nullable = false, length = 15)
     private String customerPhone;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "seatId")
-    private Seats seat;
+@ManyToMany
+    @JoinTable(
+            name = "ticket_seats",
+            joinColumns = @JoinColumn(name = "ticket_id"),
+            inverseJoinColumns = @JoinColumn(name = "seat_id")
+    )
+    private List<Seats> seats = new ArrayList<>();
 
     @Column(name = "qrCode")
     private String qrCode;

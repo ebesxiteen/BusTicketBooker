@@ -1,6 +1,10 @@
 package com.example.ticketbooker.Controller;
 
+import java.net.URLEncoder; // Thêm import này
+import java.nio.charset.StandardCharsets; // Thêm import này
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,7 @@ import com.example.ticketbooker.DTO.Invoice.AddInvoiceDTO;
 import com.example.ticketbooker.DTO.Ticket.AddTicketRequest;
 import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
 import com.example.ticketbooker.DTO.Trips.SearchTripRequest;
+import com.example.ticketbooker.Entity.Invoices;
 import com.example.ticketbooker.Entity.Users;
 import com.example.ticketbooker.Service.InvoiceService;
 import com.example.ticketbooker.Service.SeatsService;
@@ -58,32 +63,28 @@ public class MainController {
         
         if (isLoggedIn) {
             Object principal = authentication.getPrincipal();
-            // Sửa: Lấy Users thay vì Account
             Users user = SecurityUtils.extractUser(principal);
             
             if (user != null) {
                 model.addAttribute("fullname", user.getFullName());
-                
-                // Kiểm tra quyền Admin/Manager (Sửa logic so sánh role)
                 boolean isAdmin = "ADMIN".equals(user.getRole()) || "MANAGER".equals(user.getRole());
                 model.addAttribute("isAdmin", isAdmin);
             }
         }
         
-        model.addAttribute("searchData", new SearchTripRequest());
+        if (!model.containsAttribute("searchData")) {
+            model.addAttribute("searchData", new SearchTripRequest());
+        }
+        
         model.addAttribute("isLoggedIn", isLoggedIn);
         return "View/User/Basic/TrangChu";
     }
 
     @GetMapping("/about-us")
-    public String showAboutUs() {
-        return "View/User/Basic/AboutUs";
-    }
+    public String showAboutUs() { return "View/User/Basic/AboutUs"; }
 
     @GetMapping("/contact-us")
-    public String showContactUs() {
-        return "View/User/Basic/ContactUs";
-    }
+    public String showContactUs() { return "View/User/Basic/ContactUs"; }
 
     // 2. TRANG TÌM CHUYẾN
     @GetMapping("/find-trip")
@@ -91,8 +92,49 @@ public class MainController {
         if (!model.containsAttribute("responseTripDTO")) {
             model.addAttribute("responseTripDTO", new ResponseTripDTO());
         }
+        if (!model.containsAttribute("searchData")) {
+            model.addAttribute("searchData", new SearchTripRequest());
+        }
+        
         LocalDateTime currentDate = LocalDateTime.now();
         model.addAttribute("currentDate", currentDate);
+        return "View/User/Basic/FindTrip";
+    }
+
+    // XỬ LÝ CLICK TỪ TRANG CHỦ & URL
+    @GetMapping("/search-trips")
+    public String searchTripsFromLink(
+            @RequestParam(value = "arrival", required = false) String arrival,
+            @RequestParam(value = "departure", required = false) String departure,
+            @RequestParam(value = "date", required = false) String dateStr,
+            Model model) {
+
+        SearchTripRequest searchRequest = new SearchTripRequest();
+        searchRequest.setArrival(arrival);
+        searchRequest.setDeparture(departure);
+
+        if (dateStr == null || dateStr.isEmpty()) {
+            searchRequest.setDepartureDate(LocalDateTime.now());
+        } else {
+            try {
+                LocalDate d = LocalDate.parse(dateStr);
+                searchRequest.setDepartureDate(d.atStartOfDay());
+            } catch (Exception e) {
+                searchRequest.setDepartureDate(LocalDateTime.now());
+            }
+        }
+
+        ResponseTripDTO responseTripDTO = new ResponseTripDTO();
+        if (arrival != null && !arrival.isEmpty()) {
+            responseTripDTO = tripService.searchTrip(searchRequest);
+        } else {
+            responseTripDTO.setTripsCount(0);
+        }
+
+        model.addAttribute("responseTripDTO", responseTripDTO);
+        model.addAttribute("searchData", searchRequest);
+        model.addAttribute("currentDate", LocalDateTime.now());
+
         return "View/User/Basic/FindTrip";
     }
 
@@ -100,123 +142,133 @@ public class MainController {
     public String searchTrips(@ModelAttribute("searchData") SearchTripRequest searchTripRequest, RedirectAttributes redirectAttributes) {
         ResponseTripDTO responseTripDTO = tripService.searchTrip(searchTripRequest);
         redirectAttributes.addFlashAttribute("responseTripDTO", responseTripDTO);
+        redirectAttributes.addFlashAttribute("searchData", searchTripRequest);
         return "redirect:/greenbus/find-trip";
     }
 
     // 3. TRANG ĐẶT VÉ (BOOKING)
     @GetMapping("/booking")
     public String showBooking(@RequestParam int tripId, Model model, HttpServletResponse response) {
-        model.addAttribute("bookingInformation", tripService.getTripById(tripId));
+        
+        // --- SỬA ĐOẠN NÀY: Gửi kèm địa chỉ quay về ---
+        if (!SecurityUtils.isLoggedIn()) {
+            // Tạo link để quay lại trang booking này
+            String returnUrl = "/greenbus/booking?tripId=" + tripId;
+            // Encode để tránh lỗi ký tự đặc biệt
+            String encodedUrl = URLEncoder.encode(returnUrl, StandardCharsets.UTF_8);
+            
+            return "redirect:/greenbus/login?redirect=" + encodedUrl; 
+        }
+        // --------------------------------------------
+
+        model.addAttribute("bookingInformation", tripService.getTripById(Integer.valueOf(tripId)));
         
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isLoggedIn = SecurityUtils.isLoggedIn();
+        Users user = SecurityUtils.extractUser(authentication.getPrincipal());
         
-        if (isLoggedIn) {
-            // Sửa: Lấy thông tin từ Users
-            Users user = SecurityUtils.extractUser(authentication.getPrincipal());
-            if (user != null) {
-                Integer userId = user.getId();
-                model.addAttribute("accountId", userId); // Giữ tên biến view cũ là accountId cho đỡ phải sửa HTML
-                model.addAttribute("fullname", user.getFullName());
-                model.addAttribute("phone", user.getPhone());
-                model.addAttribute("email", user.getEmail());
-                
-                // Lưu cookie userId (thay vì bookerId cũ)
-                CookieUtils.addCookie(response, "bookerId", Integer.toString(userId), "/", -1);
-            }
+        if (user != null) {
+            Integer userId = user.getId();
+            model.addAttribute("accountId", userId);
+            model.addAttribute("fullname", user.getFullName());
+            model.addAttribute("phone", user.getPhone());
+            model.addAttribute("email", user.getEmail());
+            CookieUtils.addCookie(response, "bookerId", Integer.toString(userId), "/", -1);
         }
+        
         return "View/User/Basic/Booking";
     }
 
     @GetMapping("/paying")
-    public String showPaying() {
-        return "View/User/Basic/Paying";
-    }
+    public String showPaying() { return "View/User/Basic/Paying"; }
 
     @GetMapping("/ticket-lookup")
-    public String showTicketLookup() {
-        return "View/User/Basic/LookUpTicket";
+    public String showTicketLookup() { 
+        if (!SecurityUtils.isLoggedIn()) {
+            // Tạo link để quay lại trang booking này
+            String returnUrl = "/greenbus/ticket-lookup";
+            // Encode để tránh lỗi ký tự đặc biệt
+            String encodedUrl = URLEncoder.encode(returnUrl, StandardCharsets.UTF_8);
+            
+            return "redirect:/greenbus/login?redirect=" + encodedUrl; 
+        }
+        return "View/User/Basic/LookUpTicket"; 
     }
 
-    // 4. TRANG CẢM ƠN & XỬ LÝ VÉ (QUAN TRỌNG)
-    @GetMapping("/thankyou")
-    public String showPaymentSuccess(HttpServletRequest request, HttpServletResponse response, Model model, @RequestParam Map<String, String> allParams) {
-        try {
-            int tripId = Integer.parseInt(CookieUtils.getCookieValue(request, "tripId", "0"));
-            String customerName = CookieUtils.getCookieValue(request, "customerName", "");
-            
-            // Lấy User ID (Booker)
-            int bookerId = Integer.parseInt(CookieUtils.getCookieValue(request, "bookerId", "0"));
-            
-            String grandTotal = CookieUtils.getCookieValue(request, "grandTotal", "0");
-            String email = CookieUtils.getCookieValue(request, "email", "");
-            String customerPhone = CookieUtils.getCookieValue(request, "customerPhone", "");
-            String seadIds = CookieUtils.getCookieValue(request, "seatIds", "") + " ";
-            String[] seatIdList = seadIds.trim().split(" ");
+    // 4. TRANG CẢM ƠN
+   @GetMapping("/thankyou")
+public String showPaymentSuccess(HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 Model model,
+                                 @RequestParam Map<String, String> allParams) {
+    try {
+        int tripId = Integer.parseInt(CookieUtils.getCookieValue(request, "tripId", "0"));
+        String customerName = CookieUtils.getCookieValue(request, "customerName", "");
+        int bookerId = Integer.parseInt(CookieUtils.getCookieValue(request, "bookerId", "0"));
+        String grandTotal = CookieUtils.getCookieValue(request, "grandTotal", "0");
+        String customerPhone = CookieUtils.getCookieValue(request, "customerPhone", "");
+        String seatIdsStr = CookieUtils.getCookieValue(request, "seatIds", "");
+        String[] listSeatIds = seatIdsStr.trim().split("\\s+");
 
-            String paymentStatusParam = allParams.get("paymentStatus");
-            int paymentStatus = (paymentStatusParam != null) ? Integer.parseInt(paymentStatusParam) : 0;
+        int paymentStatus = Integer.parseInt(allParams.getOrDefault("paymentStatus", "0"));
 
-            if (paymentStatus == 1) { // Thanh toán thành công
-                // Tạo hóa đơn
-                AddInvoiceDTO addInvoiceDTO = new AddInvoiceDTO(
-                        Integer.parseInt(grandTotal),
-                        PaymentStatus.PAID,
-                        LocalDateTime.now(),
-                        PaymentMethod.EWALLET
-                );
-                int invoiceCreated = invoiceService.addInvoice(addInvoiceDTO);
+        if (paymentStatus == 1) {
 
-                // Tạo vé cho từng ghế
-                for (String s : seatIdList) {
-                    if (s.isEmpty()) continue;
-                    
-                    AddTicketRequest addRequest = new AddTicketRequest();
-                    addRequest.setCustomerName(customerName);
-                    addRequest.setCustomerPhone(customerPhone);
-                    addRequest.setTrip(tripService.getTripById(tripId).getListTrips().get(0));
-                    addRequest.setSeat(seatsService.getSeatById(Integer.parseInt(s)));
-                    
-                    // --- SỬA LOGIC SET BOOKER ---
-                    if (bookerId != 0) {
-                        // Tạo object Users giả để làm Foreign Key (Hibernate tự hiểu)
-                        // Không cần query lại DB để lấy full user, tiết kiệm tài nguyên
-                        Users booker = Users.builder().id(bookerId).build();
-                        addRequest.setBooker(booker);
-                    }
-                    // ----------------------------
+            // bắt buộc có booker
+            if (bookerId == 0) {
+                return "redirect:/greenbus/login";
+            }
 
-                    addRequest.setTicketStatus(TicketStatus.BOOKED);
-                    addRequest.setInvoices(invoiceService.getById(invoiceCreated));
-                    ticketService.addTicket(addRequest);
-                }
-                CookieUtils.addCookie(response, "paymentStatus", Integer.toString(paymentStatus), "/", -1);
-            } else if (paymentStatus == 0) {
-                // Xử lý khi thanh toán thất bại (Logic cũ của bạn là xóa ghế???)
-                // Mình giữ nguyên logic của bạn, nhưng cẩn thận chỗ này nhé.
-                for (String s : seatIdList) {
-                    if (!s.isEmpty()) seatsService.deleteSeat(Integer.parseInt(s));
+            // 1️⃣ tạo 1 invoice duy nhất cho cả lượt đặt
+            AddInvoiceDTO addInvoiceDTO = new AddInvoiceDTO(
+                    Integer.parseInt(grandTotal),
+                    PaymentStatus.PAID,
+                    LocalDateTime.now(),
+                    PaymentMethod.EWALLET
+            );
+            int invoiceId = invoiceService.addInvoice(addInvoiceDTO);
+            Invoices invoice = invoiceService.getById(invoiceId);
+
+            // 2️⃣ tạo AddTicketRequest: 1 ticket, nhiều ghế
+            AddTicketRequest addRequest = new AddTicketRequest();
+            addRequest.setSeat(new ArrayList<>());
+            addRequest = AddTicketRequest.builder()
+                    .customerName(customerName)
+                    .customerPhone(customerPhone)
+                    .tripId(tripId)
+                    .bookerId(bookerId)
+                    .ticketStatus(TicketStatus.BOOKED)
+                    .invoices(invoice)          // 1 invoice cho 1 vé
+                    .build();
+
+            for (String s : listSeatIds) {
+                if (!s.isEmpty()) {
+                    addRequest.getSeat().add(Integer.parseInt(s)); // list seat id
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            // 3️⃣ gọi service: tạo 1 Tickets chứa nhiều seats
+            ticketService.addTicket(addRequest);
+
+            CookieUtils.addCookie(response, "paymentStatus", String.valueOf(paymentStatus), "/", -1);
+        } else {
+            // payment fail → xoá giữ chỗ ghế
+            for (String s : listSeatIds) {
+                if (!s.isEmpty()) seatsService.deleteSeat(Integer.parseInt(s));
+            }
         }
-        
-        return "View/User/Basic/Thankyou";
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    return "View/User/Basic/Thankyou";
+}
 
     @GetMapping("/login")
-    public String login() {
-        return "View/Util/Login";
-    }
+    public String login() { return "View/Util/Login"; }
 
     @GetMapping("/profile")
-    public String showProfile() {
-        return "View/User/Registered/Profile/TicketHistory";
-    }
+    public String showProfile() { return "View/User/Registered/Profile/TicketHistory"; }
 
     @GetMapping("/reset-password")
-    public String resetPassword() {
-        return "View/Util/ResetPassword";
-    }
+    public String resetPassword() { return "View/Util/ResetPassword"; }
 }

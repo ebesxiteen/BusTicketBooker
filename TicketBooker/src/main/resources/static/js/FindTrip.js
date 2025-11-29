@@ -1,278 +1,304 @@
 (function () {
     document.addEventListener("DOMContentLoaded", function () {
+        console.log("🚀 FindTrip.js Loaded - V4 Clean Fix!");
+
+        // Biến toàn cục quản lý trạng thái
+        let tripsData = []; // Lưu trữ danh sách gốc nếu cần (hiện tại dùng DOM)
         
-        // ==========================================
-        // 1. XỬ LÝ UI: Ẩn/Hiện Ngày Về (OneWay/RoundTrip)
-        // ==========================================
-        const tripTypeRadios = document.querySelectorAll('input[name="tripType"]');
-        const returnDateContainer = document.getElementById('returnDateContainer');
-
-        function updateDateContainerLayout() {
-            // Kiểm tra null để tránh lỗi nếu trang không có phần này
-            const selectedRadio = document.querySelector('input[name="tripType"]:checked');
-            if (selectedRadio && returnDateContainer) {
-                if (selectedRadio.value === 'oneWay') {
-                    returnDateContainer.classList.add('hidden');
-                } else {
-                    returnDateContainer.classList.remove('hidden');
-                }
-            }
-        }
-
-        tripTypeRadios.forEach(radio => {
-            radio.addEventListener('change', updateDateContainerLayout);
-        });
-        updateDateContainerLayout(); // Chạy lần đầu
-
-        // ==========================================
-        // 2. KHỞI TẠO LOGIC ĐẶT VÉ
-        // ==========================================
-        let TICKET_PRICE = 0;
-        let selectedSeats = [];
+        // DOM Elements
+        const rangeMin = document.getElementById("range-min");
+        const rangeMax = document.getElementById("range-max");
+        const track = document.querySelector(".slider-track");
+        const priceMinDisplay = document.getElementById("price-min-display");
+        const priceMaxDisplay = document.getElementById("price-max-display");
         
-        // Lấy TripId từ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const tripId = urlParams.get('tripId');
+        // Khởi chạy
+        init();
 
-        if(tripId) {
-            fetchTripDetails();
-            bookingLogic();
-            handlePayment();
-        }
-
-        // ==========================================
-        // 3. LẤY THÔNG TIN CHUYẾN & GIÁ VÉ
-        // ==========================================
-        async function fetchTripDetails() {
-            try {
-                const response = await fetch(`/admin/trips/${tripId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Cập nhật UI thông tin chuyến
-                    const locEl = document.getElementById('departureLocation');
-                    const timeEl = document.getElementById('departureTime');
-                    if(locEl) locEl.textContent = `${data.departureLocation} - ${data.arrivalLocation}`;
-                    if(timeEl) timeEl.textContent = data.departureTime;
-
-                    // Lưu giá vé
-                    TICKET_PRICE = data.totalPrice || 0; // Đảm bảo field này khớp với API Trip
-                    updatePriceInfo();
-                }
-            } catch (error) {
-                console.error('Lỗi lấy thông tin chuyến:', error);
-            }
-        }
-
-        // ==========================================
-        // 4. LOGIC VẼ GHẾ & CHỌN GHẾ
-        // ==========================================
-        async function bookingLogic() {
-            // Container chứa ghế (Bạn cần thêm div id="seatMapContainer" vào HTML)
-            const seatContainer = document.getElementById('seatMapContainer');
-            if(!seatContainer) return;
-
-            try {
-                // Gọi API lấy ghế đã đặt
-                const response = await fetch(`/api/seats/${tripId}/booked`);
-                let bookedSeats = [];
-                if (response.ok) {
-                    bookedSeats = await response.json();
-                }
-
-                // Vẽ sơ đồ ghế (Tầng A và Tầng B) - 18 ghế mỗi tầng
-                renderSeatMap(seatContainer, bookedSeats);
-
-            } catch (error) {
-                console.error('Lỗi tải sơ đồ ghế:', error);
-            }
-        }
-
-        function renderSeatMap(container, bookedSeats) {
-            // HTML khung sơ đồ (Style GreenBus)
-            container.innerHTML = `
-                <div class="mt-4 p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-700">Chọn ghế</h3>
-                    
-                    <div class="flex justify-center gap-4 mb-6 text-sm">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                            <span>Đã bán</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 border-2 border-green-500 bg-white rounded"></div>
-                            <span>Còn trống</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 bg-green-500 rounded"></div>
-                            <span>Đang chọn</span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="text-center">
-                            <h4 class="font-medium mb-3 text-gray-600">Tầng dưới (A)</h4>
-                            <div class="grid grid-cols-3 gap-3 justify-center max-w-[200px] mx-auto">
-                                ${generateSeatHTML('A', 18, bookedSeats)}
-                            </div>
-                        </div>
-                        
-                        <div class="text-center">
-                            <h4 class="font-medium mb-3 text-gray-600">Tầng trên (B)</h4>
-                            <div class="grid grid-cols-3 gap-3 justify-center max-w-[200px] mx-auto">
-                                ${generateSeatHTML('B', 18, bookedSeats)}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Gán sự kiện click cho các ghế vừa tạo
-            const seatButtons = container.querySelectorAll('.seat-btn');
-            seatButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    handleSeatClick(this);
-                });
-            });
-        }
-
-        function generateSeatHTML(prefix, count, bookedSeats) {
-            let html = '';
-            for (let i = 1; i <= count; i++) {
-                const seatCode = `${prefix}${i.toString().padStart(2, '0')}`; // VD: A01
-                const isBooked = bookedSeats.includes(seatCode);
-                
-                // Style cho ghế
-                let classList = "seat-btn w-10 h-10 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center ";
-                
-                if (isBooked) {
-                    classList += "bg-gray-300 text-gray-500 cursor-not-allowed";
-                } else {
-                    classList += "bg-white border-2 border-green-500 text-green-600 hover:bg-green-50 cursor-pointer shadow-sm";
-                }
-
-                html += `<button type="button" 
-                            class="${classList}" 
-                            data-code="${seatCode}" 
-                            ${isBooked ? 'disabled' : ''}>
-                            ${seatCode}
-                         </button>`;
-            }
-            return html;
-        }
-
-        function handleSeatClick(btn) {
-            const seatCode = btn.dataset.code;
-
-            if (selectedSeats.includes(seatCode)) {
-                // Bỏ chọn -> Về trạng thái trống (Trắng viền xanh)
-                selectedSeats = selectedSeats.filter(s => s !== seatCode);
-                btn.className = "seat-btn w-10 h-10 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center bg-white border-2 border-green-500 text-green-600 hover:bg-green-50 cursor-pointer shadow-sm";
-            } else {
-                // Chọn mới
-                if (selectedSeats.length >= 5) {
-                    Swal.fire({ icon: 'warning', title: 'Chỉ được chọn tối đa 5 ghế!', confirmButtonText: 'OK' });
-                    return;
-                }
-                // Chọn -> Chuyển màu xanh đặc (GreenBus)
-                selectedSeats.push(seatCode);
-                btn.className = "seat-btn w-10 h-10 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center bg-green-500 text-white border-2 border-green-500 shadow-md transform scale-105";
-            }
-            updatePriceInfo();
-        }
-
-        function updatePriceInfo() {
-            // Cập nhật giao diện tổng tiền
-            const totalPrice = selectedSeats.length * TICKET_PRICE;
+        function init() {
+            syncUrlParamsToForm();
+            loadSelectData(); // Load dropdown
             
-            const els = {
-                seatCount: document.getElementById('seatCount'),
-                selectedSeats: document.getElementById('selectedSeats'),
-                totalPrice: document.getElementById('totalPrice'),
-                ticketPrice: document.getElementById('ticketPrice'),
-                grandTotal: document.getElementById('grandTotal')
+            // Đợi 1 chút để DOM ổn định rồi mới init các tính năng lọc
+            setTimeout(() => {
+                initPriceSlider();
+                initFilters();
+                // Chạy lọc lần đầu để khớp với trạng thái mặc định
+                filterTrips(); 
+            }, 100);
+        }
+
+        // ============================================================
+        // 1. SYNC URL (Giữ nguyên logic chuẩn)
+        // ============================================================
+        function syncUrlParamsToForm() {
+            const params = new URLSearchParams(window.location.search);
+            const arrival = params.get('arrival');
+            const departure = params.get('departure');
+            const dateVal = params.get('date');
+
+            const dateInput = document.getElementById("departureDate");
+            if (dateInput) {
+                if (dateVal) dateInput.value = dateVal.includes("T") ? dateVal : (dateVal + "T00:00");
+                else {
+                    // Set default today
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    dateInput.value = now.toISOString().slice(0, 16);
+                }
+            }
+
+            const safeDecode = (s) => { try { return decodeURIComponent(s || ''); } catch(e){ return s; } };
+
+            if(arrival) {
+                const el = document.getElementById("arrival");
+                if(el) { el.value = safeDecode(arrival); el.setAttribute('data-selected', safeDecode(arrival)); }
+            }
+            if(departure) {
+                const el = document.getElementById("departure");
+                if(el) { el.value = safeDecode(departure); el.setAttribute('data-selected', safeDecode(departure)); }
+            }
+        }
+
+        // ============================================================
+        // 2. LOAD DROPDOWN (Giữ nguyên)
+        // ============================================================
+        function loadSelectData() {
+            fetch("/api/routes/get-all", { method: "GET", headers: { "Content-Type": "application/json" } })
+            .then(res => res.json())
+            .then(data => {
+                const list = Array.isArray(data) ? data : (data.list || []);
+                const depEl = document.getElementById("departure");
+                const arrEl = document.getElementById("arrival");
+                
+                if(!depEl || !arrEl) return;
+
+                const selDep = depEl.getAttribute('data-selected');
+                const selArr = arrEl.getAttribute('data-selected');
+
+                depEl.innerHTML = '<option value="">Chọn điểm đi</option>';
+                arrEl.innerHTML = '<option value="">Chọn điểm đến</option>';
+
+                const deps = new Set(), arrs = new Set();
+                list.forEach(i => {
+                    const d = i.departureLocation || i.route?.departureLocation;
+                    const a = i.arrivalLocation || i.route?.arrivalLocation;
+                    if(d) deps.add(d);
+                    if(a) arrs.add(a);
+                });
+
+                deps.forEach(v => depEl.add(new Option(v, v, false, v == selDep)));
+                arrs.forEach(v => arrEl.add(new Option(v, v, false, v == selArr)));
+            }).catch(console.warn);
+        }
+
+        // ============================================================
+        // 3. SLIDER GIÁ (Logic Đơn Giản & Hiệu Quả)
+        // ============================================================
+        let minGap = 50000;
+        let sliderMaxVal = 2000000; // Mặc định
+
+        function initPriceSlider() {
+            if (!rangeMin || !rangeMax) return;
+
+            // 1. Tìm giá Max thực tế từ DOM
+            const items = document.querySelectorAll('.trip-item');
+            let prices = [];
+            items.forEach(el => {
+                let p = parseFloat(el.getAttribute('data-price'));
+                if(!isNaN(p)) prices.push(p);
+            });
+
+            if (prices.length > 0) {
+                let maxP = Math.max(...prices);
+                sliderMaxVal = Math.ceil(maxP / 100000) * 100000;
+                if(sliderMaxVal < 500000) sliderMaxVal = 500000;
+            }
+
+            // 2. Set Attributes
+            rangeMin.max = sliderMaxVal;
+            rangeMax.max = sliderMaxVal;
+            rangeMin.value = 0;
+            rangeMax.value = sliderMaxVal;
+
+            // 3. Update UI lần đầu
+            updateSliderUI();
+
+            // 4. Gắn sự kiện (Dùng oninput trực tiếp)
+            rangeMin.oninput = function() {
+                let minVal = parseInt(rangeMin.value);
+                let maxVal = parseInt(rangeMax.value);
+
+                if (maxVal - minVal < minGap) {
+                    rangeMin.value = maxVal - minGap;
+                }
+                updateSliderUI();
+                filterTrips(); // Gọi lọc ngay khi kéo
             };
 
-            if(els.seatCount) els.seatCount.textContent = `${selectedSeats.length} Ghế`;
-            if(els.selectedSeats) els.selectedSeats.textContent = selectedSeats.length > 0 ? selectedSeats.join(', ') : 'Chưa chọn';
-            
-            const moneyStr = totalPrice.toLocaleString('vi-VN') + 'đ';
-            if(els.totalPrice) els.totalPrice.textContent = moneyStr;
-            if(els.grandTotal) els.grandTotal.textContent = moneyStr;
-            if(els.ticketPrice) els.ticketPrice.textContent = TICKET_PRICE.toLocaleString('vi-VN') + 'đ';
+            rangeMax.oninput = function() {
+                let minVal = parseInt(rangeMin.value);
+                let maxVal = parseInt(rangeMax.value);
+
+                if (maxVal - minVal < minGap) {
+                    rangeMax.value = minVal + minGap;
+                }
+                updateSliderUI();
+                filterTrips(); // Gọi lọc ngay khi kéo
+            };
         }
 
-        // ==========================================
-        // 5. XỬ LÝ THANH TOÁN (PAYMENT)
-        // ==========================================
-        function handlePayment() {
-            const btnPay = document.getElementById('btnPay');
-            if(!btnPay) return;
+        function updateSliderUI() {
+            let minVal = parseInt(rangeMin.value);
+            let maxVal = parseInt(rangeMax.value);
+            
+            // Cập nhật số tiền hiển thị
+            if(priceMinDisplay) priceMinDisplay.innerText = formatMoney(minVal);
+            if(priceMaxDisplay) priceMaxDisplay.innerText = formatMoney(maxVal);
 
-            btnPay.addEventListener("click", async function () {
-                // Validate dữ liệu
-                const customerName = document.querySelector('[name="customerName"]')?.value || "";
-                const customerPhone = document.querySelector('[name="customerPhone"]')?.value || "";
-                const email = document.querySelector('[name="email"]')?.value || "";
+            // Tô màu thanh track
+            let percent1 = (minVal / sliderMaxVal) * 100;
+            let percent2 = (maxVal / sliderMaxVal) * 100;
+            
+            if(track) {
+                track.style.background = `linear-gradient(to right, #e5e7eb ${percent1}%, #10b981 ${percent1}%, #10b981 ${percent2}%, #e5e7eb ${percent2}%)`;
+            }
+        }
 
-                if (selectedSeats.length === 0) {
-                    Swal.fire({ icon: 'warning', title: 'Vui lòng chọn ít nhất 1 ghế!' });
-                    return;
-                }
-                if (!customerName || !customerPhone || !email) {
-                    Swal.fire({ icon: 'warning', title: 'Vui lòng điền đầy đủ thông tin khách hàng!' });
-                    return;
-                }
+        // ============================================================
+        // 4. BỘ LỌC TỔNG HỢP
+        // ============================================================
+        let currentBusType = 'ALL';
 
-                // Lưu Cookie để sang trang thankyou xử lý
-                const grandTotal = selectedSeats.length * TICKET_PRICE;
-                document.cookie = `tripId=${tripId}; path=/`;
-                document.cookie = `selectedSeats=${selectedSeats.join(' ')}; path=/`;
-                document.cookie = `grandTotal=${grandTotal}; path=/`;
-                document.cookie = `customerName=${encodeURIComponent(customerName)}; path=/`;
-                document.cookie = `customerPhone=${encodeURIComponent(customerPhone)}; path=/`;
-                document.cookie = `email=${encodeURIComponent(email)}; path=/`;
+        function initFilters() {
+            // Checkbox Giờ
+            document.querySelectorAll('input[name="timeFilter"]').forEach(cb => {
+                cb.addEventListener('change', filterTrips);
+            });
 
-                // Gọi API giữ chỗ (Pre-booking)
-                try {
-                    const preResp = await fetch('/api/seats/prebooking-seat', { method: 'POST', credentials: 'include' });
-                    if (!preResp.ok) throw new Error("Giữ chỗ thất bại");
+            // Button Loại Xe
+            document.querySelectorAll('.btn-type-filter').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    let type = this.getAttribute('data-value');
+                    // Toggle logic
+                    currentBusType = (currentBusType === type) ? 'ALL' : type;
+                    updateTypeButtonsUI();
+                    filterTrips();
+                });
+            });
 
-                    // Chuyển hướng thanh toán
-                    const paymentMethodInput = document.querySelector('input[name="payment"]:checked');
-                    if (paymentMethodInput && (paymentMethodInput.value === "VNPay" || paymentMethodInput.id === "vnpay")) {
-                        window.location.href = '/vnpay';
-                    } else {
-                        // Mặc định ZaloPay
-                        processZaloPayment(customerName, grandTotal);
-                    }
-                } catch (e) {
-                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể giữ chỗ. Ghế có thể vừa bị người khác đặt.' });
+            // Nút Reset
+            const resetBtn = document.querySelector('.btn-reset-filter');
+            if(resetBtn) {
+                resetBtn.addEventListener('click', resetAllFilters);
+            }
+            
+            // Format tiền cho danh sách (chỉ chạy 1 lần để đẹp)
+            document.querySelectorAll('.trip-price').forEach(el => {
+                // Kiểm tra nếu chưa format thì mới làm
+                if(!el.innerText.includes('₫') && !el.innerText.includes('đ')) {
+                    let v = parseFloat(el.innerText.replace(/[^0-9]/g, ''));
+                    if(!isNaN(v)) el.innerText = formatMoney(v);
                 }
             });
         }
 
-        async function processZaloPayment(fullName, amount) {
-            try {
-                const res = await fetch("/payment/zalo-payment", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ 
-                        appUser: fullName, 
-                        amount: amount, 
-                        description: `Thanh toan ve xe GreenBus ${Date.now()}` 
-                    })
-                });
-                const data = await res.json();
-                if (data.returnCode === 1) {
-                    window.location.href = data.orderUrl;
-                } else {
-                    Swal.fire({ icon: 'error', title: 'ZaloPay Error', text: data.returnMessage });
+        function filterTrips() {
+            const items = document.querySelectorAll('.trip-item');
+            
+            // Lấy điều kiện Giờ
+            const timeChecked = Array.from(document.querySelectorAll('input[name="timeFilter"]:checked')).map(c => c.value);
+            
+            // Lấy điều kiện Giá
+            let pMin = rangeMin ? parseInt(rangeMin.value) : 0;
+            let pMax = rangeMax ? parseInt(rangeMax.value) : 999999999;
+
+            let count = 0;
+
+            items.forEach(item => {
+                // Lấy data từ attribute
+                let hour = parseInt(item.getAttribute('data-hour'));
+                let type = normalizeType(item.getAttribute('data-type'));
+                let price = parseFloat(item.getAttribute('data-price'));
+
+                // 1. Check Giờ
+                let timeOk = (timeChecked.length === 0); // Nếu không check cái nào thì mặc định true
+                if (!timeOk) {
+                    timeChecked.forEach(range => {
+                        let [start, end] = range.split('-').map(Number);
+                        if (hour >= start && hour < end) timeOk = true;
+                    });
                 }
-            } catch (e) {
-                console.error(e);
-                Swal.fire({ icon: 'error', title: 'Lỗi kết nối thanh toán' });
+
+                // 2. Check Loại Xe
+                let typeOk = (currentBusType === 'ALL' || type === normalizeType(currentBusType));
+
+                // 3. Check Giá
+                let priceOk = (price >= pMin && price <= pMax);
+
+                // KẾT QUẢ
+                if (timeOk && typeOk && priceOk) {
+                    item.classList.remove('hidden');
+                    count++;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            // Cập nhật số lượng
+            const counter = document.getElementById('tripCountDisplay');
+            if(counter) counter.innerText = `(${count} chuyến)`;
+
+            // Hiển thị thông báo rỗng
+            const noMsg = document.getElementById('noResultFilter');
+            if(noMsg) {
+                if(count === 0 && items.length > 0) noMsg.classList.remove('hidden');
+                else noMsg.classList.add('hidden');
             }
+        }
+
+        function resetAllFilters() {
+            // Reset Giờ
+            document.querySelectorAll('input[name="timeFilter"]').forEach(c => c.checked = false);
+            
+            // Reset Loại Xe
+            currentBusType = 'ALL';
+            updateTypeButtonsUI();
+
+            // Reset Giá
+            if(rangeMin && rangeMax) {
+                rangeMin.value = 0;
+                rangeMax.value = rangeMax.max;
+                updateSliderUI();
+            }
+
+            filterTrips();
+        }
+
+        function updateTypeButtonsUI() {
+            document.querySelectorAll('.btn-type-filter').forEach(btn => {
+                let isActive = btn.getAttribute('data-value') === currentBusType;
+                if (isActive) {
+                    btn.classList.remove('bg-gray-50', 'text-gray-700', 'border-gray-300');
+                    btn.classList.add('bg-emerald-600', 'text-white', 'border-transparent');
+                } else {
+                    btn.classList.add('bg-gray-50', 'text-gray-700', 'border-gray-300');
+                    btn.classList.remove('bg-emerald-600', 'text-white', 'border-transparent');
+                }
+            });
+        }
+
+        // --- Helpers ---
+        function normalizeType(s) {
+            if(!s) return "BED"; 
+            s = s.toUpperCase();
+            if(s.includes("BED") || s.includes("GIUONG") || s.includes("LIMOUSINE")) return "BED";
+            if(s.includes("SEAT") || s.includes("GHE")) return "SEAT";
+            return "BED";
+        }
+
+        function formatMoney(n) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
         }
     });
 })();

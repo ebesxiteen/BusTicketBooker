@@ -47,6 +47,10 @@
             <form th:action="@{/perform_login}" method="post"
                   class="login-form w-full max-w-md transition-all duration-700 opacity-100">
 
+                <!-- QUAN TRỌNG: Input ẩn để hứng tham số redirect từ URL -->
+                <!-- Ví dụ URL: /login?redirect=/booking?tripId=12 -->
+                <input type="hidden" name="redirect" th:value="${param.redirect}">
+
                 <div class="mb-8">
                     <h3 class="text-gray-800 text-3xl md:text-4xl font-extrabold">Đăng nhập</h3>
                     <p class="text-gray-800 text-sm mt-4">Truy cập tài khoản dễ dàng.</p>

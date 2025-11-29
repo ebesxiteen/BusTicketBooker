@@ -4,7 +4,9 @@ import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,9 +15,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.ticketbooker.DTO.Ticket.TicketResponse;
@@ -71,6 +75,59 @@ public class ProfileController {
     return "View/User/Registered/Profile/Info";
     }
    // 2. Cập nhật thông tin
+   @PostMapping("/info/avatar")
+public String updateAvatar(@RequestParam("avatarFile") MultipartFile avatarFile,
+                           RedirectAttributes redirectAttributes) {
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Users currentUser = SecurityUtils.extractUser(authentication.getPrincipal());
+
+    if (currentUser == null) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Không xác định được người dùng.");
+        return "redirect:/profile/info";
+    }
+
+    if (avatarFile == null || avatarFile.isEmpty()) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn một ảnh.");
+        return "redirect:/profile/info";
+    }
+
+    String contentType = avatarFile.getContentType();
+    if (contentType == null || !contentType.startsWith("image/")) {
+        redirectAttributes.addFlashAttribute("errorMessage", "File không phải là ảnh hợp lệ.");
+        return "redirect:/profile/info";
+    }
+
+    try {
+        userService.updateAvatar(currentUser.getId(), avatarFile);
+        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật ảnh đại diện thành công!");
+    } catch (Exception e) {
+        e.printStackTrace(); // RẤT QUAN TRỌNG: in stack trace ra console để coi nó báo gì
+        redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi khi cập nhật ảnh đại diện.");
+    }
+
+    return "redirect:/profile/info";
+}
+
+@GetMapping("/photo/{userId}")
+public ResponseEntity<byte[]> getProfilePhoto(@PathVariable Integer userId) {
+    Users user = userRepo.findById(userId)
+            .orElse(null);
+
+    if (user == null || user.getProfilePhoto() == null) {
+        // Nếu không có ảnh thì trả 404, cho frontend tự fallback ảnh mặc định
+        return ResponseEntity.notFound().build();
+    }
+
+    byte[] photo = user.getProfilePhoto();
+
+    // Ở đây tui tạm cho là JPEG, nếu bà có lưu contentType thì set cho chuẩn hơn
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.IMAGE_JPEG);
+
+    return new ResponseEntity<>(photo, headers, HttpStatus.OK);
+}
+
 @PostMapping("/info/updates")
     public String updateUser(@ModelAttribute("updateUserForm") UpdateUserRequest updateUserForm,
                             RedirectAttributes redirectAttributes) {
@@ -108,6 +165,10 @@ public class ProfileController {
     public String redirectInfoUpdate() {
         return "redirect:/profile/info";
     }
+        @GetMapping("/info/avatar")
+    public String redirectAvatarUpdate() {
+        return "redirect:/profile/info";
+    }
 
     // 3. Lịch sử đặt vé
     @GetMapping("/history-booking")
@@ -128,6 +189,10 @@ public class ProfileController {
         
         model.addAttribute("ticketResponse", ticketResponse);
         model.addAttribute("ticketStatuses", TicketStatus.values());
+        model.addAttribute("filterTicketId", ticketId);
+        model.addAttribute("filterDepartureDate", departureDate);
+        model.addAttribute("filterRoute", route);
+        model.addAttribute("filterStatus", status);
         
         return "View/User/Registered/Profile/TicketHistory";
     }

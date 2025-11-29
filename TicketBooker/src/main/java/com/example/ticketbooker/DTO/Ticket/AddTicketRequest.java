@@ -1,9 +1,8 @@
 package com.example.ticketbooker.DTO.Ticket;
 
+import java.util.List;
+
 import com.example.ticketbooker.Entity.Invoices;
-import com.example.ticketbooker.Entity.Seats;
-import com.example.ticketbooker.Entity.Trips;
-import com.example.ticketbooker.Entity.Users;
 import com.example.ticketbooker.Util.Enum.TicketStatus;
 
 import lombok.AllArgsConstructor;
@@ -16,13 +15,13 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class AddTicketRequest {
-    private Trips trip;
-    
-    private Users booker; 
+    private Integer tripId;              // ID chuyến
+    private Integer bookerId;
     
     private String customerName;
     private String customerPhone;
-    private Seats seat;
+    @Builder.Default
+    private List<Integer> seat = new java.util.ArrayList<>();
     private TicketStatus ticketStatus;
     private Invoices invoices;
 }

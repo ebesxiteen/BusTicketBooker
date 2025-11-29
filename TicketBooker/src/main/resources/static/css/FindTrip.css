@@ -2,14 +2,15 @@
 
 /* --- KHAI BÁO MÀU (Dự phòng nếu file này load riêng) --- */
 :root {
-    --primary-color: #10b981;       /* Xanh GreenBus */
-    --primary-hover: #059669;       /* Xanh đậm */
-    --focus-ring: rgba(16, 185, 129, 0.25); /* Viền sáng khi bấm input */
+    --primary-color: #10b981;
+    --primary-hover: #059669;
+    --track-color: #e5e7eb;
+    --thumb-size: 20px;
 }
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #f8fafc; /* Màu nền xám rất nhạt cho hiện đại */
+    background-color: #f8fafc;
 }
 
 /* --- TÙY CHỈNH CHO CÁC Ô NHẬP LIỆU (INPUT/SELECT) --- */
@@ -44,4 +45,63 @@ button[type="submit"]:hover, .btn-search:hover {
 .step-completed {
     border-color: var(--primary-color) !important;
     color: var(--primary-color) !important;
+}
+
+/* --- SLIDER CSS FIX --- */
+.range-slider {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    background-color: var(--track-color);
+    border-radius: 4px;
+    margin: 25px 0 15px 0;
+}
+
+.slider-track {
+    position: absolute;
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    z-index: 1;
+}
+
+.range-input {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    top: 0;
+    left: 0;
+    background: none;
+    pointer-events: none; /* BẮT BUỘC: Để 2 thanh input chồng lên nhau mà vẫn kéo được */
+    -webkit-appearance: none;
+    appearance: none;
+    z-index: 2;
+    margin: 0;
+}
+
+/* Thumb Chrome */
+.range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    pointer-events: auto; /* BẮT BUỘC: Để chuột bắt được nút kéo */
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    margin-top: -7px; /* Căn giữa */
+}
+
+/* Thumb Firefox */
+.range-input::-moz-range-thumb {
+    pointer-events: auto;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transform: translateZ(0);
 }

@@ -1,23 +1,22 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector('form');
-    const oldPasswordInput = document.querySelector('input[name="oldPassword"]');
-    const newPasswordInput = document.querySelector('input[name="newPassword"]');
-    const confirmPasswordInput = document.querySelector('input[name="confirmPassword"]');
-    // Tìm nút submit để khóa lại khi đang loading
-    const submitButton = form.querySelector('button[type="submit"]'); 
-    
-    const statusMessage = document.createElement('p'); 
-    form.appendChild(statusMessage);
+    const form = document.querySelector('#passwordChangeForm');
+    const oldPasswordInput = document.querySelector('#oldPassword');
+    const newPasswordInput = document.querySelector('#newPassword');
+    const confirmPasswordInput = document.querySelector('#confirmPassword');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    // Container để hiển thị card thông báo
+    const messageContainer = document.createElement('div');
+    form.appendChild(messageContainer);
 
     form.addEventListener('submit', async function (event) {
-        event.preventDefault(); 
-        resetStatusMessage();
+        event.preventDefault();
+        clearMessages();
 
         if (!validateForm()) {
             return;
         }
 
-        // 1. Hiệu ứng Loading: Khóa nút & đổi text
         const originalBtnText = submitButton.innerText;
         submitButton.disabled = true;
         submitButton.innerText = "Đang xử lý...";
@@ -29,70 +28,79 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch('/profile/change-password', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData.toString()
             });
 
-            // 2. Xử lý kết quả trả về
-            const responseText = await response.text(); // Backend trả về text thông báo
+            const responseText = await response.text();
 
             if (response.ok) {
-                displaySuccess(responseText || "Đổi mật khẩu thành công!");
+                showCard(responseText || "Đổi mật khẩu thành công!", true);
                 form.reset();
             } else {
-                // Hiển thị lỗi từ Backend (ví dụ: "Mật khẩu cũ không đúng")
-                displayError(responseText || "Đã xảy ra lỗi.");
+                showCard(responseText || "Đã xảy ra lỗi.", false);
             }
         } catch (error) {
-            displayError("Lỗi kết nối đến máy chủ.");
+            showCard("Lỗi kết nối đến máy chủ.", false);
         } finally {
-            // 3. Mở khóa nút dù thành công hay thất bại
             submitButton.disabled = false;
             submitButton.innerText = originalBtnText;
         }
     });
 
-    // --- CÁC HÀM VALIDATE GIỮ NGUYÊN ---
+    // ==========================
+    // VALIDATE
+    // ==========================
     function validateForm() {
-        resetStatusMessage();
-
         if (!oldPasswordInput.value.trim()) {
-            displayError("Vui lòng nhập mật khẩu cũ.");
+            showFieldError(oldPasswordInput, "Vui lòng nhập mật khẩu cũ.");
             return false;
         }
-
         if (!validatePasswordStrength(newPasswordInput.value)) {
-            displayError("Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa, thường, số và ký tự đặc biệt.");
+            showFieldError(newPasswordInput, "Mật khẩu mới phải có ít nhất 6 ký tự.");
             return false;
         }
-
+        if (newPasswordInput.value === oldPasswordInput.value) {
+            showFieldError(newPasswordInput, "Mật khẩu mới không được trùng mật khẩu cũ.");
+            return false;
+        }
         if (newPasswordInput.value !== confirmPasswordInput.value) {
-            displayError("Mật khẩu xác nhận không khớp.");
+            showFieldError(confirmPasswordInput, "Mật khẩu xác nhận không khớp.");
             return false;
         }
         return true;
     }
 
     function validatePasswordStrength(password) {
-        // Regex này khá chặt chẽ, đảm bảo bảo mật cao
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        return passwordRegex.test(password);
+        // Chỉ cần tối thiểu 6 ký tự
+        return password.length >= 6;
     }
 
-    function displayError(message) {
-        statusMessage.textContent = message;
-        statusMessage.className = 'text-danger small mt-2'; // Dùng class Bootstrap (text-danger) hoặc Tailwind (text-red-500) tùy project
+    // ==========================
+    // HIỂN THỊ CARD THÔNG BÁO
+    // ==========================
+    function showCard(message, isSuccess) {
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-lg shadow-md mt-4 ${isSuccess ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'}`;
+        card.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas ${isSuccess ? 'fa-check-circle text-green-600' : 'fa-exclamation-circle text-red-600'} mr-2"></i>
+                <span class="font-semibold">${message}</span>
+            </div>
+        `;
+        messageContainer.appendChild(card);
     }
 
-    function displaySuccess(message) {
-        statusMessage.textContent = message;
-        statusMessage.className = 'text-success small mt-2'; // Dùng class Bootstrap (text-success)
+    function showFieldError(input, message) {
+        const error = document.createElement('div');
+        error.className = 'text-red-500 text-sm mt-1';
+        error.textContent = message;
+        input.insertAdjacentElement('afterend', error);
+        input.focus();
     }
 
-    function resetStatusMessage() {
-        statusMessage.textContent = '';
-        statusMessage.className = '';
+    function clearMessages() {
+        messageContainer.innerHTML = '';
+        form.querySelectorAll('.text-red-500').forEach(el => el.remove());
     }
 });

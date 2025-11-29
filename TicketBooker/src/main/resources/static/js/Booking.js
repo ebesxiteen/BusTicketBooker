@@ -1,217 +1,289 @@
 (function () {
     document.addEventListener("DOMContentLoaded", function () {
-        // Khởi tạo các chức năng
-        booking();
-        handlePayment();
-        fetchTripDetails();
+        // Biến toàn cục
+        let TICKET_PRICE = 0;
+        let selectedSeats = [];
+        const MAX_SEATS = 5;
+        let BUS_CAPACITY = 36; // mặc định
 
-        let TICKET_PRICE = 0; // Giá vé
-        let tripTotalPrice = 0;
+        init();
 
-        // 1. Lấy thông tin chuyến xe
-        async function fetchTripDetails() {
+        function init() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const tripId = urlParams.get('tripId');
-
-                const response = await fetch(`/admin/trips/${tripId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('departureLocation').textContent = `${data.departureLocation} - ${data.arrivalLocation}`;
-                    document.getElementById('departureTime').textContent = data.departureTime;
-                    
-                    console.log('Total Price from API:', data.totalPrice);
-                    TICKET_PRICE = data.totalPrice;
-                    updatePriceInfo();
-                } else {
-                    console.error('Không thể lấy thông tin chuyến xe');
-                }
-            } catch (error) {
-                console.error('Lỗi khi lấy thông tin chuyến xe:', error);
-            }
-        }
-
-        // 2. Logic chọn ghế
-        function booking() {
-            let selectedSeats = [];
-            const seats = document.querySelectorAll('.seat');
-            const urlParams = new URLSearchParams(window.location.search);
-            const tripId = urlParams.get('tripId');
-
-            async function fetchBookedSeats() {
-                try {
-                    const response = await fetch(`/api/seats/${tripId}/booked`);
-                    if (response.ok) {
-                        const bookedSeats = await response.json();
-                        markBookedSeats(bookedSeats);
-                    }
-                } catch (error) {
-                    console.error('Lỗi khi lấy danh sách ghế đã đặt:', error);
-                }
-            }
-
-            function markBookedSeats(bookedSeats) {
-                seats.forEach(seat => {
-                    const seatCode = seat.textContent.trim();
-                    if (bookedSeats.includes(seatCode)) {
-                        seat.classList.add('seat-booked', 'bg-gray-300', 'cursor-not-allowed'); // Thêm class booked
-                        seat.classList.remove('seat-available');
-                        seat.disabled = true;
-                    }
-                });
-            }
-
-            // Global scope function để gọi từ bên ngoài nếu cần
-            window.updatePriceInfo = function() {
-                const seatCountEl = document.getElementById('seatCount');
-                const selectedSeatsEl = document.getElementById('selectedSeats');
-                const totalPriceEl = document.getElementById('totalPrice');
-                const ticketPriceEl = document.getElementById('ticketPrice');
-                const grandTotalEl = document.getElementById('grandTotal');
-
-                if(seatCountEl) seatCountEl.textContent = `${selectedSeats.length} Ghế`;
-                if(selectedSeatsEl) selectedSeatsEl.textContent = selectedSeats.join(', ');
-                
-                const totalPrice = selectedSeats.length * TICKET_PRICE;
-                if(totalPriceEl) totalPriceEl.textContent = `${totalPrice.toLocaleString()}đ`;
-                if(ticketPriceEl) ticketPriceEl.textContent = `${TICKET_PRICE.toLocaleString()}đ`;
-                if(grandTotalEl) grandTotalEl.textContent = `${totalPrice.toLocaleString()}đ`;
-            }
-
-            function toggleSeat(button) {
-                if (button.classList.contains('seat-booked') || button.disabled) {
-                    Swal.fire({ icon: 'error', title: 'Ghế này đã được đặt!', confirmButtonText: 'OK' });
+                if (!tripId) {
+                    console.error("Không tìm thấy tripId trên URL");
                     return;
                 }
 
-                const seatCode = button.textContent.trim();
+                // Lấy info chuyến + vẽ sơ đồ ghế + check ghế đã đặt
+                fetchTripDetails(tripId);
 
-                if (selectedSeats.includes(seatCode)) {
-                    // Bỏ chọn
-                    button.classList.remove('seat-selected', 'bg-green-500', 'text-white');
-                    button.classList.add('seat-available');
-                    selectedSeats = selectedSeats.filter(s => s !== seatCode);
-                } else {
-                    // Chọn mới
-                    if (selectedSeats.length >= 5) {
-                        Swal.fire({ icon: 'warning', title: 'Không thể chọn quá 5 ghế!', confirmButtonText: 'OK' });
-                        return;
-                    }
-                    button.classList.remove('seat-available');
-                    button.classList.add('seat-selected', 'bg-green-500', 'text-white');
-                    selectedSeats.push(seatCode);
+                // Khởi tạo thanh toán
+                handlePayment();
+            } catch (e) {
+                console.error("Lỗi trong init(): ", e);
+            }
+        }
+
+        // ============================================================
+        // 1. LẤY CHI TIẾT CHUYẾN XE
+        // ============================================================
+        async function fetchTripDetails(tripId) {
+            try {
+                const response = await fetch(`/api/trips/${tripId}`);
+
+                if (!response.ok) {
+                    console.error("Lỗi gọi API /api/trips: ", response.status);
+                    return;
                 }
+
+                const data = await response.json();
+
+                // Cập nhật UI
+                const depLoc = document.getElementById('departureLocation');
+                const depTime = document.getElementById('departureTime');
+                const ticketPriceUi = document.getElementById('ticketPrice');
+
+                if (depLoc) {
+                    depLoc.textContent = `${data.departureLocation} ➝ ${data.arrivalLocation}`;
+                }
+                if (depTime) {
+                    depTime.textContent = data.departureTime;
+                }
+
+                // Lưu giá vé
+                let rawPrice = data.totalPrice
+                    ? data.totalPrice.toString().replace(/[^0-9]/g, '')
+                    : "0";
+                TICKET_PRICE = parseInt(rawPrice || "0", 10);
+
+                if (ticketPriceUi) {
+                    ticketPriceUi.textContent = formatMoney(TICKET_PRICE);
+                }
+
+                // Lấy capacity nếu backend có trả, không có thì giữ mặc định
+                if (data.capacity && !isNaN(parseInt(data.capacity))) {
+                    BUS_CAPACITY = parseInt(data.capacity, 10);
+                }
+
+                // Vẽ sơ đồ ghế theo capacity
+                renderSeatMap(BUS_CAPACITY);
+
+                // Check ghế đã đặt
+                fetchBookedSeats(tripId);
+
+                // Cập nhật giá lần đầu
                 updatePriceInfo();
+
+            } catch (error) {
+                console.error('Lỗi lấy thông tin chuyến:', error);
+            }
+        }
+
+        // ============================================================
+        // 2. VẼ SƠ ĐỒ GHẾ
+        // ============================================================
+        function renderSeatMap(capacity) {
+            const container = document.getElementById('seatMapContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            // Chia ghế cho 2 tầng: A (dưới), B (trên)
+            const floor1Count = Math.ceil(capacity / 2);
+            const floor2Count = capacity - floor1Count;
+
+            const floor1 = createFloor('Tầng dưới', 'A', floor1Count);
+            const floor2 = createFloor('Tầng trên', 'B', floor2Count);
+
+            container.appendChild(floor1);
+            container.appendChild(floor2);
+        }
+
+        function createFloor(title, prefix, count) {
+            const floorDiv = document.createElement('div');
+            floorDiv.className = 'floor-container bg-gray-100 p-4 rounded-lg mx-2';
+
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'text-center font-bold text-gray-500 mb-3';
+            titleEl.innerText = title;
+            floorDiv.appendChild(titleEl);
+
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'grid grid-cols-3 gap-3';
+
+            for (let i = 1; i <= count; i++) {
+                const seatCode = `${prefix}${i.toString().padStart(2, '0')}`;
+
+                const btn = document.createElement('button');
+                btn.className =
+                    'seat seat-available w-10 h-10 md:w-12 md:h-12 rounded-lg border ' +
+                    'border-gray-300 flex items-center justify-center text-xs font-semibold ' +
+                    'shadow-sm bg-white hover:border-emerald-500 transition relative';
+                btn.innerText = seatCode;
+                btn.dataset.code = seatCode;
+
+                btn.addEventListener('click', () => toggleSeat(btn, seatCode));
+
+                gridDiv.appendChild(btn);
             }
 
-            fetchBookedSeats();
+            floorDiv.appendChild(gridDiv);
+            return floorDiv;
+        }
 
-            seats.forEach(seat => {
-                seat.addEventListener('click', function () {
-                    toggleSeat(seat);
-                });
+        // ============================================================
+        // 3. GHẾ ĐÃ ĐẶT
+        // ============================================================
+        async function fetchBookedSeats(tripId) {
+            try {
+                const response = await fetch(`/api/seats/${tripId}/booked`);
+                if (!response.ok) {
+                    console.error("Lỗi API /api/seats/{tripId}/booked: ", response.status);
+                    return;
+                }
+                const bookedSeats = await response.json();
+                markBookedSeats(bookedSeats);
+            } catch (error) {
+                console.error('Lỗi check ghế đã đặt:', error);
+            }
+        }
+
+        function markBookedSeats(bookedList) {
+            const allSeats = document.querySelectorAll('.seat');
+            allSeats.forEach(btn => {
+                const code = btn.dataset.code;
+                if (bookedList.includes(code)) {
+                    btn.classList.remove('seat-available', 'bg-white');
+                    btn.classList.add(
+                        'seat-booked',
+                        'bg-gray-300',
+                        'text-gray-500',
+                        'cursor-not-allowed'
+                    );
+                    btn.disabled = true;
+                    btn.title = "Ghế đã có người đặt";
+                }
             });
         }
 
-        // 3. Xử lý Thanh toán (Payment)
+        // ============================================================
+        // 4. CHỌN GHẾ + TÍNH TIỀN
+        // ============================================================
+        function toggleSeat(btn, code) {
+            if (btn.disabled) return;
+
+            if (selectedSeats.includes(code)) {
+                selectedSeats = selectedSeats.filter(s => s !== code);
+                btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-600');
+                btn.classList.add('bg-white', 'text-gray-800');
+            } else {
+                if (selectedSeats.length >= MAX_SEATS) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Giới hạn',
+                        text: `Chỉ được chọn tối đa ${MAX_SEATS} ghế.`
+                    });
+                    return;
+                }
+                selectedSeats.push(code);
+                btn.classList.remove('bg-white', 'text-gray-800');
+                btn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-600');
+            }
+            updatePriceInfo();
+        }
+
+        function updatePriceInfo() {
+            const countEl = document.getElementById('seatCount');
+            const listEl = document.getElementById('selectedSeats');
+            const totalEl = document.getElementById('totalPrice');
+            const grandEl = document.getElementById('grandTotal');
+
+            if (countEl) countEl.innerText = `${selectedSeats.length} Ghế`;
+            if (listEl) listEl.innerText =
+                selectedSeats.length > 0 ? selectedSeats.join(', ') : 'Chưa chọn';
+
+            const total = selectedSeats.length * TICKET_PRICE;
+            const formattedTotal = formatMoney(total);
+
+            if (totalEl) totalEl.innerText = formattedTotal;
+            if (grandEl) grandEl.innerText = formattedTotal;
+        }
+
+        // ============================================================
+        // 5. XỬ LÝ THANH TOÁN
+        // ============================================================
         function handlePayment() {
             const btnPay = document.getElementById('btnPay');
-            if(!btnPay) return;
+            if (!btnPay) return;
 
-            btnPay.addEventListener("click", async function () {
-                console.log("Bắt đầu xử lý thanh toán...");
+            btnPay.addEventListener('click', async () => {
+                const name = document.querySelector('input[name="customerName"]').value;
+                const phone = document.querySelector('input[name="customerPhone"]').value;
+                const email = document.querySelector('input[name="email"]').value;
+
+                if (selectedSeats.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Chưa chọn ghế',
+                        text: 'Vui lòng chọn ít nhất 1 ghế!'
+                    });
+                    return;
+                }
+                if (!name || !phone || !email) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Thiếu thông tin',
+                        text: 'Vui lòng điền đầy đủ thông tin khách hàng!'
+                    });
+                    return;
+                }
+
+                const tripId = new URLSearchParams(window.location.search).get('tripId');
+                const total = selectedSeats.length * TICKET_PRICE;
+
+                setCookie("tripId", tripId, 1);
+                setCookie("selectedSeats", selectedSeats.join(','), 1);
+                setCookie("grandTotal", total, 1);
+                setCookie("customerName", name, 1);
+                setCookie("customerPhone", phone, 1);
+                setCookie("email", email, 1);
 
                 try {
-                    // Lấy dữ liệu từ DOM
-                    const tripId = new URLSearchParams(window.location.search).get('tripId') || "";
-                    const selectedSeats = document.getElementById('selectedSeats')?.textContent.trim() || "";
-                    const grandTotalRaw = document.getElementById('totalPrice')?.textContent || "0";
-                    const customerName = document.querySelector('[name="customerName"]')?.value || "";
-                    const customerPhone = document.querySelector('[name="customerPhone"]')?.value || "";
-                    const email = document.querySelector('[name="email"]')?.value || "";
+                    await fetch('/api/seats/prebooking-seat', { method: 'POST' });
 
-                    // Validate
-                    if (!selectedSeats || !customerName || !customerPhone || !email) {
-                        Swal.fire({ icon: 'warning', title: 'Vui lòng điền đầy đủ thông tin!', confirmButtonText: 'OK' });
-                        return;
-                    }
+                    const paymentMethod =
+                        document.querySelector('input[name="payment"]:checked').value;
 
-                    // Format giá tiền (bỏ dấu đ, dấu chấm)
-                    const grandTotal = parseInt(grandTotalRaw.replace(/[^0-9]/g, ""), 10);
+                    // Tạm thời vẫn redirect thẳng tới thankyou
+                    window.location.href = `/greenbus/thankyou?paymentStatus=1`;
 
-                    // Lưu Cookie
-                    document.cookie = `tripId=${encodeURIComponent(tripId)}; path=/`;
-                    document.cookie = `selectedSeats=${encodeURIComponent(selectedSeats)}; path=/`;
-                    document.cookie = `grandTotal=${encodeURIComponent(grandTotal)}; path=/`;
-                    document.cookie = `customerName=${encodeURIComponent(customerName)}; path=/`;
-                    document.cookie = `customerPhone=${encodeURIComponent(customerPhone)}; path=/`;
-                    document.cookie = `email=${encodeURIComponent(email)}; path=/`;
-
-                    // Gọi API giữ chỗ (Prebooking)
-                    const preBookingResponse = await fetch('/api/seats/prebooking-seat', {
-                        method: 'POST',
-                        // headers: { 'Content-Type': 'application/json' }, // Tùy backend yêu cầu
-                        credentials: 'include'
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: 'Không thể xử lý đặt vé lúc này'
                     });
-
-                    if (!preBookingResponse.ok) {
-                        Swal.fire({ icon: 'error', title: 'Đặt chỗ thất bại. Vui lòng thử lại!', confirmButtonText: 'OK' });
-                        return;
-                    }
-
-                    // Kiểm tra phương thức thanh toán
-                    const selectedPaymentInput = document.querySelector('input[name="payment"]:checked');
-                    if (selectedPaymentInput) {
-                        // Tìm thẻ span chứa text bên cạnh input (hoặc lấy value của input)
-                        const paymentMethod = selectedPaymentInput.closest('label')?.querySelector('span')?.textContent.trim() || selectedPaymentInput.value;
-                        console.log("Phương thức:", paymentMethod);
-
-                        if (paymentMethod === "VNPay" || selectedPaymentInput.value === "VNPay") {
-                            window.location.href = '/vnpay'; // Chuyển hướng VNPay
-                        } 
-                        else {
-                            // Mặc định ZaloPay hoặc các loại khác
-                            await processZaloPayment(fullName, grandTotal);
-                        }
-                    } else {
-                        Swal.fire({ icon: 'warning', title: 'Vui lòng chọn phương thức thanh toán!', confirmButtonText: 'OK' });
-                    }
-
-                } catch (error) {
-                    console.error("Lỗi thanh toán:", error);
-                    Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi hệ thống.', text: error.message });
                 }
             });
         }
 
-        // Hàm xử lý ZaloPay tách riêng
-        async function processZaloPayment(fullName, amount) {
-            const description = "Thanh toan ve xe " + Date.now();
-            
-            try {
-                // Gọi API tạo đơn hàng ZaloPay
-                // LƯU Ý: Sửa URL thành đường dẫn tương đối để tự động nhận port hiện tại (8000)
-                const createOrderRes = await fetch("/payment/zalo-payment", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ appUser: fullName, amount: amount, description: description })
-                });
+        // Helpers
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount || 0);
+        }
 
-                const orderData = await createOrderRes.json();
-
-                if (orderData.returnCode === 1) {
-                    // Nếu tạo đơn thành công -> Chuyển hướng sang trang thanh toán của ZaloPay
-                    window.location.href = orderData.orderUrl; 
-                    
-                    // (Tùy chọn) Gọi API lưu trạng thái nếu cần thiết
-                    // await fetch("/payment/zalo-payment-status", { ... });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Lỗi ZaloPay', text: orderData.returnMessage });
-                }
-            } catch (e) {
-                console.error("ZaloPay Error:", e);
-                Swal.fire({ icon: 'error', title: 'Không thể kết nối tới ZaloPay' });
-            }
+        function setCookie(cname, cvalue, exhours) {
+            const d = new Date();
+            d.setTime(d.getTime() + (exhours * 60 * 60 * 1000));
+            const expires = "expires=" + d.toUTCString();
+            document.cookie = cname + "=" + encodeURIComponent(cvalue) + ";" + expires + ";path=/";
         }
     });
 })();

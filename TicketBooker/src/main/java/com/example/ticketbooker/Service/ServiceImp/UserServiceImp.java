@@ -1,5 +1,7 @@
 package com.example.ticketbooker.Service.ServiceImp;
 
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.ticketbooker.DTO.Users.AddUserRequest;
 import com.example.ticketbooker.DTO.Users.UpdateUserRequest;
@@ -274,6 +277,28 @@ public UpdateUserRequest mapToUpdateUserRequest(Users user) {
     dto.setRole(user.getRole());
     return dto;
 }
+
+@Override
+public void updateAvatar(Integer userId, MultipartFile avatarFile) {
+    try {
+        Users user = usersRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // log nhẹ cho chắc
+        System.out.println("Upload avatar size = " + avatarFile.getSize());
+
+        byte[] photoBytes = avatarFile.getBytes();
+        user.setProfilePhoto(photoBytes);
+
+        usersRepo.save(user);
+    } catch (IOException e) {
+        // quấn lại thành RuntimeException cho gọn
+        throw new RuntimeException("Lỗi khi xử lý file ảnh", e);
+    }
+}
+
+
+
     
 
 }

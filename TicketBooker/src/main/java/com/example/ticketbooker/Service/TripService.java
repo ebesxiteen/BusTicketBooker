@@ -1,12 +1,18 @@
 package com.example.ticketbooker.Service;
 
-import com.example.ticketbooker.DTO.Trips.*;
-import com.example.ticketbooker.DTO.Users.UserResponse;
-import com.example.ticketbooker.Entity.Trips;
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
+import com.example.ticketbooker.DTO.Trips.AddTripDTO;
+import com.example.ticketbooker.DTO.Trips.RequestIdTripDTO;
+import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
+import com.example.ticketbooker.DTO.Trips.SearchTripRequest;
+import com.example.ticketbooker.DTO.Trips.TripDTO;
+import com.example.ticketbooker.DTO.Trips.TripStatsDTO;
+import com.example.ticketbooker.DTO.Trips.UpdateTripDTO;
+import com.example.ticketbooker.Entity.Trips;
 
 public interface TripService {
     public ResponseTripDTO getTripById(int id);
@@ -21,5 +27,6 @@ public interface TripService {
     public Trips getTripByIdpath(int tripId);
     ResponseTripDTO getTripByIds(int tripId);
     TripStatsDTO getTripStats(String period, LocalDate selectedDate);
+    void updateAvailableSeats(Integer tripId, int delta);
 
 }

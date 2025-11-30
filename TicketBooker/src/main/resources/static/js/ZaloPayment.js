@@ -1,65 +1,106 @@
-(function () {
-    document.addEventListener("DOMContentLoaded", async function () {
-        
-        // 1. Lấy và xử lý Tổng tiền (An toàn hơn)
+// /static/js/ZaloPayment.js
+
+async function startZaloPay(tripId, selectedSeats) {
+    try {
+        // 1. Lấy thông tin cần thiết
         const totalElement = document.getElementById("grandTotal");
-        if (!totalElement) return; // Nếu không ở trang thanh toán thì dừng lại
+        if (!totalElement) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi giao diện',
+                text: 'Không tìm thấy tổng tiền (#grandTotal).'
+            });
+            return;
+        }
 
-        // Xóa tất cả ký tự không phải số (dấu phẩy, dấu chấm, chữ đ)
-        const total = totalElement.innerText.replace(/[^0-9]/g, ""); 
+        const rawAmount = totalElement.innerText.replace(/[^0-9]/g, "");
+        const amount = parseInt(rawAmount || "0", 10);
 
-        // 2. Sửa lỗi cú pháp .value() -> .value
-        // Lưu ý: Đảm bảo các input này có class 'apiField' và đúng name trong HTML
-        const fullNameInput = document.querySelector(".apiField[name='fullname']");
-        const phoneInput = document.querySelector(".apiField[name='phone']");
-        const emailInput = document.querySelector(".apiField[name='email']");
+        const fullNameInput = document.querySelector('input[name="customerName"]');
+        const phoneInput = document.querySelector('input[name="customerPhone"]');
+        const emailInput = document.querySelector('input[name="email"]');
 
-        const fullName = fullNameInput ? fullNameInput.value : "";
+        const appUser = fullNameInput ? fullNameInput.value : "";
         const phone = phoneInput ? phoneInput.value : "";
         const email = emailInput ? emailInput.value : "";
 
-        const description = "Thanh toan GreenBus " + Date.now();
-        console.log("Total Amount:", total);
+        const description = "Thanh toán vé GreenBus " + Date.now();
 
+        // 2. GỌI API ZALOPAY ĐỂ TẠO ĐƠN HÀNG (API Backend /payment/zalo-payment)
+        const res = await fetch("/payment/zalo-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                appUser: appUser,
+                amount: amount,
+                description: description,
+                phone: phone,
+                email: email
+            })
+        });
+
+        const text = await res.text();
+        let data;
         try {
-            // 3. Gọi API tạo đơn hàng (Dùng đường dẫn tương đối)
-            const response = await fetch("/payment/zalo-payment", {
+            data = JSON.parse(text);
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi server ZaloPay',
+                text: 'Server đang trả về dữ liệu không hợp lệ. Vui lòng kiểm tra lại Network tab và log server Java.'
+            });
+            return;
+        }
+
+        // 3. KIỂM TRA KẾT QUẢ TẠO ĐƠN
+        if (data.returnCode === 1 && data.returnUrl) {
+            
+            // 3.1. TẠO ĐƠN ZALOPAY THÀNH CÔNG -> GỌI API TẠO GHẾ TẠM
+            
+            // Dữ liệu tạo ghế tạm (/api/seats/add cần tripId và seatCode là chuỗi "A01 A02")
+            const seatPayload = {
+                tripId: parseInt(tripId), 
+                seatCode: selectedSeats.join(' ') 
+            };
+
+            // GỌI API TẠO GHẾ TẠM CŨ CỦA BẠN (SeatsApi.java)
+            const seatRes = await fetch("/api/seats/add", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    appUser: fullName, 
-                    amount: total, 
-                    description: description,
-                    phone: phone, // Gửi thêm nếu backend cần
-                    email: email 
-                })
+                body: JSON.stringify(seatPayload)
             });
-
-            const data = await response.json();
-
-            if (data.returnCode === 1) {
-                console.log("Tạo đơn thành công, đang chuyển hướng...");
-                
-                // (Tùy chọn) Gọi API lưu trạng thái trước khi chuyển đi
-                // Lưu ý: Thường bước này backend tự xử lý khi nhận callback từ ZaloPay
-                /*
-                await fetch("/payment/zalo-payment-status", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data)
-                });
-                */
-
-                // 4. Chuyển hướng sang cổng thanh toán ZaloPay
+            
+            if (seatRes.ok) {
+                // 3.2. ĐẶT CHỖ THÀNH CÔNG -> Redirect sang ZaloPay
                 window.location.href = data.returnUrl;
             } else {
-                console.error("Lỗi tạo đơn ZaloPay:", data.returnMessage);
-                alert("Lỗi thanh toán: " + data.returnMessage);
+                // Lỗi 4xx/5xx từ /api/seats/add (Ví dụ: ghế đã bị người khác đặt/Lỗi DB)
+                const errorText = await seatRes.text();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi đặt chỗ tạm thời',
+                    // Hiển thị message lỗi chi tiết từ SeatsApi.java (nếu có)
+                    text: "Ghế không thể đặt chỗ. Có thể ghế đã bị người khác chọn. Chi tiết: " + errorText 
+                });
+                // ⚠️ Quan trọng: Đơn ZaloPay đã được tạo nhưng sẽ hết hạn sau 15 phút.
+                // Chúng ta không cần làm gì thêm ở đây.
             }
-
-        } catch (e) {
-            console.error("Lỗi kết nối:", e);
-            alert("Không thể kết nối đến máy chủ thanh toán.");
+            
+        } else {
+            // LỖI TỪ ZALOPAY (Return Code != 1) - Ghế chưa được tạo
+            Swal.fire({
+                icon: 'error',
+                title: 'Tạo đơn ZaloPay thất bại',
+                // data.detailMessage chứa thông báo lỗi sai MAC, Key, Port...
+                text: "Chi tiết lỗi: " + (data.detailMessage || "Không xác định")
+            });
         }
-    });
-})();
+    } catch (e) {
+        console.error("Lỗi trong startZaloPay: ", e);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi kết nối',
+            text: 'Không thể kết nối với cổng thanh toán. Vui lòng kiểm tra lại mạng.'
+        });
+    }
+}

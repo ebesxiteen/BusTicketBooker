@@ -55,12 +55,14 @@ public class Tickets {
     @Column(name = "customerPhone", nullable = false, length = 15)
     private String customerPhone;
 
-@ManyToMany
-    @JoinTable(
-            name = "ticket_seats",
-            joinColumns = @JoinColumn(name = "ticket_id"),
-            inverseJoinColumns = @JoinColumn(name = "seat_id")
-    )
+// SỬA LẠI ĐOẠN NÀY
+@ManyToMany(fetch = FetchType.EAGER) // Nên để EAGER nếu bạn muốn load ghế luôn mà không bị lỗi Lazy
+@JoinTable(
+        name = "ticket_seats",
+        joinColumns = @JoinColumn(name = "ticketId"),      // Đã sửa ticket_id -> ticketId
+        inverseJoinColumns = @JoinColumn(name = "seatId")  // Đã sửa seat_id -> seatId
+)   
+    @Builder.Default
     private List<Seats> seats = new ArrayList<>();
 
     @Column(name = "qrCode")

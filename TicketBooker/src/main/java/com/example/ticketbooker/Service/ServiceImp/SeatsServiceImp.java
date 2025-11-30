@@ -1,19 +1,19 @@
 package com.example.ticketbooker.Service.ServiceImp;
 
-import com.example.ticketbooker.DTO.Seats.AddSeatDTO;
-import com.example.ticketbooker.Entity.Seats;
-import com.example.ticketbooker.Entity.Trips;
-import com.example.ticketbooker.Util.Mapper.SeatsMapper;
-import com.example.ticketbooker.Repository.SeatsRepo;
-import com.example.ticketbooker.Service.SeatsService;
-import com.example.ticketbooker.Service.TripService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.example.ticketbooker.DTO.Seats.AddSeatDTO;
+import com.example.ticketbooker.Entity.Seats;
+import com.example.ticketbooker.Entity.Trips;
+import com.example.ticketbooker.Repository.SeatsRepo;
+import com.example.ticketbooker.Service.SeatsService;
+import com.example.ticketbooker.Service.TripService;
+import com.example.ticketbooker.Util.Mapper.SeatsMapper;
 
 @Service
 public class SeatsServiceImp implements SeatsService {
@@ -27,37 +27,41 @@ public class SeatsServiceImp implements SeatsService {
     @Autowired
     private TripService tripService;
 
-    @Override
-    public List<Integer> addSeats(AddSeatDTO addSeatDTO) {
-        List<Integer> seatIds = new ArrayList<>(); // Danh sách để chứa tất cả các seatId
+   @Override
+public List<Integer> addSeats(AddSeatDTO addSeatDTO) {
+    List<Integer> seatIds = new ArrayList<>();
 
-        try {
-            // Lấy thông tin trip từ tripId
-            Trips trip = tripService.getTripById(addSeatDTO.getTripId());
-            if (trip == null) {
-                throw new IllegalArgumentException("Trip ID không tồn tại");
-            }
+    Trips trip = tripService.getTripById(addSeatDTO.getTripId());
+    if (trip == null) {
+        throw new IllegalArgumentException("Trip ID không tồn tại");
+    }
 
-            // Tách các mã ghế từ chuỗi
-            String[] seatCodes = addSeatDTO.getSeatCode().split(",\\s*");
+    String raw = addSeatDTO.getSeatCode() != null ? addSeatDTO.getSeatCode().trim() : "";
+    if (raw.isEmpty()) {
+        throw new IllegalArgumentException("Chưa có ghế nào được chọn");
+    }
 
-            // Lưu ghế vào cơ sở dữ liệu và lấy seatId
-            for (String seatCode : seatCodes) {
-                Seats seat = Seats.builder()
-                        .trip(trip)
-                        .seatCode(seatCode)
-                        .build();
+    // hỗ trợ "A01 A02" hoặc "A01,A02"
+    String[] seatCodes = raw.split("[,\\s]+");
 
-                Seats savedSeat = seatsRepository.save(seat); // Lưu ghế vào DB và lấy ghế đã lưu
-                seatIds.add(savedSeat.getId()); // Thêm seatId vào danh sách
-            }
+    for (String seatCode : seatCodes) {
+        if (seatCode.isBlank()) continue;
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        if (seatsRepository.existsByTripIdAndSeatCode(trip.getId(), seatCode)) {
+            throw new IllegalArgumentException("Ghế " + seatCode + " đã được đặt, vui lòng chọn ghế khác.");
         }
 
-        return seatIds; // Trả về danh sách seatId đã lưu
+        Seats seat = Seats.builder()
+                .trip(trip)
+                .seatCode(seatCode)
+                .build();
+        Seats savedSeat = seatsRepository.save(seat);
+        seatIds.add(savedSeat.getId());
     }
+
+    return seatIds;
+}
+
 
     @Override
     public List<String> getBookedSeatsForTrip(Integer tripId) {

@@ -107,18 +107,18 @@ CREATE TABLE Tickets (
 
 -- 9. Bảng trung gian: TicketSeats (mỗi ticket <-> nhiều seats)
 CREATE TABLE ticket_seats (
-    ticket_id INT NOT NULL,
-    seat_id   INT NOT NULL,
-    PRIMARY KEY (ticket_id, seat_id),
+    ticketId INT NOT NULL,
+    seatId   INT NOT NULL,
+    PRIMARY KEY (ticketId, seatId),
 
     CONSTRAINT fk_ticketseats_ticket
-        FOREIGN KEY (ticket_id) REFERENCES Tickets(ticketId)
+        FOREIGN KEY (ticketId) REFERENCES Tickets(ticketId)
         ON DELETE CASCADE,
 
     CONSTRAINT fk_ticketseats_seat
-        FOREIGN KEY (seat_id) REFERENCES Seats(seatId)
+        FOREIGN KEY (seatId) REFERENCES Seats(seatId)
         ON DELETE CASCADE,
 
     -- Đảm bảo 1 ghế chỉ thuộc 1 vé:
-    CONSTRAINT uq_ticketseats_seat UNIQUE (seat_id)
+    CONSTRAINT uq_ticketseats_seat UNIQUE (seatId)
 );

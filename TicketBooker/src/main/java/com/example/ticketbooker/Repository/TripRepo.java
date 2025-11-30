@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.List; // Dùng List cho chuẩn
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param; // Nhớ import cái này
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ticketbooker.DTO.Trips.SearchTripRequest;
 import com.example.ticketbooker.Entity.Routes;
@@ -41,4 +43,9 @@ public interface TripRepo extends JpaRepository<Trips, Integer> {
 
     ArrayList<Trips> findAllById(int tripId);
     long countTripsByDepartureTimeBetween (LocalDateTime start, LocalDateTime end);
+    @Modifying
+    @Transactional
+    @Query("UPDATE Trips t SET t.tripStatus = 'COMPLETED' " +
+           "WHERE t.departureTime < :now AND t.tripStatus = 'SCHEDULED'")
+    int updateCompletedTrips(@Param("now") LocalDateTime now);
 }

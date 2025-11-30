@@ -16,79 +16,78 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* --- CẤU HÌNH MÀU CHỦ ĐẠO GREENBUS (Emerald Green) --- */
-        /* Đây là config tùy chỉnh nếu không dùng file tailwind.config.js */
+        /* --- CẤU HÌNH MÀU CHỦ ĐẠO --- */
         .bg-primary { background-color: #10b981 !important; }
-        .hover\:bg-primary-dark:hover { background-color: #047857 !important; }
         .text-primary { color: #10b981 !important; }
-        .border-primary { border-color: #10b981 !important; }
         
-        /* Thay thế màu PURPLE cũ bằng màu Emerald */
-        .bg-purple-50, .bg-purple-600, .bg-purple-700, .bg-purple-800 { background-color: #10b981 !important; }
-        .hover\:bg-purple-700:hover { background-color: #059669 !important; }
-        .text-purple-600 { color: #10b981 !important; }
+        /* Hiệu ứng trượt mượt mà cho Menu Drawer */
+        #drawerMenu { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #drawerOverlay { transition: opacity 0.3s ease-in-out; }
         
-        /* --- CHAT BOX CSS FIX (Tông màu) --- */
-        #chat-icon { color: #10b981 !important; }
-        .bot { background-color: #d1fae5; } /* Light Emerald */
-        .message { font-size: 0.875rem; }
+        /* Hiệu ứng hover cho link mobile */
+        .mobile-link { transition: all 0.2s ease-in-out; }
+        .mobile-link:hover { padding-left: 1.25rem; background-color: #ecfdf5; color: #059669; }
+        
+        /* Chặn cuộn trang khi mở menu */
+        body.menu-open { overflow: hidden; }
     </style>
 </head>
 
-<body>
+<body class="bg-gray-50 flex flex-col min-h-screen font-sans">
 
-<nav class="bg-gradient-to-r from-emerald-800 to-emerald-900 text-white py-4 custom-nav">
+<nav class="bg-gradient-to-r from-emerald-800 to-emerald-900 text-white py-3 shadow-lg sticky top-0 z-40">
     <div class="container mx-auto px-4 md:px-10">
         <div class="flex justify-between items-center h-16">
             
-            <button class="md:hidden" id="mobileMenuBtn">
-                <i class="fas fa-bars text-2xl"></i>
+            <button class="md:hidden text-white text-2xl focus:outline-none p-2 hover:bg-emerald-700 rounded-lg transition" onclick="toggleDrawer()">
+                <i class="fas fa-bars"></i>
             </button>
-            <a th:href="@{/greenbus}" class="flex items-center space-x-2 text-2xl font-bold italic">
-                <i class="fas fa-bus-alt"></i> <span>GreenBus</span>
+
+            <a th:href="@{/greenbus}" class="flex items-center space-x-2 text-2xl font-bold italic tracking-wide">
+                <i class="fas fa-bus-alt text-emerald-300"></i> <span>GreenBus</span>
             </a>
             
-            <div class="hidden md:flex items-center space-x-2 lg:space-x-4 xl:space-x-8 ml-auto text-sm">
+            <div class="hidden md:flex items-center space-x-2 lg:space-x-6 ml-auto text-sm font-medium">
                 
-                <div class="relative flex items-center border-2 border-transparent focus-within:border-emerald-400 rounded-full">
+                <div class="relative flex items-center bg-emerald-700/50 rounded-full border border-emerald-600 focus-within:border-emerald-300 focus-within:bg-emerald-700 transition-all">
                     <input id="search-input" type="text" placeholder="Tìm kiếm..."
-                           class="bg-emerald-700 text-white placeholder-emerald-300 rounded-l-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-400 w-40 sm:w-48 md:w-56 lg:w-64 text-sm">
-                    
-                    <button class="bg-emerald-700 p-2 hover:bg-emerald-600 transition duration-300 ease-in-out" onclick="startSpeechRecognition()">
-                         <i class="fas fa-microphone"></i>
-                    </button>
-                    <button class="bg-emerald-700 p-2 rounded-r-full hover:bg-emerald-600 transition duration-300 ease-in-out" onclick="performSearch()">
-                        <i class="fas fa-search"></i>
-                    </button>
+                           class="bg-transparent text-white placeholder-emerald-200 rounded-l-full py-2 px-4 focus:outline-none w-32 sm:w-40 lg:w-56 text-sm border-none">
+                    <button class="text-emerald-200 hover:text-white p-2" onclick="startSpeechRecognition()"><i class="fas fa-microphone"></i></button>
+                    <button class="text-emerald-200 hover:text-white p-2 pr-4 rounded-r-full" onclick="performSearch()"><i class="fas fa-search"></i></button>
                 </div>
 
-                <a th:href="@{/greenbus/ticket-lookup}" class="font-medium hover:text-emerald-200 relative group transition duration-300 ease-in-out">Tra cứu vé</a>
-                <a th:href="@{/greenbus/contact-us}" class="font-medium hover:text-emerald-200 relative group transition duration-300 ease-in-out">Liên hệ</a>
-                <a th:href="@{/greenbus/about-us}" class="font-medium hover:text-emerald-200 relative group transition duration-300 ease-in-out">Về chúng tôi</a>
+                <div class="group"><a th:href="@{/greenbus/ticket-lookup}" class="hover:text-emerald-300 transition px-2 py-1">Tra cứu vé</a></div>
+                <div class="group"><a th:href="@{/greenbus/contact-us}" class="hover:text-emerald-300 transition px-2 py-1">Liên hệ</a></div>
+                <div class="group"><a th:href="@{/greenbus/about-us}" class="hover:text-emerald-300 transition px-2 py-1">Về chúng tôi</a></div>
                 
                 <a th:href="@{/auth}" th:if="${!isLoggedIn}"
-                   class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-3 rounded transition duration-300 ease-in-out">Đăng nhập</a>
+                   class="bg-emerald-500 hover:bg-emerald-400 text-white px-5 py-2 rounded-full shadow-md transition transform hover:scale-105">Đăng nhập</a>
                 
-                <div th:if="${isLoggedIn}" class="relative inline-block group">
-                    <a th:href="@{/profile/info}" class="flex items-center space-x-2 text-white hover:opacity-90">
-                        <i class="fas fa-user-circle text-lg"></i>
+                <div th:if="${isLoggedIn}" class="relative inline-block group z-50">
+                    <a th:href="@{/profile/info}" class="flex items-center space-x-2 bg-emerald-700/50 px-3 py-2 rounded-lg hover:bg-emerald-600 transition cursor-pointer">
+                        <i class="fas fa-user-circle text-xl"></i>
+                        <span class="max-w-[100px] truncate" th:text="${session.userFullName != null ? session.userFullName : 'Tài khoản'}"></span>
                         <i class="fas fa-chevron-down text-xs"></i>
                     </a>
                     
-                    <div class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                        <div class="py-2">
-                            <a th:if="${isAdmin}" th:href="@{/admin/users}" class="flex items-center px-4 py-3 hover:bg-gray-100 text-gray-800">
-                                <i class="fas fa-user-shield text-blue-500 w-6"></i><span class="ml-3">Trang quản trị</span>
+                    <div class="absolute right-0 top-full mt-2 w-60 bg-white rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100 overflow-hidden border border-gray-100">
+                        <div class="py-1">
+                            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                                <p class="text-xs text-gray-500 uppercase">Xin chào,</p>
+                                <p class="text-sm font-bold text-gray-800 truncate" th:text="${session.userFullName}"></p>
+                            </div>
+                            <a th:if="${isAdmin}" th:href="@{/admin/users}" class="flex items-center px-4 py-3 hover:bg-emerald-50 text-gray-700 transition">
+                                <i class="fas fa-user-shield text-blue-500 w-6"></i> Quản trị
                             </a>
-                            <a th:href="@{/profile/info}" class="flex items-center px-4 py-3 hover:bg-gray-100 text-gray-800">
-                                <i class="fas fa-user text-yellow-500 w-6"></i><span class="ml-3">Thông tin tài khoản</span>
+                            <a th:href="@{/profile/info}" class="flex items-center px-4 py-3 hover:bg-emerald-50 text-gray-700 transition">
+                                <i class="fas fa-user text-emerald-500 w-6"></i> Thông tin
                             </a>
-                            <a th:href="@{/profile/history-booking}" class="flex items-center px-4 py-3 hover:bg-gray-100 text-gray-800">
-                                <i class="fas fa-history text-green-500 w-6"></i><span class="ml-3">Lịch sử mua vé</span>
+                            <a th:href="@{/profile/history-booking}" class="flex items-center px-4 py-3 hover:bg-emerald-50 text-gray-700 transition">
+                                <i class="fas fa-history text-orange-500 w-6"></i> Lịch sử vé
                             </a>
-                            <form th:action="@{/logout}" method="post">
-                                <button type="submit" class="w-full text-left px-4 py-3 text-red-500 hover:bg-red-50">
-                                    <i class="fas fa-sign-out-alt w-6"></i><span class="ml-3">Đăng xuất</span>
+                            <form th:action="@{/logout}" method="post" class="border-t border-gray-100">
+                                <button type="submit" class="w-full text-left px-4 py-3 text-red-500 hover:bg-red-50 transition flex items-center">
+                                    <i class="fas fa-sign-out-alt w-6"></i> Đăng xuất
                                 </button>
                             </form>
                         </div>
@@ -99,95 +98,160 @@
     </div>
 </nav>
 
-<div layout:fragment="content">
+<div layout:fragment="content" class="flex-grow"></div>
+
+<div id="drawerOverlay" class="fixed inset-0 bg-black bg-opacity-60 z-[90] hidden transition-opacity duration-300 backdrop-blur-sm" onclick="toggleDrawer()"></div>
+
+<div id="drawerMenu" class="fixed inset-y-0 left-0 w-[85%] max-w-[300px] bg-white text-gray-800 z-[100] transform -translate-x-full shadow-2xl flex flex-col h-full border-r border-gray-200">
+    
+    <div class="p-6 bg-emerald-800 text-white flex justify-between items-center shadow-md">
+        <span class="text-xl font-bold italic flex items-center gap-2">
+            <i class="fas fa-bus-alt text-emerald-300"></i> GreenBus
+        </span>
+        <button class="text-emerald-200 hover:text-white focus:outline-none transition p-1" onclick="toggleDrawer()">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
     </div>
 
-<div id="mobileMenu" class="fixed inset-0 bg-emerald-700 text-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
-    <div class="container mx-auto py-20 px-10">
-        <button class="absolute top-8 right-8 text-white cursor-pointer" id="closeMobileMenuBtn">
-            <i class="fas fa-times text-3xl"></i>
-        </button>
-        <a th:href="@{/greenbus/ticket-lookup}" class="flex items-center py-4 px-10 hover:bg-emerald-600 transition duration-300 ease-in-out text-xl"><i class="fas fa-ticket-alt mr-4"></i> TRA CỨU VÉ</a>
-        <a th:href="@{/greenbus/contact-us}" class="flex items-center py-4 px-10 hover:bg-emerald-600 transition duration-300 ease-in-out text-xl"><i class="fas fa-phone mr-4"></i> LIÊN HỆ</a>
-        <a th:href="@{/greenbus/about-us}" class="flex items-center py-4 px-10 hover:bg-emerald-600 transition duration-300 ease-in-out text-xl"><i class="fas fa-users mr-4"></i> VỀ CHÚNG TÔI</a>
+    <div class="flex-grow overflow-y-auto py-6 px-4 space-y-1">
+        
+        <div class="mb-6 relative">
+            <input type="text" placeholder="Tìm chuyến xe..." class="w-full bg-gray-100 border-none rounded-lg py-3 px-4 pl-10 focus:ring-2 focus:ring-emerald-500 text-sm outline-none text-gray-700">
+            <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
+        </div>
+
+        <p class="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Menu chính</p>
+        
+        <a th:href="@{/greenbus}" class="mobile-link flex items-center px-4 py-3 rounded-lg font-medium text-gray-700">
+            <i class="fas fa-home w-8 text-lg text-emerald-600"></i> Trang chủ
+        </a>
+        <a th:href="@{/greenbus/ticket-lookup}" class="mobile-link flex items-center px-4 py-3 rounded-lg font-medium text-gray-700">
+            <i class="fas fa-search w-8 text-lg text-blue-500"></i> Tra cứu vé
+        </a>
+        
+        <div class="my-5 space-y-3 pt-4 border-t border-gray-100">
+            <a th:href="@{/greenbus/contact-us}" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white text-center font-bold py-3 rounded-lg shadow-md transition transform active:scale-95">
+                <i class="fas fa-phone-alt mr-2"></i> LIÊN HỆ
+            </a>
+            
+            <div th:if="${!isLoggedIn}">
+                <a th:href="@{/auth}" class="block w-full bg-white border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-center font-bold py-3 rounded-lg transition transform active:scale-95">
+                    ĐĂNG NHẬP
+                </a>
+            </div>
+        </div>
+
+        <a th:href="@{/greenbus/about-us}" class="mobile-link flex items-center px-4 py-3 rounded-lg font-medium text-gray-700">
+            <i class="fas fa-info-circle w-8 text-lg text-gray-500"></i> Về chúng tôi
+        </a>
+
+        <div th:if="${isLoggedIn}" class="mt-6 pt-4 border-t border-gray-100">
+            <p class="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Tài khoản</p>
+            
+            <div class="px-4 py-3 bg-emerald-50 rounded-lg mb-2 flex items-center gap-3 border border-emerald-100">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-lg">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-gray-800 truncate" th:text="${session.userFullName}"></p>
+                    <p class="text-xs text-emerald-600 font-medium">● Đang hoạt động</p>
+                </div>
+            </div>
+
+            <a th:href="@{/profile/info}" class="mobile-link flex items-center px-4 py-3 rounded-lg font-medium text-gray-700">
+                <i class="fas fa-id-card w-8 text-lg text-purple-500"></i> Thông tin cá nhân
+            </a>
+            <a th:href="@{/profile/history-booking}" class="mobile-link flex items-center px-4 py-3 rounded-lg font-medium text-gray-700">
+                <i class="fas fa-clock w-8 text-lg text-orange-500"></i> Lịch sử đặt vé
+            </a>
+            
+            <form th:action="@{/logout}" method="post" class="mt-2">
+                <button type="submit" class="w-full text-left mobile-link flex items-center px-4 py-3 rounded-lg font-medium text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt w-8 text-lg"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="p-4 bg-gray-50 border-t border-gray-200 text-center text-xs text-gray-400">
+        &copy; 2025 GreenBus Line
     </div>
 </div>
 
-
-<footer class="bg-emerald-800 text-white py-12">
+<footer class="bg-emerald-900 text-white py-12 mt-auto border-t-4 border-emerald-500">
     <div class="container mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div class="space-y-4">
-                <h3 class="text-xl font-bold mb-4 border-b-2 border-emerald-500 pb-2 inline-block">Về GreenBus Line</h3>
-                <ul class="space-y-2">
-                    <li><a th:href="@{/greenbus/about-us}" class="hover:text-emerald-300 transition flex items-center"><span class="mr-2">&bull;</span>Giới thiệu</a></li>
-                    <li><a href="#" class="hover:text-emerald-300 transition flex items-center"><span class="mr-2">&bull;</span>Lịch sử phát triển</a></li>
-                    <li><a href="#" class="hover:text-emerald-300 transition flex items-center"><span class="mr-2">&bull;</span>Tuyển dụng</a></li>
-                </ul>
+            <div>
+                <h3 class="text-lg font-bold mb-4 text-emerald-400">Về GreenBus</h3>
+                <p class="text-emerald-100 text-sm leading-relaxed">Hệ thống đặt vé xe khách uy tín, chất lượng hàng đầu.</p>
             </div>
-            
-            <div class="space-y-4">
-                <h3 class="text-xl font-bold mb-4 border-b-2 border-emerald-500 pb-2 inline-block">Hỗ trợ</h3>
-                <ul class="space-y-2">
-                    <li><a href="#" class="hover:text-emerald-300 transition flex items-center"><span class="mr-2">&bull;</span>Hướng dẫn đặt vé</a></li>
-                    <li><a href="#" class="hover:text-emerald-300 transition flex items-center"><span class="mr-2">&bull;</span>Chính sách hoàn trả</a></li>
-                    <li><a href="#" class="hover:text-emerald-300 transition flex items-center"><span class="mr-2">&bull;</span>Câu hỏi thường gặp</a></li>
-                </ul>
             </div>
-            
-            <div class="space-y-4">
-                <h3 class="text-xl font-bold mb-4 border-b-2 border-emerald-500 pb-2 inline-block">Liên hệ</h3>
-                <ul class="space-y-2">
-                    <li class="flex items-center"><i class="fas fa-phone-alt w-5 h-5 mr-2"></i> 1900 1990</li>
-                    <li class="flex items-center"><i class="fas fa-envelope w-5 h-5 mr-2"></i> hotro@greenbus.vn</li>
-                    <li class="flex items-center"><i class="fas fa-map-marker-alt w-5 h-5 mr-2"></i> 273 Đ. An Dương Vương, Phường 3, Quận 5</li>
-                </ul>
-            </div>
-            
-            <div class="space-y-4">
-                <h3 class="text-xl font-bold mb-4 border-b-2 border-emerald-500 pb-2 inline-block">Kết nối với chúng tôi</h3>
-                <div class="flex space-x-4">
-                    <a href="#" class="text-3xl hover:text-emerald-300 transition"><i class="fab fa-facebook"></i></a>
-                    <a href="#" class="text-3xl hover:text-emerald-300 transition"><i class="fab fa-youtube"></i></a>
-                    <a href="#" class="text-3xl hover:text-emerald-300 transition"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
+        <div class="mt-8 pt-8 border-t border-emerald-700 text-center text-sm text-emerald-300">
+            <p>&copy; 2025 GreenBus Line. All rights reserved.</p>
         </div>
-    </div>
-    <div class="mt-12 pt-8 border-t border-emerald-700 text-center">
-        <p class="text-sm">&copy; 2025 GreenBus Line. All rights reserved.</p>
     </div>
 </footer>
 
-
-<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center transition-opacity duration-300">
-    <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">Đăng nhập</h2>
-        <form th:action="@{/perform_login}" method="post">
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                <input type="email" id="email" name="username"
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                       required placeholder="Nhập email của bạn">
-            </div>
-            <div class="mb-6">
-                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Mật khẩu</label>
-                <input type="password" id="password" name="password"
-                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                       required placeholder="********">
-            </div>
-            <div class="flex items-center justify-between">
-                <button type="submit"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded transition duration-200">
-                    Đăng nhập
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-[110] p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform scale-100 transition-transform">
+        <div class="bg-emerald-600 p-6 text-center relative">
+             <button onclick="document.getElementById('loginModal').style.display='none'" class="absolute top-4 right-4 text-emerald-200 hover:text-white text-xl focus:outline-none">
+                <i class="fas fa-times"></i>
+            </button>
+             <h2 class="text-2xl font-bold text-white">Đăng nhập</h2>
+             <p class="text-emerald-100 text-sm mt-1">Quản lý vé và hành trình dễ dàng</p>
+        </div>
+        <div class="p-8">
+            <form th:action="@{/perform_login}" method="post">
+                <div class="mb-5">
+                    <label class="block text-gray-700 text-sm font-bold mb-2 ml-1">Email</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-envelope"></i></span>
+                        <input type="email" name="username" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required placeholder="name@example.com">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2 ml-1">Mật khẩu</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
+                        <input type="password" name="password" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required placeholder="••••••••">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5">
+                    ĐĂNG NHẬP
                 </button>
-                <a class="inline-block align-baseline font-bold text-sm text-emerald-600 hover:text-emerald-800"
-                   th:href="@{/profile/reset-password}">Quên mật khẩu?</a>
-            </div>
-             </form>
+                <div class="mt-5 text-center flex justify-between text-sm">
+                    <a th:href="@{/profile/reset-password}" class="text-emerald-600 hover:underline font-medium">Quên mật khẩu?</a>
+                    <a th:href="@{/auth}" class="text-gray-500 hover:text-gray-800">Tạo tài khoản mới</a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <script layout:fragment="script"></script>
+
+<script>
+    function toggleDrawer() {
+        const menu = document.getElementById('drawerMenu');
+        const overlay = document.getElementById('drawerOverlay');
+        const body = document.body;
+
+        if (menu.classList.contains('-translate-x-full')) {
+            // MỞ MENU
+            menu.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in overlay
+            body.classList.add('menu-open');
+        } else {
+            // ĐÓNG MENU
+            menu.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 300); // Chờ animation xong
+            body.classList.remove('menu-open');
+        }
+    }
+</script>
+
 </body>
 </html>

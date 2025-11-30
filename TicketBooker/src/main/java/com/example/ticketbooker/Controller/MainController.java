@@ -1,5 +1,6 @@
 package com.example.ticketbooker.Controller;
 
+import java.net.URLDecoder;
 import java.net.URLEncoder; // Thêm import này
 import java.nio.charset.StandardCharsets; // Thêm import này
 import java.time.LocalDate;
@@ -195,69 +196,117 @@ public class MainController {
     }
 
     // 4. TRANG CẢM ƠN
-   @GetMapping("/thankyou")
+   // Trong MainController.java
+
+@GetMapping("/thankyou")
 public String showPaymentSuccess(HttpServletRequest request,
                                  HttpServletResponse response,
                                  Model model,
                                  @RequestParam Map<String, String> allParams) {
     try {
+        // Lấy các giá trị Cookie cơ bản
         int tripId = Integer.parseInt(CookieUtils.getCookieValue(request, "tripId", "0"));
-        String customerName = CookieUtils.getCookieValue(request, "customerName", "");
         int bookerId = Integer.parseInt(CookieUtils.getCookieValue(request, "bookerId", "0"));
-        String grandTotal = CookieUtils.getCookieValue(request, "grandTotal", "0");
+        String seatIdsRaw = CookieUtils.getCookieValue(request, "seatIds", "");
+        
+        // --- FIX: Kiểm tra dữ liệu quan trọng ---
+        if (tripId == 0 || bookerId == 0 || seatIdsRaw.isEmpty()) {
+            System.out.println("Lỗi: Thiếu thông tin trong Cookie (tripId, bookerId hoặc seatIds)");
+            return "redirect:/greenbus"; // Hoặc trang lỗi
+        }
+        // ----------------------------------------
+
+        String customerName = CookieUtils.getCookieValue(request, "customerName", "Khách lẻ");
         String customerPhone = CookieUtils.getCookieValue(request, "customerPhone", "");
-        String seatIdsStr = CookieUtils.getCookieValue(request, "seatIds", "");
-        String[] listSeatIds = seatIdsStr.trim().split("\\s+");
+        String grandTotalStr = CookieUtils.getCookieValue(request, "grandTotal", "0");
+        int grandTotal = Integer.parseInt(grandTotalStr); // Parse ở đây cho gọn
 
-        int paymentStatus = Integer.parseInt(allParams.getOrDefault("paymentStatus", "0"));
+        // Giải mã Seat IDs
+        String seatIdsDecoded = URLDecoder.decode(seatIdsRaw, StandardCharsets.UTF_8);
+        String[] listSeatIds = seatIdsDecoded.trim().split("\\s+");
 
-        if (paymentStatus == 1) {
+        // Lấy trạng thái thanh toán từ URL (ZaloPay redirect về kèm param)
+        // Lưu ý: ZaloPay trả về 'status' hoặc 'returncode', nhưng ở Service bạn đang set hardcode '?paymentStatus=1'
+        int paymentStatus = 0;
+        if (allParams.containsKey("paymentStatus")) {
+             paymentStatus = Integer.parseInt(allParams.get("paymentStatus"));
+        } else if (allParams.containsKey("status")) { 
+             // Dự phòng trường hợp cổng thanh toán khác trả về 'status'
+             paymentStatus = Integer.parseInt(allParams.get("status")); 
+        }
 
-            // bắt buộc có booker
-            if (bookerId == 0) {
-                return "redirect:/greenbus/login";
-            }
+       if (paymentStatus == 1) { // Thanh toán thành công (hoặc đặt đơn thành công với COD)
 
-            // 1️⃣ tạo 1 invoice duy nhất cho cả lượt đặt
-            AddInvoiceDTO addInvoiceDTO = new AddInvoiceDTO(
-                    Integer.parseInt(grandTotal),
-                    PaymentStatus.PAID,
-                    LocalDateTime.now(),
-                    PaymentMethod.EWALLET
-            );
-            int invoiceId = invoiceService.addInvoice(addInvoiceDTO);
-            Invoices invoice = invoiceService.getById(invoiceId);
+    // --- LOGIC MỚI BẮT ĐẦU ---
+    
+    // 1. Xác định phương thức và trạng thái thanh toán
+    String methodParam = allParams.getOrDefault("paymentMethod", "");
+    
+    PaymentStatus finalStatus;
+    PaymentMethod finalMethod;
 
-            // 2️⃣ tạo AddTicketRequest: 1 ticket, nhiều ghế
-            AddTicketRequest addRequest = new AddTicketRequest();
-            addRequest.setSeat(new ArrayList<>());
-            addRequest = AddTicketRequest.builder()
+    // Nếu trên URL có gửi paymentMethod=CASH (từ Booking.js)
+    if ("CASH".equalsIgnoreCase(methodParam)) {
+        finalStatus = PaymentStatus.PENDING; // COD thì chưa trả tiền -> PENDING
+        finalMethod = PaymentMethod.CASH; 
+    } else {
+        // Các trường hợp khác (ZaloPay, VNPay...) mặc định là đã trả tiền
+        finalStatus = PaymentStatus.PAID;
+        finalMethod = PaymentMethod.EWALLET; 
+    }
+
+    // 2. Tạo Invoice với trạng thái động
+    AddInvoiceDTO addInvoiceDTO = new AddInvoiceDTO(
+            grandTotal,
+            finalStatus,  // Dùng biến vừa logic ở trên
+            LocalDateTime.now(),
+            finalMethod   // Dùng biến vừa logic ở trên
+    );
+    // --- LOGIC MỚI KẾT THÚC ---
+
+    int invoiceId = invoiceService.addInvoice(addInvoiceDTO);
+    Invoices invoice = invoiceService.getById(invoiceId);
+
+    // ... (Phần code dưới giữ nguyên) ...
+
+            // 2. Tạo Request Add Ticket
+            AddTicketRequest addRequest = AddTicketRequest.builder()
                     .customerName(customerName)
                     .customerPhone(customerPhone)
                     .tripId(tripId)
                     .bookerId(bookerId)
                     .ticketStatus(TicketStatus.BOOKED)
-                    .invoices(invoice)          // 1 invoice cho 1 vé
+                    .invoices(invoice)
+                    .seat(new ArrayList<>()) 
                     .build();
 
+            // 3. Add ghế vào request
             for (String s : listSeatIds) {
                 if (!s.isEmpty()) {
-                    addRequest.getSeat().add(Integer.parseInt(s)); // list seat id
+                    try {
+                        addRequest.getSeat().add(Integer.parseInt(s));
+                    } catch (NumberFormatException nfe) {
+                        nfe.printStackTrace();
+                    }
                 }
             }
 
-            // 3️⃣ gọi service: tạo 1 Tickets chứa nhiều seats
+            // 4. Lưu Ticket (Lúc này bảng ticket_seats mới được tạo)
             ticketService.addTicket(addRequest);
 
-            CookieUtils.addCookie(response, "paymentStatus", String.valueOf(paymentStatus), "/", -1);
+            // Xóa Cookie để tránh đặt lại (Optional)
+            CookieUtils.addCookie(response, "seatIds", "", "/", 0);
+            
         } else {
-            // payment fail → xoá giữ chỗ ghế
+            // Thanh toán thất bại hoặc Hủy -> Xóa ghế đã giữ
+            System.out.println("Thanh toán thất bại. Đang xóa ghế tạm...");
             for (String s : listSeatIds) {
                 if (!s.isEmpty()) seatsService.deleteSeat(Integer.parseInt(s));
             }
         }
     } catch (Exception e) {
         e.printStackTrace();
+        return "redirect:/greenbus"; // Redirect về trang chủ nếu lỗi hệ thống
     }
 
     return "View/User/Basic/Thankyou";

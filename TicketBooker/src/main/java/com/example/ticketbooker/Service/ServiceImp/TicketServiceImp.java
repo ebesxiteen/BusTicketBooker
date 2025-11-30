@@ -370,24 +370,26 @@ public boolean updateTicket(UpdateTicketRequest dto) {
                 cell.setCellValue(headers[i]);
             }
 
-            int rowIdx = 1;
-            for (Tickets ticket : tickets) {
-                Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(ticket.getId());
-                row.createCell(1).setCellValue(ticket.getCustomerName());
-                row.createCell(2).setCellValue(ticket.getCustomerPhone());
-                String seatCodes = "";
-                for (Tickets t : tickets) {
-                    seatCodes = (t.getSeats()).stream()
-                    .map(seat -> seat.getSeatCode()) // nếu entity Seat có field code
-                .collect(Collectors.joining(", "));
-                row.createCell(3).setCellValue(seatCodes);
-                
-                
-    }                
-                row.createCell(4).setCellValue(ticket.getTicketStatus().name());
-            }
+           // Sửa lại đoạn loop trong generateExcel
+int rowIdx = 1;
+for (Tickets ticket : tickets) {
+    Row row = sheet.createRow(rowIdx++);
+    row.createCell(0).setCellValue(ticket.getId());
+    row.createCell(1).setCellValue(ticket.getCustomerName());
+    row.createCell(2).setCellValue(ticket.getCustomerPhone());
 
+    // --- SỬA ĐOẠN NÀY ---
+    String seatCodes = "";
+    if (ticket.getSeats() != null) {
+        seatCodes = ticket.getSeats().stream()
+                .map(seat -> seat.getSeatCode()) // Lấy code của đúng ticket hiện tại
+                .collect(Collectors.joining(", "));
+    }
+    row.createCell(3).setCellValue(seatCodes);
+    // --------------------
+
+    row.createCell(4).setCellValue(ticket.getTicketStatus().name());
+}
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());

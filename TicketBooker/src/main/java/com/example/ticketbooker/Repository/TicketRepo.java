@@ -1,35 +1,38 @@
 package com.example.ticketbooker.Repository;
 
-import com.example.ticketbooker.Entity.Tickets;
-import com.example.ticketbooker.Util.Enum.TicketStatus;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import com.example.ticketbooker.Entity.Tickets;
+import com.example.ticketbooker.Util.Enum.TicketStatus;
 
-
-@SuppressWarnings("ALL")
 @Repository
 public interface TicketRepo extends JpaRepository<Tickets, Integer> {
-    ArrayList<Tickets> findAll();
-    ArrayList<Tickets> findAllById(int id);
+
     List<Tickets> findAllByBookerId(int bookerId);
 
+    // --- CÂU QUERY ĐÃ ĐƯỢC FIX LỖI ---
     @Query("SELECT t FROM Tickets t WHERE t.booker.id = :bookerId " +
-            "AND (:ticketId IS NULL OR t.id = :ticketId) " +
-            "AND (:departureDate IS NULL OR CAST(t.trip.departureTime AS DATE) = :departureDate) " + // Corrected line
-            "AND (:route IS NULL OR CONCAT(t.trip.route.departureLocation, ' - ', t.trip.route.arrivalLocation) LIKE %:route%) " +
-            "AND (:status IS NULL OR t.ticketStatus = :status)")
+           "AND (:ticketId IS NULL OR t.id = :ticketId) " +
+           // Sửa lỗi ngày tháng: Dùng hàm DATE() của MySQL
+           "AND (:departureDate IS NULL OR FUNCTION('DATE', t.trip.departureTime) = :departureDate) " +
+           // Sửa lỗi cú pháp LIKE: Phải dùng CONCAT để nối chuỗi '%'
+           "AND (:route IS NULL OR CONCAT(t.trip.route.departureLocation, ' - ', t.trip.route.arrivalLocation) LIKE CONCAT('%', :route, '%')) " +
+           "AND (:status IS NULL OR t.ticketStatus = :status) " +
+           "ORDER BY t.id DESC")
     List<Tickets> searchTickets(@Param("bookerId") int bookerId,
                                 @Param("ticketId") Integer ticketId,
-                                @Param("departureDate") LocalDate departureDate, // Parameter remains LocalDate
+                                @Param("departureDate") LocalDate departureDate,
                                 @Param("route") String route,
                                 @Param("status") TicketStatus status);
 
@@ -37,6 +40,11 @@ public interface TicketRepo extends JpaRepository<Tickets, Integer> {
     int countTicketsByPaymentTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     Page<Tickets> findAllByTripId(int tripId, Pageable pageable);
-    // Phương thức mới để trả về toàn bộ danh sách vé mà không phân trang
+    
     List<Tickets> findAllByTripId(int tripId);
+    @Modifying
+    @Transactional
+    @Query("UPDATE Tickets t SET t.ticketStatus = 'USED' " +
+           "WHERE t.trip.departureTime < :now AND t.ticketStatus = 'BOOKED'")
+    int updateUsedTickets(@Param("now") LocalDateTime now);
 }

@@ -212,64 +212,98 @@
             if (grandEl) grandEl.innerText = formattedTotal;
         }
 
-        // ============================================================
-        // 5. XỬ LÝ THANH TOÁN
-        // ============================================================
         function handlePayment() {
-            const btnPay = document.getElementById('btnPay');
-            if (!btnPay) return;
+    const btnPay = document.getElementById('btnPay');
+    if (!btnPay) return;
 
-            btnPay.addEventListener('click', async () => {
-                const name = document.querySelector('input[name="customerName"]').value;
-                const phone = document.querySelector('input[name="customerPhone"]').value;
-                const email = document.querySelector('input[name="email"]').value;
+    btnPay.addEventListener('click', async () => {
+        const name  = document.querySelector('input[name="customerName"]').value;
+        const phone = document.querySelector('input[name="customerPhone"]').value;
+        const email = document.querySelector('input[name="email"]').value;
 
-                if (selectedSeats.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Chưa chọn ghế',
-                        text: 'Vui lòng chọn ít nhất 1 ghế!'
-                    });
-                    return;
-                }
-                if (!name || !phone || !email) {
+        if (selectedSeats.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Chưa chọn ghế',
+                text: 'Vui lòng chọn ít nhất 1 ghế!'
+            });
+            return;
+        }
+        if (!name || !phone || !email) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Thiếu thông tin',
+                text: 'Vui lòng điền đầy đủ thông tin khách hàng!'
+            });
+            return;
+        }
+
+        const tripId = new URLSearchParams(window.location.search).get('tripId');
+        const total  = selectedSeats.length * TICKET_PRICE;
+
+        // Lưu cookie để /thankyou đọc
+        setCookie("tripId", tripId, 1);
+        setCookie("selectedSeats", selectedSeats.join(','), 1);
+// đổi key cho rõ
+        setCookie("grandTotal", total, 1);
+        setCookie("customerName", name, 1);
+        setCookie("customerPhone", phone, 1);
+        setCookie("email", email, 1);
+
+        try {
+    const res = await fetch('/api/seats/prebooking-seat', { method: 'POST' });
+
+    if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || 'Giữ chỗ ghế thất bại');
+    }
+
+    const paymentMethod =
+        document.querySelector('input[name="payment"]:checked').value;
+
+    if (paymentMethod === 'ZaloPay') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const tripId = urlParams.get('tripId');
+                
+                // Kiểm tra ghế đã chọn (selectedSeats là biến toàn cục)
+                if (!tripId || selectedSeats.length === 0) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Thiếu thông tin',
-                        text: 'Vui lòng điền đầy đủ thông tin khách hàng!'
+                        text: 'Vui lòng chọn ghế và đảm bảo thông tin chuyến đi đã được tải.'
                     });
                     return;
                 }
-
-                const tripId = new URLSearchParams(window.location.search).get('tripId');
-                const total = selectedSeats.length * TICKET_PRICE;
-
-                setCookie("tripId", tripId, 1);
-                setCookie("selectedSeats", selectedSeats.join(','), 1);
-                setCookie("grandTotal", total, 1);
-                setCookie("customerName", name, 1);
-                setCookie("customerPhone", phone, 1);
-                setCookie("email", email, 1);
-
-                try {
-                    await fetch('/api/seats/prebooking-seat', { method: 'POST' });
-
-                    const paymentMethod =
-                        document.querySelector('input[name="payment"]:checked').value;
-
-                    // Tạm thời vẫn redirect thẳng tới thankyou
-                    window.location.href = `/greenbus/thankyou?paymentStatus=1`;
-
-                } catch (e) {
-                    console.error(e);
+                
+                // ➡️ THAY ĐỔI: TRUYỀN tripId VÀ selectedSeats VÀO HÀM startZaloPay
+                if (typeof startZaloPay === "function") {
+                    // startZaloPay(tripId, ['A01', 'A02', ...])
+                    await startZaloPay(tripId, selectedSeats); 
+                } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Lỗi',
-                        text: 'Không thể xử lý đặt vé lúc này'
+                        text: 'ZaloPay chưa được cấu hình (Thiếu file ZaloPayment.js).'
                     });
                 }
-            });
-        }
+            } else if (paymentMethod === 'VNPay') {
+        window.location.href = '/vnpay/create-order';
+    } else {
+    // COD: Thêm param paymentMethod=CASH để Controller nhận biết
+    window.location.href = `/greenbus/thankyou?paymentStatus=1&paymentMethod=CASH`;
+}
+} catch (e) {
+    console.error(e);
+    Swal.fire({
+        icon: 'error',
+        title: 'Lỗi',
+        text: e.message || 'Không thể xử lý đặt vé lúc này'
+    });
+}
+
+    });
+}
+
 
         // Helpers
         function formatMoney(amount) {

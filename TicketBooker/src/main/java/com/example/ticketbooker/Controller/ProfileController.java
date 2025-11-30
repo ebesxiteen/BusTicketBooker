@@ -193,13 +193,10 @@ public ResponseEntity<byte[]> getProfilePhoto(@PathVariable Integer userId) {
         model.addAttribute("filterDepartureDate", departureDate);
         model.addAttribute("filterRoute", route);
         model.addAttribute("filterStatus", status);
-        
+        System.out.println("DEBUG: User đang login ID = " + user.getId());
+        System.out.println("DEBUG: Đang tìm vé cho ID = " + user.getId());
+        System.out.println("DEBUG: Số vé tìm thấy = " + (ticketResponse.getListTickets() != null ? ticketResponse.getListTickets().size() : 0));
         return "View/User/Registered/Profile/TicketHistory";
-    }
-
-    @GetMapping("/address")
-    public String showAddress() {
-        return "View/User/Registered/Profile/Address";
     }
 
     // 4. Trang đổi mật khẩu

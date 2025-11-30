@@ -1,35 +1,39 @@
 USE ticketbooker;
+
 -- =========================================
 -- 1. USERS
 -- =========================================
 SET @BCRYPT_PASS = '$2a$10$0JT96MJWgK9/0SquImmnDuV7r0T8.y.RMP27OtbHeC9dn1M1bYCMG';
 
-INSERT INTO Users (fullName, email, password, phone, address, gender, dateOfBirth, role, provider, userStatus, enabled) VALUES 
-('Quản Trị Hệ Thống', 'admin@greenbus.vn', @BCRYPT_PASS, '0901234567', 'Quận 1, TP.HCM', 'MALE', '1990-01-01', 'ADMIN', 'LOCAL', 'ACTIVE', 1),
-('Trần Nhân Viên', 'staff@greenbus.vn', @BCRYPT_PASS, '0909000222', 'Quận 3, TP.HCM', 'FEMALE', '1995-05-05', 'STAFF', 'LOCAL', 'ACTIVE', 1),
-('Lê Khách Hàng', 'customer@gmail.com', @BCRYPT_PASS, '0909000333', 'TP. Đà Lạt', 'FEMALE', '2000-10-10', 'USER', 'LOCAL', 'ACTIVE', 1),
-('Google User Test', 'googleuser@gmail.com', NULL, NULL, NULL, 'MALE', NULL, 'USER', 'GOOGLE', 'ACTIVE', 1);
+INSERT INTO Users (
+    fullName, email, password, phone, address, gender, dateOfBirth,
+    role, provider, userStatus, enabled
+) VALUES 
+('Quản Trị Hệ Thống', 'admin@greenbus.vn', @BCRYPT_PASS, '0901234567', 'Quận 1, TP.HCM', 'MALE',   '1990-01-01', 'ADMIN', 'LOCAL', 'ACTIVE', 1),
+('Trần Nhân Viên',    'staff@greenbus.vn', @BCRYPT_PASS, '0909000222', 'Quận 3, TP.HCM', 'FEMALE', '1995-05-05', 'STAFF', 'LOCAL', 'ACTIVE', 1),
+('Lê Khách Hàng',     'customer@gmail.com',@BCRYPT_PASS, '0909000333', 'TP. Đà Lạt',     'FEMALE', '2000-10-10', 'USER',  'LOCAL', 'ACTIVE', 1),
+('Google User Test',  'googleuser@gmail.com', NULL, NULL, NULL,        'MALE',   NULL,    'USER',  'GOOGLE','ACTIVE', 1);
 
 -- =========================================
 -- 2. ROUTES
 -- =========================================
 INSERT INTO Routes (departureLocation, arrivalLocation, estimatedTime, routeStatus) VALUES 
-('TP. Hồ Chí Minh', 'TP. Đà Lạt', '06:00:00', 'ACTIVE'), -- ID 1
-('TP. Hồ Chí Minh', 'TP. Nha Trang', '08:00:00', 'ACTIVE'), -- ID 2
+('TP. Hồ Chí Minh', 'TP. Đà Lạt',  '06:00:00', 'ACTIVE'), -- ID 1
+('TP. Hồ Chí Minh', 'TP. Nha Trang','08:00:00', 'ACTIVE'), -- ID 2
 ('TP. Hồ Chí Minh', 'TP. Đà Nẵng', '12:00:00', 'ACTIVE'), -- ID 3
-('TP. Nha Trang', 'TP. Hồ Chí Minh', '08:00:00', 'ACTIVE'), -- ID 4
-('TP. Nha Trang', 'TP. Đà Lạt', '06:00:00', 'ACTIVE'), -- ID 5
-('TP. Nha Trang', 'TP. Đà Nẵng', '04:00:00', 'ACTIVE'), -- ID 6
-('TP. Đà Nẵng', 'TP. Hồ Chí Minh', '12:00:00', 'ACTIVE'), -- ID 7
-('TP. Đà Nẵng', 'TP. Đà Lạt', '06:00:00', 'ACTIVE'), -- ID 8
-('TP. Đà Nẵng', 'TP. Nha Trang', '04:00:00', 'ACTIVE'); -- ID 9
+('TP. Nha Trang',   'TP. Hồ Chí Minh','08:00:00', 'ACTIVE'), -- ID 4
+('TP. Nha Trang',   'TP. Đà Lạt', '06:00:00', 'ACTIVE'), -- ID 5
+('TP. Nha Trang',   'TP. Đà Nẵng','04:00:00', 'ACTIVE'), -- ID 6
+('TP. Đà Nẵng',     'TP. Hồ Chí Minh','12:00:00', 'ACTIVE'), -- ID 7
+('TP. Đà Nẵng',     'TP. Đà Lạt','06:00:00', 'ACTIVE'), -- ID 8
+('TP. Đà Nẵng',     'TP. Nha Trang','04:00:00', 'ACTIVE'); -- ID 9
 
 -- =========================================
 -- 3. DRIVERS
 -- =========================================
 INSERT INTO Driver (name, licenseNumber, phone, address, driverStatus) VALUES 
 ('Nguyễn Văn Tài', 'B2-001234', '0988888111', 'Bình Thạnh, HCM', 'ACTIVE'), -- ID 1
-('Lê Văn Xế', 'D-005678', '0988888222', 'Thủ Đức, HCM', 'ACTIVE'); -- ID 2
+('Lê Văn Xế',      'D-005678',  '0988888222', 'Thủ Đức, HCM',    'ACTIVE'); -- ID 2
 
 -- =========================================
 -- 4. BUSES
@@ -65,11 +69,15 @@ INSERT INTO Buses (routeId, licensePlate, busType, capacity, busStatus) VALUES
 
 -- =========================================
 -- 5. TRIPS
---  - Trip COMPLETED: chỉ để demo lịch sử.
---  - Trip SCHEDULED: availableSeats = capacity (sẽ trừ sau vì ticket demo).
+--  - Trip COMPLETED: demo lịch sử
+--  - Trip SCHEDULED: availableSeats = capacity
 -- =========================================
-
-INSERT INTO Trips (routeId, busId, driverId, departureStation, arrivalStation, departureTime, arrivalTime, price, availableSeats, tripStatus) VALUES 
+INSERT INTO Trips (
+    routeId, busId, driverId,
+    departureStation, arrivalStation,
+    departureTime, arrivalTime,
+    price, availableSeats, tripStatus
+) VALUES 
 
 -- Route 1: HCM -> Đà Lạt
 -- Hôm qua (COMPLETED) - bus 1 (36 chỗ)
@@ -220,23 +228,12 @@ INSERT INTO Trips (routeId, busId, driverId, departureStation, arrivalStation, d
  DATE_ADD(CONCAT(CURDATE(), ' 20:30:00'), INTERVAL 10 HOUR),
  350000, 40, 'SCHEDULED');
 
-USE ticketbooker;
-
 -- =========================================
--- 6. INVOICE DEMO
+-- 6. INVOICE DEMO (tạo 2 invoice demo, id dự kiến = 1 và 2)
 -- =========================================
--- BOOKED
-INSERT INTO Invoices (totalAmount, paymentStatus, paymentTime, paymentMethod)
-SELECT 300000, 'PAID', NOW(), 'EWALLET'
-FROM Trips t
-WHERE t.tripStatus = 'SCHEDULED';
-
--- COMPLETED
-INSERT INTO Invoices (totalAmount, paymentStatus, paymentTime, paymentMethod)
-SELECT 300000, 'PAID', NOW(), 'EWALLET'
-FROM Trips t
-WHERE t.tripStatus = 'COMPLETED';
-
+INSERT INTO Invoices (totalAmount, paymentStatus, paymentTime, paymentMethod) VALUES
+(300000, 'PAID', NOW(), 'EWALLET'),
+(300000, 'PAID', NOW(), 'EWALLET');
 
 -- =========================================
 -- 7. SEATS cho TRIP SCHEDULED
@@ -244,60 +241,79 @@ WHERE t.tripStatus = 'COMPLETED';
 -- =========================================
 INSERT INTO Seats (tripId, seatCode)
 SELECT t.tripId, 'A01'
-FROM Trips t WHERE t.tripStatus = 'SCHEDULED'
+FROM Trips t 
+WHERE t.tripStatus = 'SCHEDULED'
 UNION ALL
 SELECT t.tripId, 'A02'
-FROM Trips t WHERE t.tripStatus = 'SCHEDULED';
+FROM Trips t 
+WHERE t.tripStatus = 'SCHEDULED';
 
 -- =========================================
 -- 8. TICKETS
 --  (Lưu ý: bảng Tickets KHÔNG còn seatId)
 -- =========================================
 
--- Vé BOOKED
-INSERT INTO Tickets (tripId, bookerId, invoiceId, customerName, customerPhone, qrCode, ticketStatus)
-SELECT t.tripId, 3, ROW_NUMBER() OVER (ORDER BY t.tripId),
+-- Vé BOOKED (gắn invoiceId = 1 cho đơn giản)
+INSERT INTO Tickets (
+    tripId, bookerId, invoiceId,
+    customerName, customerPhone, qrCode, ticketStatus
+)
+SELECT t.tripId, 3, 1,
        'Demo User', '0909000333', NULL, 'BOOKED'
 FROM Trips t
 WHERE t.tripStatus = 'SCHEDULED';
 
--- Vé COMPLETED
-INSERT INTO Tickets (tripId, bookerId, invoiceId, customerName, customerPhone, qrCode, ticketStatus)
-SELECT t.tripId, 3, ROW_NUMBER() OVER (ORDER BY t.tripId) + 
-       (SELECT COUNT(*) FROM Trips WHERE tripStatus = 'SCHEDULED'),
+-- Vé COMPLETED (USED) - gắn invoiceId = 2
+INSERT INTO Tickets (
+    tripId, bookerId, invoiceId,
+    customerName, customerPhone, qrCode, ticketStatus
+)
+SELECT t.tripId, 3, 2,
        'Demo User', '0909000000', NULL, 'USED'
 FROM Trips t
 WHERE t.tripStatus = 'COMPLETED';
 
 -- Vé CANCELLED (không gắn invoice)
-INSERT INTO Tickets (tripId, bookerId, invoiceId, customerName, customerPhone, qrCode, ticketStatus)
+INSERT INTO Tickets (
+    tripId, bookerId, invoiceId,
+    customerName, customerPhone, qrCode, ticketStatus
+)
 SELECT t.tripId, 3, NULL,
        'Demo User', '0909000000', NULL, 'CANCELLED'
 FROM Trips t
 WHERE t.tripStatus = 'SCHEDULED';
-
 
 -- =========================================
 -- 9. TICKETSEATS
 --  - Gắn 2 ghế (A01, A02) cho mỗi vé BOOKED tương ứng theo tripId
 --  - Mỗi seatId chỉ xuất hiện đúng 1 lần (1 ghế chỉ thuộc 1 vé)
 -- =========================================
-
--- Giả sử bảng TicketSeats đã được tạo như sau:
+-- Giả sử bảng:
 -- CREATE TABLE TicketSeats (
 --   ticketId INT NOT NULL,
---   seatId INT NOT NULL,
+--   seatId   INT NOT NULL,
 --   PRIMARY KEY (ticketId, seatId),
 --   FOREIGN KEY (ticketId) REFERENCES Tickets(ticketId) ON DELETE CASCADE,
---   FOREIGN KEY (seatId) REFERENCES Seats(seatId) ON DELETE CASCADE,
+--   FOREIGN KEY (seatId)   REFERENCES Seats(seatId)   ON DELETE CASCADE,
 --   CONSTRAINT uq_ticketseat_seat UNIQUE (seatId)
 -- );
 
-INSERT INTO ticket_seats (ticket_id, seat_id)
+INSERT INTO ticket_seats (ticketId, seatId)
 SELECT tk.ticketId, s.seatId
-FROM Tickets tk
-JOIN Trips t ON tk.tripId = t.tripId
-JOIN Seats s ON s.tripId = t.tripId
+FROM tickets tk
+JOIN trips  t ON tk.tripId = t.tripId
+JOIN seats  s ON s.tripId = t.tripId
 WHERE t.tripStatus = 'SCHEDULED'
   AND tk.ticketStatus = 'BOOKED';
 
+INSERT INTO Trips (
+    routeId, busId, driverId,
+    departureStation, arrivalStation,
+    departureTime, arrivalTime,
+    price, availableSeats, tripStatus
+) VALUES 
+(9, 15, 1,
+ 'Bến xe Đà Nẵng', 'Bến xe Đà Lạt',
+ CONCAT(CURDATE(), ' 18:45:00'),
+ DATE_ADD(CONCAT(CURDATE(), ' 18:45:00'), INTERVAL 10 HOUR),
+ 450000, 40, 'SCHEDULED');

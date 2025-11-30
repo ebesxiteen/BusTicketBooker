@@ -32,7 +32,7 @@ public class InvoiceServiceImp implements InvoiceService {
 // 3. Tạo 1 invoice duy nhất
 Invoices invoice = new Invoices();
 invoice.setPaymentMethod(dto.getPaymentMethod());
-invoice.setPaymentStatus(PaymentStatus.PAID);
+invoice.setPaymentStatus(dto.getPaymentStatus());
 invoice.setPaymentTime(LocalDateTime.now());
 invoice.setTotalAmount(dto.getTotalAmount());
 Invoices savedInvoice=invoicesRepo.save(invoice);

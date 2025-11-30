@@ -1,21 +1,28 @@
 package com.example.ticketbooker.Controller.Api;
 
-import com.example.ticketbooker.DTO.Seats.AddSeatDTO;
-import com.example.ticketbooker.Entity.Seats;
-import com.example.ticketbooker.Service.SeatsService;
-import com.example.ticketbooker.Util.Utils.CookieUtils;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.ticketbooker.DTO.Seats.AddSeatDTO;
+import com.example.ticketbooker.Service.SeatsService;
+import com.example.ticketbooker.Util.Utils.CookieUtils;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/seats")
@@ -44,43 +51,50 @@ public class SeatsApi {
         try {
             // Lấy dữ liệu từ cookie
             int tripId = Integer.parseInt(CookieUtils.getCookieValue(request, "tripId", "0"));
-            String selectedSeats = CookieUtils.getCookieValue(request, "selectedSeats", "");
-            String[] seats = selectedSeats.split(",\\s*");
+            // Lấy raw từ cookie
+            String selectedSeatsRaw = CookieUtils.getCookieValue(request, "selectedSeats", "");
 
-            // Tạo DTO
-            AddSeatDTO addSeatDTO = new AddSeatDTO();
-            addSeatDTO.setTripId(tripId);
-            addSeatDTO.setSeatCode(selectedSeats);
+        // ✅ GIẢI MÃ %20 → space
+            String selectedSeats = URLDecoder.decode(selectedSeatsRaw, StandardCharsets.UTF_8);
 
-            // Lấy danh sách seatIds từ service
-            List<Integer> seatIds = seatsService.addSeats(addSeatDTO);
+            System.out.println("selectedSeats raw  = " + selectedSeatsRaw);
+            System.out.println("selectedSeats deco = " + selectedSeats);
 
-            // In danh sách seatIds ra console
-            System.out.println("Danh sách seatIds được tạo: " + seatIds);
-            if (seatIds != null && !seatIds.isEmpty()) {
-                // Chuyển danh sách seatIds thành chuỗi
-                String seatIdsString = seatIds.stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(" "));
-                 System.out.println("Danh sách seatIdsString được tạo: " + seatIdsString);
-
-                String encodedSeatIds = URLEncoder.encode(seatIdsString, StandardCharsets.UTF_8);
-
-                Cookie seatIdsCookie = new Cookie("seatIds", encodedSeatIds);
-                seatIdsCookie.setPath("/");
-                seatIdsCookie.setMaxAge(900);
-                response.addCookie(seatIdsCookie);
-
-                // Trả về kết quả thành công
-                return ResponseEntity.ok("Seats pre-booked and added to cookie.");
-            } else {
-                return ResponseEntity.badRequest().body("No seats were pre-booked.");
+            if (selectedSeats == null || selectedSeats.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("No seats were selected.");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while pre-booking seats.");
+          AddSeatDTO addSeatDTO = new AddSeatDTO();
+        addSeatDTO.setTripId(tripId);
+        // ví dụ: "A04 A05"
+        addSeatDTO.setSeatCode(selectedSeats);
+
+        List<Integer> seatIds = seatsService.addSeats(addSeatDTO);
+        System.out.println("Danh sách seatIds được tạo: " + seatIds);
+        
+        if (seatIds == null || seatIds.isEmpty()) {
+            // trường hợp service không ném exception nhưng lại không tạo được ghế
+            return ResponseEntity
+                    .badRequest()
+                    .body("Không tạo được ghế, vui lòng thử lại.");
         }
+         String seatIdsString = seatIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(" "));
+
+        String encodedSeatIds = URLEncoder.encode(seatIdsString, StandardCharsets.UTF_8);
+        Cookie seatIdsCookie = new Cookie("seatIds", encodedSeatIds);
+        seatIdsCookie.setPath("/");
+        seatIdsCookie.setMaxAge(900);
+        response.addCookie(seatIdsCookie);
+
+        return ResponseEntity.ok("Đặt chỗ ghế tạm thời thành công.");
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error occurred while pre-booking seats.");
     }
+}
 
     @PostMapping("/delete")
     public void deleteSeats(@RequestBody String seatIds) {

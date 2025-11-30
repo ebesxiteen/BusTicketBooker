@@ -1,10 +1,9 @@
-/* --- SỬA MÀU BANNER --- */
+/* --- 1. MÀU BANNER (Giữ nguyên vì đẹp) --- */
 .banner-gradient {
-    /* Gradient mới: Từ Xanh Ngọc (#10b981) sang Xanh Đậm (#047857) */
     background: linear-gradient(90deg, #10b981 0%, #047857 100%);
 }
 
-/* --- CÁC PHẦN KHÁC GIỮ NGUYÊN HOẶC TINH CHỈNH --- */
+/* --- 2. CAROUSEL --- */
 .carousel {
     scroll-behavior: smooth;
 }
@@ -13,46 +12,41 @@
     flex: 0 0 100%;
 }
 
-/* Animation trượt ngang (Slide In from Left) */
+/* --- 3. ANIMATION --- */
 @keyframes slideIn {
     from { opacity: 0; transform: translateX(-100%); }
     to { opacity: 1; transform: translateX(0); }
 }
 
 .animate-slide-in {
-    animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Chỉnh timing cho mượt hơn */
+    animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Mobile Menu */
-#mobileMenu {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    z-index: 50;
-    width: 60%;
-    background-color: white; /* Đảm bảo nền trắng cho menu mobile */
+/* --- 4. HIỆU ỨNG GẠCH CHÂN MENU (DESKTOP) --- */
+/* Chỉ áp dụng cho menu trên thanh Navbar (nền xanh) */
+nav .group a {
+    position: relative;
+    display: inline-block;
 }
 
-#mobileMenu.show {
-    transform: translateX(0);
-}
-
-/* Hiệu ứng gạch chân Menu (Underline Hover) */
-.custom-nav a {
-    position: relative; /* Cần thiết để after định vị theo thẻ a */
-}
-
-.custom-nav a::after {
+/* Tạo đường kẻ trắng ẩn bên dưới */
+nav .group a::after {
     content: '';
     position: absolute;
-    bottom: -4px; /* Đẩy xuống một chút cho thoáng */
+    bottom: -2px;
     left: 0;
     width: 0%;
     height: 2px;
-    background-color: white; /* Màu gạch chân (trên nền xanh thì màu trắng là chuẩn) */
-    transition: width 0.3s ease;
+    background-color: #ffffff; /* Màu trắng nổi bật trên nền xanh */
+    transition: width 0.3s ease-in-out;
+    opacity: 0.8;
 }
 
-/* Sửa lại selector hover cho đúng cấu trúc */
-.custom-nav a:hover::after {
+/* Khi di chuột vào thì đường kẻ chạy ra */
+nav .group a:hover::after {
     width: 100%;
 }
+
+/* --- 5. QUAN TRỌNG: XÓA CODE MOBILE MENU CŨ --- */
+/* Tôi đã xóa các dòng #mobileMenu ở đây để nhường quyền điều khiển cho Tailwind trong HTML.
+   Điều này sẽ sửa lỗi menu bị trắng bọc hoặc nút bị ẩn. */

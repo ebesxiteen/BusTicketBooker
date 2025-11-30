@@ -19,7 +19,7 @@ public class StatusScheduler {
     private TicketRepo ticketRepo;
 
     // Chạy mỗi 1 gi giây (60000ms)
-    @Scheduled(fixedRate = 60000) 
+    @Scheduled(fixedRate = 3600000) // 1 hour
     public void autoUpdateStatus() {
         LocalDateTime now = LocalDateTime.now();
 

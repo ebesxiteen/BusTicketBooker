@@ -3,7 +3,6 @@ package com.example.ticketbooker.Controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,12 +17,6 @@ public class AccessController {
     // 1. Đổi AccountService -> UserService
     @Autowired
     private UserService userService;
-
-    @GetMapping("/admin/**")
-    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')") // Thêm ADMIN vào cho chắc
-    public String managerDashboard() {
-        return "redirect:/admin/users";
-    }
 
     @GetMapping("/access-denied")
     public String accessDenied() {

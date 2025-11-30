@@ -1,5 +1,7 @@
 package com.example.ticketbooker.Controller.Api;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,7 +36,6 @@ public class UserApi {
     @Autowired
     private UserService userService;
 
-    // --- CẦN INJECT THÊM CÁC CÁI NÀY ĐỂ XỬ LÝ MẬT KHẨU & EMAIL ---
     @Autowired
     private UserRepo userRepo;
     
@@ -47,12 +48,28 @@ public class UserApi {
 
     // 1. Xóa User
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser(@RequestBody UserIdRequest request) {
-        boolean result = userService.deleteUser(request);
-        if (result) {
-            return ResponseEntity.ok().body("Deleted successfully");
-        } else {
-            return ResponseEntity.badRequest().body("Delete failed");
+    public ResponseEntity<?> deleteUser(@RequestBody Map<String, Integer> payload) {
+        // Lấy userId từ JSON gửi lên (bất kể key là 'userId' hay 'id')
+        Integer id = payload.get("userId"); 
+        if (id == null) id = payload.get("id"); // Phòng hờ JS gửi 'id'
+
+        if (id == null) {
+            return ResponseEntity.badRequest().body("Thiếu ID người dùng");
+        }
+
+        try {
+            UserIdRequest requestDto = new UserIdRequest();
+            requestDto.setUserId(id);
+            boolean result = userService.deleteUser(requestDto); // Cần sửa UserService nhận int
+
+            if (result) {
+                return ResponseEntity.ok().body("Deleted successfully");
+            } else {
+                return ResponseEntity.badRequest().body("Delete failed");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
     }
 

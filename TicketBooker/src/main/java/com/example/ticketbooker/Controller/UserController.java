@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.ticketbooker.DTO.Users.AddUserRequest;
@@ -96,22 +97,30 @@ public class UserController {
     }
 
     // 4. Xử lý Cập nhật (Bao gồm cả Role, Email)
-    @PostMapping("/update")
-    public String updateUser(@ModelAttribute("updateUserForm") UpdateUserRequest updateUserRequest, RedirectAttributes redirectAttributes) {
+   @PostMapping("/update")
+    public String updateUser(@ModelAttribute("updateUserForm") UpdateUserRequest updateUserRequest,
+                             @RequestParam(value = "avatarFile", required = false) MultipartFile avatarFile, // Thêm dòng này
+                             RedirectAttributes redirectAttributes) {
         try {
-            boolean result = userService.updateUser(updateUserRequest);
+            // 1. Cập nhật thông tin text trước
+            boolean updateInfoResult = userService.updateUser(updateUserRequest);
             
-            if (result) {
+            // 2. Cập nhật Avatar nếu có file gửi lên
+            if (avatarFile != null && !avatarFile.isEmpty()) {
+                userService.updateAvatar(updateUserRequest.getUserId(), avatarFile);
+            }
+
+            if (updateInfoResult) {
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thành công!");
             } else {
-                redirectAttributes.addFlashAttribute("failedMessage", "Cập nhật thất bại.");
+                redirectAttributes.addFlashAttribute("failedMessage", "Cập nhật thông tin thất bại.");
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            e.printStackTrace(); // In lỗi ra console để debug nếu có
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
         }
+        
+        // Redirect về lại trang chi tiết để xem kết quả
         return "redirect:/admin/users/details/" + updateUserRequest.getUserId();
     }
-    
-    // 5. Xử lý Xóa (Nếu cần)
-    // Bạn có thể thêm @GetMapping("/delete/{id}") hoặc @PostMapping("/delete") tùy nhu cầu
 }

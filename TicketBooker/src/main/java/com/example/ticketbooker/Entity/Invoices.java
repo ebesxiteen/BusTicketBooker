@@ -1,13 +1,20 @@
 package com.example.ticketbooker.Entity;
 
+import java.time.LocalDateTime;
+
 import com.example.ticketbooker.Util.Enum.PaymentMethod;
 import com.example.ticketbooker.Util.Enum.PaymentStatus;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -38,7 +45,7 @@ public class Invoices {
         this.totalAmount = 0;
         this.paymentStatus = PaymentStatus.PENDING;
         this.paymentTime = null;
-        this.paymentMethod = PaymentMethod.CREDITCARD;
+        this.paymentMethod = PaymentMethod.CASH;
     }
 
     public Invoices(Integer id, Integer totalAmount, PaymentStatus paymentStatus, LocalDateTime paymentTime, PaymentMethod paymentMethod) {

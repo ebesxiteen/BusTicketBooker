@@ -2,71 +2,69 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{View/Layout/AdminLayout.html}">
-<head>
-    <meta charset="UTF-8">
-    <title>Quản lý Tài Xế - GreenBus</title>
-    </head>
-<body class="bg-gray-50">
+<head> <title>Quản lý Tài Xế</title> </head>
+<body>
 <div layout:fragment="content">
-    <div class="container mx-auto p-6">
-        
-        <h1 class="text-3xl font-bold mb-6 text-emerald-700 capitalize">Quản Lý Tài Xế</h1>
-
-        <form id="searchForm" th:action="@{/admin/drivers/search}" method="get" class="mb-6 relative">
-            <div class="flex items-center bg-white shadow rounded-lg p-2 border border-gray-200">
-                <i class="fas fa-search text-gray-400 ml-3 mr-2"></i>
-                <input type="text" name="keyword" id="keyword" placeholder="Tìm kiếm theo tên, số giấy phép"
-                       class="flex-grow px-4 py-2 outline-none text-gray-700 leading-tight focus:outline-none focus:border-emerald-500"
-                       th:value="${param.keyword}">
-                
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded transition">
-                    Tìm kiếm
-                </button>
-            </div>
-            </form>
-
-        <div class="flex justify-end mb-4">
-            <a href="/admin/drivers/add" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded shadow transition">
-                <i class="fas fa-user-plus mr-2"></i> Thêm Lái Xe
-            </a>
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Quản Lý Tài Xế</h1>
+            <p class="text-sm text-gray-500">Đội ngũ lái xe và thông tin liên hệ</p>
         </div>
+        <a href="/admin/drivers/add" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-sm font-medium transition-all flex items-center gap-2">
+            <i class="fas fa-user-plus"></i> <span>Thêm Tài Xế</span>
+        </a>
+    </div>
 
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <table class="min-w-full leading-normal">
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+        <form th:action="@{/admin/drivers/search}" method="get" class="relative w-full">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" name="keyword" class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" 
+                   placeholder="Tìm kiếm tài xế theo tên, bằng lái..." th:value="${param.keyword}">
+        </form>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-emerald-50 text-emerald-800 uppercase text-sm font-bold">
-                        <th class="py-3 px-4 text-center">ID</th>
-                        <th class="py-3 px-4 text-left">Tên</th>
-                        <th class="py-3 px-4 text-center">Bằng Lái</th>
-                        <th class="py-3 px-4 text-center">SĐT</th>
-                        <th class="py-3 px-4 text-center">Trạng Thái</th>
-                        <th class="py-3 px-4 text-center">Hành Động</th>
+                    <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold border-b border-gray-200">
+                        <th class="px-6 py-4 text-center">ID</th>
+                        <th class="px-6 py-4">Họ Tên</th>
+                        <th class="px-6 py-4 text-center">Bằng Lái</th>
+                        <th class="px-6 py-4 text-center">Số Điện Thoại</th>
+                        <th class="px-6 py-4 text-center">Trạng Thái</th>
+                        <th class="px-6 py-4 text-center">Hành Động</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-700 text-sm">
-                    <tr th:each="driver : ${drivers}" class="text-center border-b hover:bg-gray-50 transition">
-                        <td class="py-2 px-4" th:text="${driver.id}"></td>
-                        <td class="py-2 px-4 text-left" th:text="${driver.name}"></td>
-                        <td class="py-2 px-4" th:text="${driver.licenseNumber}"></td>
-                        <td class="py-2 px-4" th:text="${driver.phone}"></td>
-                        <td class="py-2 px-4">
+                <tbody class="divide-y divide-gray-100 text-sm">
+                    <tr th:each="driver : ${drivers}" class="hover:bg-emerald-50/50 transition duration-200">
+                        <td class="px-6 py-4 text-center font-medium text-gray-500" th:text="'#' + ${driver.id}"></td>
+                        
+                        <td class="px-6 py-4 font-bold text-gray-800" th:text="${driver.name}"></td>
+                        
+                        <td class="px-6 py-4 text-center font-mono text-gray-600" th:text="${driver.licenseNumber}"></td>
+                        
+                        <td class="px-6 py-4 text-center" th:text="${driver.phone}"></td>
+                        
+                        <td class="px-6 py-4 text-center">
                             <select th:data-driverid="${driver.id}" onchange="updateDriverStatus(this)"
-                                    class="border rounded py-1 px-2 text-xs font-semibold focus:outline-none cursor-pointer transition"
-                                    th:classappend="${driver.driverStatus == T(com.example.ticketbooker.Util.Enum.DriverStatus).ACTIVE} ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-red-100 text-red-700 border-red-300'">
-                                <option value="ACTIVE" th:selected="${driver.driverStatus == T(com.example.ticketbooker.Util.Enum.DriverStatus).ACTIVE}">ACTIVE</option>
-                                <option value="INACTIVE" th:selected="${driver.driverStatus == T(com.example.ticketbooker.Util.Enum.DriverStatus).INACTIVE}">INACTIVE</option>
+                                    class="border-0 bg-transparent text-xs font-bold cursor-pointer focus:ring-0"
+                                    th:classappend="${driver.driverStatus?.name() == 'ACTIVE'} ? 'text-emerald-600' : 'text-red-500'">
+                                <option value="ACTIVE" th:selected="${driver.driverStatus?.name() == 'ACTIVE'}">ACTIVE</option>
+                                <option value="INACTIVE" th:selected="${driver.driverStatus?.name() == 'INACTIVE'}">INACTIVE</option>
                             </select>
                         </td>
 
-                        <td class="py-2 px-4">
-                            <div class="flex justify-center space-x-3">
-                                <a th:href="@{/admin/drivers/details/{id}(id=${driver.id})}" title="Sửa chi tiết"
-                                   class="text-blue-500 hover:text-blue-700 transition">
-                                    <i class="fas fa-edit text-lg"></i>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center gap-2">
+                                <a th:href="@{/admin/drivers/details/{id}(id=${driver.id})}" 
+                                   class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition flex items-center justify-center">
+                                    <i class="fas fa-pen text-xs"></i>
                                 </a>
                                 <button th:data-id="${driver.id}" onclick="confirmDeleteTrip(this)"
-                                        class="text-red-500 hover:text-red-700 transition" title="Xóa">
-                                    <i class="fas fa-trash-alt text-lg"></i>
+                                        class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center">
+                                    <i class="fas fa-trash text-xs"></i>
                                 </button>
                             </div>
                         </td>
@@ -74,22 +72,8 @@
                 </tbody>
             </table>
         </div>
-
-        <div class="mt-6 flex justify-center" th:if="${totalPages > 1}">
-            <nav class="flex space-x-1 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
-                <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                   th:href="@{/admin/drivers(page=${i}, size=10)}"
-                   th:text="${i + 1}"
-                   class="px-3 py-1 rounded transition text-sm font-medium"
-                   th:classappend="${currentPage == i} ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100'">
-                </a>
-            </nav>
         </div>
-        
-    </div>
 </div>
-
 <script type="text/javascript" th:src="@{/js/DriverManagement.js}"></script>
-
 </body>
 </html>

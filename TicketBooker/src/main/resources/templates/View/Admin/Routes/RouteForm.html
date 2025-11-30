@@ -45,9 +45,12 @@
                     <select th:field="*{status}" required
                             class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white">
                         <option th:value="${T(com.example.ticketbooker.Util.Enum.RouteStatus).ACTIVE}"
-                                th:text="ACTIVE" th:selected="*{status == T(com.example.ticketbooker.Util.Enum.RouteStatus).ACTIVE}"></option>
-                        <option th:value="${T(com.example.ticketbooker.Util.Enum.RouteStatus).INACTIVE}"
-                                th:text="INACTIVE" th:selected="*{status == T(com.example.ticketbooker.Util.Enum.RouteStatus).INACTIVE}"></option>
+        th:text="ACTIVE" 
+        th:selected="*{status?.name() == 'ACTIVE'}"></option>
+
+<option th:value="${T(com.example.ticketbooker.Util.Enum.RouteStatus).INACTIVE}"
+        th:text="INACTIVE" 
+        th:selected="*{status?.name() == 'INACTIVE'}"></option>
                     </select>
                 </div>
 

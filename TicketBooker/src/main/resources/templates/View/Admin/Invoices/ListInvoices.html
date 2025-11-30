@@ -2,64 +2,60 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{View/Layout/AdminLayout.html}">
-<head>
-    <meta charset="UTF-8">
-    <title>Danh sách Hóa Đơn - GreenBus</title>
-</head>
-<body class="bg-gray-50">
+<head> <title>Danh sách Hóa Đơn</title> </head>
+<body>
 <div layout:fragment="content">
-    <div class="container mx-auto py-8 px-4">
-        
-        <div class="flex w-full mb-6 justify-between items-center border-b pb-2">
-            <div class="font-bold text-3xl capitalize text-emerald-700 italic">Danh Sách Hóa Đơn</div>
-            <span class="text-sm text-gray-500">Quản lý các giao dịch thanh toán</span>
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Danh Sách Hóa Đơn</h1>
+            <p class="text-sm text-gray-500">Lịch sử giao dịch và thanh toán</p>
         </div>
-        
-        <div class="mb-6 flex flex-col md:flex-row justify-start items-center space-y-4 md:space-y-0 md:space-x-4 p-4 bg-white shadow rounded-lg border border-gray-200">
-            
-            <input id="totalAmount" type="number" placeholder="Nhập tổng tiền"
-                   class="w-full md:w-1/4 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-300">
-                   
-            <select id="paymentStatus" 
-                    class="w-full md:w-auto px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-300">
-                <option value="">Tất cả trạng thái</option>
-                <option value="PAID">Đã thanh toán</option>
-                <option value="PENDING">Chưa thanh toán</option>
-            </select>
-            
-            <select id="paymentMethod" 
-                    class="w-full md:w-auto px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-300">
-                <option value="">Tất cả phương thức</option>
-                <option value="CREDITCARD">CREDITCARD</option>
-                <option value="CASH">CASH</option>
-                <option value="EWALLET">EWALLET</option>
-            </select>
-            
-            <button id="searchBtn" onclick="searchInvoices()"
-                    class="px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all duration-300 shadow-md">
-                <i class="fas fa-search mr-1"></i> Tìm kiếm
-            </button>
         </div>
 
-        <div class="overflow-x-auto shadow-lg sm:rounded-lg bg-white border border-gray-200">
-            <table class="min-w-full text-center">
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input id="totalAmount" type="number" placeholder="Lọc theo số tiền..."
+               class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+        
+        <select id="paymentStatus" 
+                class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+            <option value="">-- Trạng thái --</option>
+            <option value="PAID">Đã thanh toán</option>
+            <option value="PENDING">Chờ xử lý</option>
+        </select>
+        
+        <select id="paymentMethod" 
+                class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+            <option value="">-- Phương thức --</option>
+            <option value="CREDITCARD">Thẻ tín dụng</option>
+            <option value="CASH">Tiền mặt</option>
+            <option value="EWALLET">Ví điện tử</option>
+        </select>
+        
+        <button onclick="searchInvoices()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition shadow-sm">
+            <i class="fas fa-filter mr-1"></i> Áp dụng
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-emerald-50 text-emerald-700 uppercase text-sm leading-normal font-bold">
-                    <th class="py-3 px-6">ID</th>
-                    <th class="py-3 px-6">Tổng Tiền</th>
-                    <th class="py-3 px-6">Trạng Thái Thanh Toán</th>
-                    <th class="py-3 px-6">Thời Gian Thanh Toán</th>
-                    <th class="py-3 px-6">Phương Thức Thanh Toán</th>
-                </tr>
+                    <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold border-b border-gray-200">
+                        <th class="px-6 py-4">ID</th>
+                        <th class="px-6 py-4 text-center">Tổng Tiền</th>
+                        <th class="px-6 py-4 text-center">Trạng Thái</th>
+                        <th class="px-6 py-4 text-center">Thời Gian</th>
+                        <th class="px-6 py-4 text-center">Phương Thức</th>
+                    </tr>
                 </thead>
-                <tbody id="invoiceTableBody" class="text-gray-600 text-sm">
-                    <tr><td colspan="5" class="text-center py-4 text-gray-500">Đang tải dữ liệu...</td></tr>
+                <tbody id="invoiceTableBody" class="text-sm text-gray-600 divide-y divide-gray-100">
+                    <tr><td colspan="5" class="text-center py-8 text-gray-500">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-
 <script type="text/javascript" th:src="@{/js/searchInvoices.js}"></script>
 </body>
 </html>

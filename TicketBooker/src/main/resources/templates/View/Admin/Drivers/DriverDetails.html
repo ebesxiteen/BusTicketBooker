@@ -48,8 +48,8 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="driverStatusNew">Trạng Thái</label>
                     <select th:field="*{driverStatus}" required
                             class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white">
-                        <option value="ACTIVE" th:text="ACTIVE"></option>
-                        <option value="INACTIVE" th:text="INACTIVE"></option>
+                        <option value="ACTIVE" th:text="ACTIVE" th:selected="*{driverStatus?.name() == 'ACTIVE'}"></option>
+                        <option value="INACTIVE" th:text="INACTIVE" th:selected="*{driverStatus?.name() == 'INACTIVE'}"></option>
                     </select>
                 </div>
                 

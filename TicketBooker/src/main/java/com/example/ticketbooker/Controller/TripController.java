@@ -1,28 +1,31 @@
 package com.example.ticketbooker.Controller;
 
-import com.example.ticketbooker.DTO.Bus.BusDTO;
-import com.example.ticketbooker.DTO.Trips.AddTripDTO;
-import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
-import com.example.ticketbooker.DTO.Trips.TripDTO;
-import com.example.ticketbooker.DTO.Trips.UpdateTripDTO;
-import com.example.ticketbooker.DTO.Users.UpdateUserRequest;
-import com.example.ticketbooker.Entity.Trips;
-import com.example.ticketbooker.Service.BusService;
-import com.example.ticketbooker.Service.DriverService;
-import com.example.ticketbooker.Service.RouteService;
-import com.example.ticketbooker.Service.TripService;
-import com.example.ticketbooker.Util.Enum.TripStatus;
-import com.example.ticketbooker.Util.Mapper.TripMapper;
-import com.example.ticketbooker.Util.Mapper.UserMapper;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
+import com.example.ticketbooker.DTO.Bus.BusDTO;
+import com.example.ticketbooker.DTO.Trips.AddTripDTO;
+import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
+import com.example.ticketbooker.DTO.Trips.TripDTO;
+import com.example.ticketbooker.DTO.Trips.UpdateTripDTO;
+import com.example.ticketbooker.Service.BusService;
+import com.example.ticketbooker.Service.DriverService;
+import com.example.ticketbooker.Service.RouteService;
+import com.example.ticketbooker.Service.TripService;
+import com.example.ticketbooker.Util.Enum.TripStatus;
+import com.example.ticketbooker.Util.Mapper.TripMapper;
 
 
 @Controller
@@ -96,6 +99,26 @@ public class TripController {
         }
         return "redirect:/admin/trips";
     }
+
+@GetMapping("/add")
+public String showAddTripForm(Model model) {
+    // Tạo DTO rỗng, tripId = null để Thymeleaf hiểu là đang ở chế độ "Thêm"
+    UpdateTripDTO dto = new UpdateTripDTO();
+    dto.setTripStatus(TripStatus.SCHEDULED); // mặc định là SCHEDULED nếu bà muốn
+
+    model.addAttribute("updateTripForm", dto);
+
+    return "View/Admin/Trips/TripDetail"; // dùng lại template TripDetail.html
+}
+
+
+@GetMapping("/admin/trips/{id}")
+public String editTrip(@PathVariable int id, Model model) {
+    ResponseTripDTO trip = tripService.getTripById(id);
+    model.addAttribute("updateTripForm", trip);
+    return "TripDetail";
+}
+
 
     @PostMapping("/update")
     public String update(@ModelAttribute("updateTripForm") UpdateTripDTO updateTripDTO, Model model) {

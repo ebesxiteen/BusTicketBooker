@@ -29,20 +29,24 @@ public class TripApi {
     private TripService tripService;
 
     // Xóa chuyến xe (Dành cho Admin)
-@DeleteMapping("/delete") 
-public ResponseEntity<?> deleteTrip(@RequestBody RequestIdTripDTO request) { 
-    
-    boolean result = tripService.deleteTrip(request);
-    
-    if (result) {
-        return ResponseEntity.ok("Xóa thành công");
-    } else {
-        return ResponseEntity.badRequest().body("Xóa thất bại");
+@DeleteMapping("/delete")
+public ResponseEntity<?> deleteTrip(@RequestBody RequestIdTripDTO request) {
+    try {
+        // Gọi service
+        tripService.deleteTrip(request);
+        
+        // Nếu thành công (không có lỗi ném ra)
+        return ResponseEntity.ok("Xóa chuyến xe thành công!");
+        
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+        
+    } catch (Exception e) {
+        // Lỗi không mong muốn khác
+        return ResponseEntity.internalServerError().body("Lỗi hệ thống: " + e.getMessage());
     }
 }
 
-    // Tìm kiếm chuyến xe (API)
-    // Đã xóa 'Model model' vì không cần thiết trong RestController
     @PostMapping("/search-trip")
     public ResponseTripDTO searchTrip(@RequestBody SearchTripRequest request) {
         ResponseTripDTO result = new ResponseTripDTO();

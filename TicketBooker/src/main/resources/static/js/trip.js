@@ -32,33 +32,42 @@ document.addEventListener("DOMContentLoaded", function () {
                 cancelButtonText: "Hủy"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch("/api/trips/delete", {
-                        method: "DELETE",
-                        headers: { 
-                            "Content-Type": "application/json" 
-                            // Nếu có lỗi 403 Forbidden thì cần thêm header CSRF ở đây
-                        },
-                        body: JSON.stringify({ tripId: tripId })
-                    })
-                    .then((response) => {
-                        if (response.ok) {
-                            Swal.fire("Đã xóa!", "Chuyến xe đã được xóa.", "success")
-                            .then(() => {
-                                // Xóa dòng khỏi bảng ngay lập tức (hiệu ứng mượt hơn reload)
-                                if (row) row.remove();
-                                // window.location.reload(); // Hoặc reload nếu muốn chắc chắn
-                            });
-                        } else {
-                            return response.text().then(text => {
-                                Swal.fire("Lỗi!", text, "error");
-                            });
-                        }
-                    })
-                    .catch((err) => {
-                        Swal.fire("Lỗi server!", "Không kết nối được API.", "error");
-                        console.error(err);
-                    });
-                }
+    fetch("/api/trips/delete", {
+        method: "DELETE", // Đã thống nhất dùng DELETE
+        headers: { 
+            "Content-Type": "application/json" 
+            // Thêm CSRF token nếu cần
+        },
+        body: JSON.stringify({ tripId: tripId })
+    })
+    .then((response) => {
+        // KỊCH BẢN THÀNH CÔNG (HTTP 200)
+        if (response.ok) {
+            Swal.fire("Đã xóa!", "Chuyến xe đã được xóa.", "success")
+            .then(() => {
+                if (row) row.remove(); // Xóa dòng khỏi bảng
+                // window.location.reload(); 
+            });
+        } 
+        // KỊCH BẢN CÓ LỖI (HTTP 400, 500...)
+        else {
+            // response.text() sẽ lấy dòng chữ: "Không thể xóa! Chuyến xe đang có..."
+            return response.text().then(errorMessage => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Không thể xóa!',
+                    text: errorMessage, // <--- Hiển thị lỗi từ Java tại đây
+                    confirmButtonColor: '#d33'
+                });
+            });
+        }
+    })
+    .catch((err) => {
+        // Lỗi mạng hoặc server sập
+        console.error(err);
+        Swal.fire("Lỗi kết nối!", "Không thể gọi đến server.", "error");
+    });
+}
             });
         });
     });

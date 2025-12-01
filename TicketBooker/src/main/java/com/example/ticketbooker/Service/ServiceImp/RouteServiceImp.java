@@ -1,18 +1,24 @@
 package com.example.ticketbooker.Service.ServiceImp;
 
-import com.example.ticketbooker.DTO.Routes.*;
-import com.example.ticketbooker.Entity.Routes;
-import com.example.ticketbooker.Repository.RouteRepo;
-import com.example.ticketbooker.Service.RouteService;
-import com.example.ticketbooker.Util.Enum.RouteStatus;
-import com.example.ticketbooker.Util.Mapper.RouteMapper;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.example.ticketbooker.DTO.Routes.AddRouteDTO;
+import com.example.ticketbooker.DTO.Routes.RequestRouteIdDTO;
+import com.example.ticketbooker.DTO.Routes.ResponseRouteDTO;
+import com.example.ticketbooker.DTO.Routes.RouteDTO;
+import com.example.ticketbooker.DTO.Routes.SearchRouteRequest;
+import com.example.ticketbooker.DTO.Routes.UpdateRouteDTO;
+import com.example.ticketbooker.Entity.Routes;
+import com.example.ticketbooker.Repository.RouteRepo;
+import com.example.ticketbooker.Service.RouteService;
+import com.example.ticketbooker.Util.Enum.RouteStatus;
+import com.example.ticketbooker.Util.Mapper.RouteMapper;
 
 @Service
 public class RouteServiceImp implements RouteService {
@@ -164,8 +170,11 @@ public class RouteServiceImp implements RouteService {
         return result;
     }
 
-    public List<Routes> getAllRoutes() {
-        return routeRepo.findAll();
+    public List<RouteDTO> getAllRoutes() {
+        List<Routes> routes = routeRepo.findAll();
+        List<RouteDTO> dtos = new ArrayList<>();
+        routes.forEach(route -> dtos.add(RouteMapper.toDTO(route)));
+        return dtos;
     }
 
 }

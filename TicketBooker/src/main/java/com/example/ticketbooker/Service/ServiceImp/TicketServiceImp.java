@@ -160,7 +160,7 @@ public boolean updateTicket(UpdateTicketRequest dto) {
 
         // 2. Cập nhật trip nếu tripId khác 0
         if (dto.getTripId() != 0) {
-            Trips trip = tripRepos.findById(dto.getTripId());
+            Optional<Trips> trip = tripRepos.findById(dto.getTripId());
             if (trip == null) {
             throw new RuntimeException("Trip not found with id: " + dto.getTripId());
             }

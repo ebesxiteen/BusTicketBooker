@@ -3,7 +3,10 @@ package com.example.ticketbooker.Repository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List; // Dùng List cho chuẩn
+import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +21,8 @@ import com.example.ticketbooker.Entity.Trips;
 @Repository
 public interface TripRepo extends JpaRepository<Trips, Integer> {
     ArrayList<Trips> findAll();
-    Trips findById(int id);
+    Optional<Trips> findById(int id);
+Page<Trips> findByTripStatus(Enum tripStatus, Pageable pageable);
 
     // Hàm cũ của bạn (Giữ nguyên hoặc dùng nếu tìm chính xác)
     @Query("SELECT t FROM Trips t WHERE " +
@@ -48,4 +52,23 @@ public interface TripRepo extends JpaRepository<Trips, Integer> {
     @Query("UPDATE Trips t SET t.tripStatus = 'COMPLETED' " +
            "WHERE t.departureTime < :now AND t.tripStatus = 'SCHEDULED'")
     int updateCompletedTrips(@Param("now") LocalDateTime now);
+    @Query("SELECT t FROM Trips t WHERE t.bus.id = :busId " +
+           "AND t.tripStatus IN ('SCHEDULED', 'IN_PROGRESS')")
+    List<Trips> findScheduledOrInProgressTripsForBus(@Param("busId") Integer busId);
+
+    @Query("SELECT COUNT(t) FROM Trips t " +
+           "WHERE t.driver.id = :driverId " +
+           "AND t.id != :tripIdToExclude " +
+           "AND t.tripStatus IN ('SCHEDULED', 'IN_PROGRESS') " +
+           "AND ( " +
+           // Điều kiện xung đột thời gian
+           "    (t.departureTime < :newArrivalTime) AND (t.arrivalTime > :newDepartureTime) " +
+           ")"
+    )
+    long countConflictingTripsForDriver(
+        @Param("driverId") Integer driverId, 
+        @Param("newDepartureTime") LocalDateTime newDepartureTime, 
+        @Param("newArrivalTime") LocalDateTime newArrivalTime, 
+        @Param("tripIdToExclude") Integer tripIdToExclude
+    );
 }

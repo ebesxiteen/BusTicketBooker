@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{View/Layout/AdminLayout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm Chuyến Xe - GreenBus</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Thêm Chuyến Xe Mới</h1>
+            <p class="text-gray-500 mt-1 text-sm">
+                Nhập thông tin chuyến xe mới vào biểu mẫu bên dưới.
+            </p>
+        </div>
+        <a href="/admin/trips"
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+            <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- KHÔNG dùng th:object, KHÔNG th:field để tránh Thymeleaf móc vào DTO gây lỗi -->
+    <form th:action="@{/admin/trips/add}"
+          method="post"
+          class="bg-white shadow-lg rounded-xl px-8 pt-6 pb-8 border border-gray-200 space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Tuyến -->
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Tuyến đường</label>
+                <select name="route.routeId"
+                        class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                               focus:ring-2 focus:ring-emerald-500 bg-white">
+                    <option value="">-- Chọn tuyến --</option>
+                    <option th:each="r : ${routes}"
+        th:value="${r.routeId}"
+        th:text="${r.departureLocation + ' -> ' + r.arrivalLocation}">Tuyến</option>
+                </select>
+            </div>
+
+            <!-- Xe -->
+            <div>
+    <label class="block text-gray-700 text-sm font-semibold mb-2">Xe</label>
+    <select name="bus.id" id="busSelect" required 
+            class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 ...">
+        <option value="">-- Chọn xe --</option>
+        <option th:each="b : ${buses}"
+                th:value="${b.id}"
+                th:text="${b.licensePlate}"
+                data-capacity="${b.capacity}" 
+                >Xe</option> </select>
+</div>
+
+            <!-- Tài xế -->
+           <div>
+    <label class="block text-gray-700 text-sm font-semibold mb-2">Tài xế</label>
+    <select name="driver.driverId" class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                   focus:ring-2 focus:ring-emerald-500 bg-white">
+        <option value="">-- Chọn tài xế --</option>
+        <option th:each="d : ${drivers}"
+                th:value="${d.id}"
+                th:text="${d.name}">Tài xế</option>
+    </select>
+</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Trạm khởi hành</label>
+                <input name="departureStation" type="text" required
+                       class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                              focus:ring-2 focus:ring-emerald-500 transition">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Trạm đến</label>
+                <input name="arrivalStation" type="text" required
+                       class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                              focus:ring-2 focus:ring-emerald-500 transition">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Thời gian khởi hành</label>
+                <input name="departureTime" type="datetime-local" required
+                       class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                              focus:ring-2 focus:ring-emerald-500 transition">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Thời gian đến (nếu có)</label>
+                <input name="arrivalTime" type="datetime-local"
+                       class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                              focus:ring-2 focus:ring-emerald-500 transition">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Giá vé (VNĐ)</label>
+                <input name="price" type="number" min="10000" required
+                       class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                              focus:ring-2 focus:ring-emerald-500 transition">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Trạng thái</label>
+                <select name="tripStatus"
+                        class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700
+                               focus:ring-2 focus:ring-emerald-500 bg-white">
+                    <option value="SCHEDULED">SCHEDULED</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-end items-center gap-4 pt-4 border-t border-gray-200 mt-6">
+            <a href="/admin/trips"
+               class="px-5 py-2 rounded-lg text-gray-500 hover:bg-gray-100 font-medium text-sm transition">
+                Hủy
+            </a>
+            <button type="submit"
+                    class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md">
+                Lưu Chuyến Xe
+            </button>
+        </div>
+    </form>
+
+</div>
+</body>
+</html>

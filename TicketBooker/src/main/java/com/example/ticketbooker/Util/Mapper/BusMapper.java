@@ -1,8 +1,9 @@
 package com.example.ticketbooker.Util.Mapper;
 
-import com.example.ticketbooker.Entity.Buses;
-import com.example.ticketbooker.DTO.Bus.BusDTO;
 import org.springframework.stereotype.Component;
+
+import com.example.ticketbooker.DTO.Bus.BusDTO;
+import com.example.ticketbooker.Entity.Buses;
 
 @Component
 public class BusMapper {

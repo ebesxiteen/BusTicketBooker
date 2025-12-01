@@ -2,7 +2,9 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{View/Layout/AdminLayout.html}">
-<head> <title>Danh sách Chuyến Xe</title> </head>
+<head>
+    <title>Danh sách Chuyến Xe</title>
+</head>
 <body>
 <div layout:fragment="content">
     
@@ -11,84 +13,161 @@
             <h1 class="text-2xl font-bold text-gray-800">Quản Lý Chuyến Xe</h1>
             <p class="text-sm text-gray-500">Lịch trình khởi hành và vé bán</p>
         </div>
-        <a href="/admin/trips/add" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-sm font-medium transition-all flex items-center gap-2">
-            <i class="fas fa-calendar-plus"></i> <span>Thêm Chuyến Xe</span>
-        </a>
+        
+        <div class="flex items-center gap-4">
+            <form id="filterForm" method="GET" th:action="@{/admin/trips}" class="flex items-center gap-2">
+                
+                <span class="text-sm font-semibold text-gray-600">Lọc theo Trạng thái:</span>
+                
+                <input type="hidden" name="page" th:value="0" /> 
+                <input type="hidden" name="size" th:value="${tripsPage.size}" />
+                
+                <select name="status" id="tripStatusFilter" 
+        class="form-select form-select-sm w-auto shadow-sm border border-gray-300 rounded-lg text-sm"  
+        onchange="document.getElementById('filterForm').submit()">
+    
+    <option value="ALL" th:selected="${currentStatus == null or currentStatus == 'ALL'}">
+        Tất cả
+    </option>
+    
+    <option value="SCHEDULED" th:selected="${currentStatus == 'SCHEDULED'}">
+        Đang chờ
+    </option>
+    
+    <option value="COMPLETED" th:selected="${currentStatus == 'COMPLETED'}">
+        Đã hoàn thành
+    </option>
+    
+    <option value="CANCELLED" th:selected="${currentStatus == 'CANCELLED'}">
+        Đã hủy
+    </option>
+    
+</select>
+            </form>
+
+            <a th:href="@{/admin/trips/add}"
+               class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-sm font-medium transition-all flex items-center gap-2">
+                <i class="fas fa-calendar-plus"></i> <span>Thêm Chuyến Xe</span>
+            </a>
+        </div>
+        </div>
+
+    <div th:if="${successMessage}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline" th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline" th:text="${errorMessage}"></span>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold border-b border-gray-200">
-                        <th class="px-6 py-4 text-center">ID</th>
-                        <th class="px-6 py-4">Lộ Trình</th>
-                        <th class="px-6 py-4 text-center">Giờ Chạy</th>
-                        <th class="px-6 py-4 text-center">Giá Vé</th>
-                        <th class="px-6 py-4 text-center">Xe & Tài Xế</th>
-                        <th class="px-6 py-4 text-center">Trạng Thái</th>
-                        <th class="px-6 py-4 text-center">Hành Động</th>
+                    <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+                        <th class="px-6 py-3 font-semibold">ID</th>
+                        <th class="px-6 py-3 font-semibold">Tuyến đường</th>
+                        <th class="px-6 py-3 font-semibold">Xe</th>
+                        <th class="px-6 py-3 font-semibold">Khởi hành</th>
+                        <th class="px-6 py-3 font-semibold">Giá/Chỗ trống</th>
+                        <th class="px-6 py-3 font-semibold text-center">Trạng thái</th>
+                        <th class="px-6 py-3 font-semibold text-center">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-sm">
-                    <tr th:each="trip : ${trips}" class="hover:bg-emerald-50/50 transition duration-200">
-                        <td class="px-6 py-4 text-center font-medium text-gray-500" th:text="'#' + ${trip.id}"></td>
-                        
-                        <td class="px-6 py-4 font-bold text-gray-800" 
-                            th:text="${trip.route.departureLocation} + ' ➝ ' + ${trip.route.arrivalLocation}"></td>
-                        
-                        <td class="px-6 py-4 text-center">
-                            <div th:text="${#temporals.format(trip.departureTime, 'HH:mm')}"></div>
-                            <div class="text-xs text-gray-500" th:text="${#temporals.format(trip.departureTime, 'dd/MM/yyyy')}"></div>
+                <tbody>
+                    <tr th:each="trip : ${tripsPage.content}" class="border-t border-gray-100 hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900" th:text="${trip.id}"></td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            <div class="font-medium" th:text="${trip.route.departureLocation} + ' → ' + ${trip.route.arrivalLocation}"></div>
+                            <div class="text-xs text-gray-500" th:text="${trip.departureStation} + ' → ' + ${trip.arrivalStation}"></div>
                         </td>
-                        
-                        <td class="px-6 py-4 text-center font-bold text-emerald-600" 
-                            th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA') + 'đ'}"></td>
-                        
-                        <td class="px-6 py-4">
-                            <div class="text-xs">
-                                <span class="font-bold">Xe:</span> <span th:text="${trip.bus.licensePlate}"></span>
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                <span class="font-bold">LX:</span> <span th:text="${trip.driver.name}"></span>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            <div th:text="${trip.bus.licensePlate}"></div>
+                            <div class="text-xs text-gray-500" th:text="${trip.bus.busType} + ' (' + ${trip.bus.capacity} + ' chỗ)'"></div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            <div class="font-medium" th:text="${#temporals.format(trip.departureTime, 'HH:mm dd/MM/yyyy')}"></div>
+                            <div class="text-xs text-gray-500" th:text="'Tài xế: ' + ${trip.driver.name}"></div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            <div class="font-medium" th:text="${#numbers.formatDecimal(trip.price, 0, 'POINT', 0, 'COMMA') + ' VND'}"></div>
+                            <div th:classappend="${trip.availableSeats &lt; 5} ? 'text-red-500 font-semibold' : 'text-gray-500'">
+                                <span th:text="${trip.availableSeats} + ' chỗ trống'"></span>
                             </div>
                         </td>
 
                         <td class="px-6 py-4 text-center">
-                            <span class="px-2 py-1 rounded-full text-xs font-semibold"
-                                  th:classappend="${trip.tripStatus?.name() == 'SCHEDULED'} ? 'bg-blue-100 text-blue-700' : 
-                                                  (${trip.tripStatus?.name() == 'COMPLETED'} ? 'bg-green-100 text-green-700' : 'bg-gray-100')"
-                                  th:text="${trip.tripStatus}">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                  th:with="status=${trip.tripStatus != null ? trip.tripStatus.name() : ''}"
+                                  th:classappend="${status == 'SCHEDULED'} ? 'bg-blue-100 text-blue-700' : 
+                                                  (${status == 'COMPLETED'} ? 'bg-green-100 text-green-700' : 
+                                                  (${status == 'CANCELLED'} ? 'bg-red-100 text-red-700' : 'bg-gray-100'))"
+                                  th:text="${status == 'SCHEDULED'} ? 'Đang chờ' : 
+                                           (${status == 'COMPLETED'} ? 'Đã hoàn thành' : 
+                                           (${status == 'CANCELLED'} ? 'Đã hủy' : 'Không xác định'))">
                             </span>
                         </td>
 
                         <td class="px-6 py-4 text-center">
                             <div class="flex justify-center gap-2">
-                                <a th:href="@{/admin/trips/{id}(id=${trip.id})}"
-   class="w-8 h-8 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-600 hover:text-white transition flex items-center justify-center">
-    <i class="fas fa-edit text-xs"></i>
-</a>
+                                <a th:href="@{/admin/trips/details/{id}(id=${trip.id})}"
+                                   class="w-8 h-8 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-600 hover:text-white transition flex items-center justify-center"
+                                   title="Chỉnh sửa">
+                                    <i class="fas fa-edit text-xs"></i>
+                                </a>
 
                                 <button type="button"
-        class="delete-trip-btn w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center shadow-sm"
-        th:data-id="${trip.id}"
-        title="Xóa">
-    <i class="fas fa-trash text-xs"></i>
-</button>
-
+                                        class="delete-trip-btn w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center shadow-sm"
+                                        th:data-id="${trip.id}"
+                                        title="Xóa">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        </div>
+    </div>
+    
+    <div th:if="${tripsPage != null and tripsPage.totalPages > 1}" class="flex justify-center items-center gap-2 pt-6">
+        
+        <a th:if="${tripsPage.hasPrevious()}"
+           th:href="@{/admin/trips(page=${tripsPage.number - 1}, size=${tripsPage.size}, status=${currentStatus})}"
+           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-chevron-left"></i> Trang trước
+        </a>
+        <span th:unless="${tripsPage.hasPrevious()}"
+              class="px-4 py-2 text-sm font-medium text-gray-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+            <i class="fas fa-chevron-left"></i> Trang trước
+        </span>
 
-    <div layout:fragment="popup">
-        </div>
+        <span th:each="i : ${#numbers.sequence(0, tripsPage.totalPages - 1)}">
+            <a th:if="${i >= tripsPage.number - 2 and i <= tripsPage.number + 2}"
+               th:href="@{/admin/trips(page=${i}, size=${tripsPage.size}, status=${currentStatus})}"
+               th:class="${i == tripsPage.number ? 
+                           'bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition' : 
+                           'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition'}">
+                <span th:text="${i + 1}"></span>
+            </a>
+        </span>
+        
+        <a th:if="${tripsPage.hasNext()}"
+           th:href="@{/admin/trips(page=${tripsPage.number + 1}, size=${tripsPage.size}, status=${currentStatus})}"
+           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+            Trang sau <i class="fas fa-chevron-right"></i>
+        </a>
+        <span th:unless="${tripsPage.hasNext()}"
+              class="px-4 py-2 text-sm font-medium text-gray-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+            Trang sau <i class="fas fa-chevron-right"></i>
+        </span>
+        
+    </div>
+    </div>
+<th:block layout:fragment="scripts">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/trip.js}"></script>
+    
+    <script th:src="@{/js/trip.js}"></script>
+</th:block>
 
-</div>
 </body>
 </html>

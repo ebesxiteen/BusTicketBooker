@@ -42,9 +42,30 @@ public interface TicketRepo extends JpaRepository<Tickets, Integer> {
     Page<Tickets> findAllByTripId(int tripId, Pageable pageable);
     
     List<Tickets> findAllByTripId(int tripId);
+    
     @Modifying
     @Transactional
     @Query("UPDATE Tickets t SET t.ticketStatus = 'USED' " +
            "WHERE t.trip.departureTime < :now AND t.ticketStatus = 'BOOKED'")
     int updateUsedTickets(@Param("now") LocalDateTime now);
+
+    @Query("SELECT COUNT(t) FROM Tickets t WHERE t.trip.id = :tripId AND t.ticketStatus IN ('BOOKED', 'USED')")
+    long countBookedOrUsedTicketsByTripId(@Param("tripId") Integer tripId);
+
+    @Query("SELECT s.seatCode " + 
+           "FROM Tickets t " + 
+           "JOIN t.seats s " + // Join bảng ticket_seats rồi sang bảng Seats
+           "WHERE t.trip.id = :tripId " +
+           "AND (t.ticketStatus = 'BOOKED')")
+    List<String> findBookedSeatCodesByTripId(@Param("tripId") Integer tripId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Tickets t SET t.ticketStatus = 'CANCELLED' WHERE t.trip.id = :tripId AND t.ticketStatus = 'BOOKED'")
+    void cancelBookedTicketsByTripId(@Param("tripId") Integer tripId);
+
+    @Modifying // Bắt buộc vì đây là lệnh DELETE/UPDATE
+    @Transactional // Bắt buộc để quản lý giao dịch
+    @Query("DELETE FROM Tickets t WHERE t.trip.id = :tripId")
+    void deleteAllByTripId(@Param("tripId") Integer tripId);
 }

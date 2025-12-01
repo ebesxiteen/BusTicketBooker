@@ -17,7 +17,6 @@ import com.example.ticketbooker.Entity.Trips;
 public interface TripService {
     public ResponseTripDTO getTripById(int id);
     Page<TripDTO> getAllTrips(Pageable pageable);
-//    public ArrayList<Trips> findAll();
     public ResponseTripDTO getAllTrips();
     public boolean addTrip(AddTripDTO dto);
     public boolean updateTrip(UpdateTripDTO updateTripDTO);
@@ -28,5 +27,8 @@ public interface TripService {
     ResponseTripDTO getTripByIds(int tripId);
     TripStatsDTO getTripStats(String period, LocalDate selectedDate);
     void updateAvailableSeats(Integer tripId, int delta);
+    Page<TripDTO> getAllTrips(String status, Pageable pageable);
+    boolean cancelTrip(Integer tripId);
+
 
 }

@@ -1,19 +1,18 @@
 package com.example.ticketbooker.Util.Mapper;
 
 
-import com.example.ticketbooker.DTO.Bus.BusDTO;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+
 import com.example.ticketbooker.DTO.Trips.AddTripDTO;
 import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
 import com.example.ticketbooker.DTO.Trips.TripDTO;
 import com.example.ticketbooker.DTO.Trips.UpdateTripDTO;
-import com.example.ticketbooker.DTO.Users.UpdateUserRequest;
 import com.example.ticketbooker.Entity.Buses;
+import com.example.ticketbooker.Entity.Driver;
+import com.example.ticketbooker.Entity.Routes;
 import com.example.ticketbooker.Entity.Trips;
-import com.example.ticketbooker.Entity.Users;
 import com.example.ticketbooker.Util.Enum.TripStatus;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 public class TripMapper {
     public static Trips fromAdd(AddTripDTO dto) {
@@ -76,20 +75,86 @@ public class TripMapper {
         tripDTO.setTripStatus(trip.getTripStatus());
         return tripDTO;
     }
-
-    public static UpdateTripDTO toUpdateDTO(Trips entity) {
-        return UpdateTripDTO.builder()
-                .tripId(entity.getId())
-                .route(entity.getRoute())
-                .bus(entity.getBus())
-                .driver(entity.getDriver())
-                .departureStation(entity.getDepartureStation())
-                .arrivalStation(entity.getArrivalStation())
-                .departureTime(entity.getDepartureTime())
-                .arrivalTime(entity.getArrivalTime())
-                .price(entity.getPrice())
-                .availableSeats(entity.getAvailableSeats())
-                .tripStatus(entity.getTripStatus())
-                .build();
+public static UpdateTripDTO toUpdateDTO(Trips trip) {
+    UpdateTripDTO dto = new UpdateTripDTO();
+    
+    // Gán các trường cơ bản
+    dto.setTripId(trip.getId());
+    dto.setDepartureTime(trip.getDepartureTime());
+    dto.setArrivalTime(trip.getArrivalTime());
+    dto.setDepartureStation(trip.getDepartureStation());
+    dto.setArrivalStation(trip.getArrivalStation());
+    dto.setPrice(trip.getPrice());
+    dto.setAvailableSeats(trip.getAvailableSeats());
+    dto.setTripStatus(trip.getTripStatus());
+    
+    // -----------------------------------------------------------------
+    // KHẮC PHỤC LỖI TYPE MISMATCH VÀ NULL POINTER
+    // -----------------------------------------------------------------
+    
+    // 1. Gán Driver (Entity)
+    // Nếu trip.getDriver() là null, tạo một Entity rỗng để Thymeleaf không bị lỗi
+    if (trip.getDriver() != null) {
+        dto.setDriver(trip.getDriver()); // TRUYỀN THẲNG ENTITY
+    } else {
+        // Khởi tạo Entity rỗng để tránh lỗi driver.driverId trong HTML
+        dto.setDriver(new Driver()); 
     }
+
+    // 2. Gán Bus (Entity)
+    if (trip.getBus() != null) {
+        dto.setBus(trip.getBus()); // TRUYỀN THẲNG ENTITY
+    } else {
+        dto.setBus(new Buses());
+    }
+
+    // 3. Gán Route (Entity)
+    if (trip.getRoute() != null) {
+        dto.setRoute(trip.getRoute()); // TRUYỀN THẲNG ENTITY
+    } else {
+        dto.setRoute(new Routes());
+    }
+    
+    // -----------------------------------------------------------------
+    
+    return dto;
+}
+// Trong com.example.ticketbooker.Util.Mapper.TripMapper
+
+public static Trips toEntity(AddTripDTO dto) {
+    Trips trip = new Trips();
+    
+    // --- 1. MAPPING KHÓA NGOẠI (Foreign Keys) ---
+    // Chỉ cần set ID cho các Entity liên kết
+    
+    Routes route = new Routes();
+    route.setRouteId(dto.getRoute().getRouteId());
+    trip.setRoute(route); 
+    
+    Buses bus = new Buses();
+    bus.setId(dto.getBus().getId());
+    trip.setBus(bus);
+    
+    Driver driver = new Driver();
+    driver.setDriverId(dto.getDriver().getDriverId());
+    trip.setDriver(driver);
+
+    // --- 2. MAPPING ĐIỂM ĐI, ĐIỂM ĐẾN (Vấn đề hiện tại) ---
+    
+    // !!! BỔ SUNG HAI DÒNG NÀY (hoặc kiểm tra xem chúng có bị lỗi không)
+    trip.setDepartureStation(dto.getDepartureStation()); 
+    trip.setArrivalStation(dto.getArrivalStation());   
+    
+    // --- 3. MAPPING CÁC TRƯỜNG CÒN LẠI ---
+
+    trip.setDepartureTime(dto.getDepartureTime());
+    // arrivalTime: KHÔNG CẦN MAPPING ở đây, vì nó được tính toán và set trong TripServiceImp.java
+    
+    trip.setPrice(dto.getPrice());
+
+    // TripStatus (trạng thái, ví dụ: SCHEDULED)
+    trip.setTripStatus(dto.getTripStatus());
+
+    return trip;
+}
 }

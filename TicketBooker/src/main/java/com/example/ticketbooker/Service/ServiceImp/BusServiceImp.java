@@ -1,19 +1,19 @@
 package com.example.ticketbooker.Service.ServiceImp;
 
-import com.example.ticketbooker.Entity.Buses;
-import com.example.ticketbooker.DTO.Bus.BusDTO;
-import com.example.ticketbooker.Service.BusService;
-import com.example.ticketbooker.Util.Mapper.BusMapper;
-import com.example.ticketbooker.Repository.BusRepo;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeInterceptorLogging_$logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import com.example.ticketbooker.DTO.Bus.BusDTO;
+import com.example.ticketbooker.Entity.Buses;
+import com.example.ticketbooker.Repository.BusRepo;
+import com.example.ticketbooker.Service.BusService;
+import com.example.ticketbooker.Util.Mapper.BusMapper;
 
 @Service
 public class BusServiceImp implements BusService {
@@ -36,15 +36,10 @@ public class BusServiceImp implements BusService {
     }
 
     @Override
-    public BusDTO getBusById(int id) {
-        BusDTO result = new BusDTO();
-        try {
-            result = BusMapper.toDTO(this.busRepository.findById(id));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return result;
-        }
-        return result;
+    public BusDTO getBusById(Integer id) {
+        return busRepository.findById(id)
+                      .map(BusMapper::toDTO) 
+                      .orElse(null);
     }
 
     @Override
@@ -64,6 +59,7 @@ public class BusServiceImp implements BusService {
             return false;
         }
         return true;
+
     }
 
     @Override
@@ -80,5 +76,16 @@ public class BusServiceImp implements BusService {
     public Page<BusDTO> getBusesByLicensePlateContaining(String licensePlate, Pageable pageable) {
         Page<Buses> buses = busRepository.findByLicensePlateContainingIgnoreCase(licensePlate, pageable);
         return buses.map(BusMapper::toDTO);
+    }
+
+    @Override
+    public Integer getBusCapacityById(Integer busId) {
+        // Sử dụng findById và trả về capacity (hoặc null nếu không tìm thấy)
+        Optional<Buses> bus = busRepository.findById(busId);
+        return bus.map(Buses::getCapacity).orElse(null);
+    }
+    @Override
+    public Buses getBusEntityById(Integer id) {
+        return busRepository.findById(id).orElse(null);
     }
 }

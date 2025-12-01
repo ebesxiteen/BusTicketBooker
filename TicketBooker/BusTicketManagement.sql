@@ -58,7 +58,7 @@ CREATE TABLE Buses (
 CREATE TABLE Invoices (
     invoiceId INT AUTO_INCREMENT PRIMARY KEY,
     totalAmount INT,
-    paymentStatus ENUM('PENDING', 'PAID') NOT NULL,
+    paymentStatus ENUM('PENDING', 'PAID', 'CANCELLED') NOT NULL,
     paymentTime DATETIME,
     paymentMethod ENUM('CREDITCARD', 'EWALLET', 'CASH') NOT NULL
 );

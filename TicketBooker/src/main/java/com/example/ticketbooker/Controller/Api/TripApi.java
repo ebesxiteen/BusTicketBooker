@@ -3,6 +3,7 @@ package com.example.ticketbooker.Controller.Api;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,15 +29,17 @@ public class TripApi {
     private TripService tripService;
 
     // Xóa chuyến xe (Dành cho Admin)
-    @DeleteMapping
-    public boolean deleteTrip(@RequestBody RequestIdTripDTO tripId) {
-        try {
-            return tripService.deleteTrip(tripId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+@DeleteMapping("/delete") 
+public ResponseEntity<?> deleteTrip(@RequestBody RequestIdTripDTO request) { 
+    
+    boolean result = tripService.deleteTrip(request);
+    
+    if (result) {
+        return ResponseEntity.ok("Xóa thành công");
+    } else {
+        return ResponseEntity.badRequest().body("Xóa thất bại");
     }
+}
 
     // Tìm kiếm chuyến xe (API)
     // Đã xóa 'Model model' vì không cần thiết trong RestController

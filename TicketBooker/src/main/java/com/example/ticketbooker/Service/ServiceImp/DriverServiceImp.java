@@ -1,5 +1,14 @@
 package com.example.ticketbooker.Service.ServiceImp;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.example.ticketbooker.DTO.Driver.AddDriverDTO;
 import com.example.ticketbooker.DTO.Driver.DriverDTO;
 import com.example.ticketbooker.DTO.Driver.ResponseDriverDTO;
@@ -9,19 +18,18 @@ import com.example.ticketbooker.Repository.DriverRepo;
 import com.example.ticketbooker.Service.DriverService;
 import com.example.ticketbooker.Util.Enum.DriverStatus;
 import com.example.ticketbooker.Util.Mapper.DriverMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-
-import java.util.ArrayList;
 
 @Service
 public class DriverServiceImp implements DriverService {
     @Autowired
     private DriverRepo driverRepo;
-
+    @Override
+    public List<DriverDTO> getAllDrivers() {
+        List<Driver> drivers = driverRepo.findAll();
+        List<DriverDTO> dtos = new ArrayList<>();
+        drivers.forEach(driver -> dtos.add(DriverMapper.toDTO(driver)));
+        return dtos;
+    }
     @Override
     public boolean addDriver(AddDriverDTO dto) {
         try{
@@ -133,5 +141,13 @@ public class DriverServiceImp implements DriverService {
     @Override
     public ResponseDriverDTO findDriverByPhone(String phone) {
         return null;
+    }
+
+    private boolean checkDriverConflict(Integer driverId, LocalDateTime departureTime, Integer tripIdToExclude) {
+        // [CẦN] Triển khai trong DriverRepo/DriverService
+        // Đếm số chuyến xe khác (trừ tripIdToExclude) mà driverId này đang SCHEDULED hoặc IN_PROGRESS
+        // và thời gian trùng lặp.
+        // Tạm thời trả về false nếu chưa có implementation
+        return false; 
     }
 }

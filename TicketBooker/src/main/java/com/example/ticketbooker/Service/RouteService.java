@@ -1,14 +1,18 @@
 package com.example.ticketbooker.Service;
 
-import com.example.ticketbooker.Controller.Api.RouteApi;
-import com.example.ticketbooker.DTO.Routes.*;
-import com.example.ticketbooker.Entity.Routes;
-import com.example.ticketbooker.Util.Enum.RouteStatus;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.example.ticketbooker.DTO.Routes.AddRouteDTO;
+import com.example.ticketbooker.DTO.Routes.RequestRouteIdDTO;
+import com.example.ticketbooker.DTO.Routes.ResponseRouteDTO;
+import com.example.ticketbooker.DTO.Routes.RouteDTO;
+import com.example.ticketbooker.DTO.Routes.SearchRouteRequest;
+import com.example.ticketbooker.DTO.Routes.UpdateRouteDTO;
+import com.example.ticketbooker.Entity.Routes;
+import com.example.ticketbooker.Util.Enum.RouteStatus;
 
 public interface RouteService {
     public boolean addRoute(AddRouteDTO dto);
@@ -22,5 +26,5 @@ public interface RouteService {
     public ResponseRouteDTO findByArrivalLocation(String arrivalLocation);
     public ResponseRouteDTO findByLocation(String arrivalLocation);
     public ResponseRouteDTO findByLocations(SearchRouteRequest request);
-    public List<Routes> getAllRoutes();
+    public List<RouteDTO> getAllRoutes();
 }

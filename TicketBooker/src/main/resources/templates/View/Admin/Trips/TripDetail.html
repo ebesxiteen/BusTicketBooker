@@ -8,12 +8,17 @@
 </head>
 <body class="bg-gray-50">
 <div layout:fragment="content">
+    
     <div class="container mx-auto p-6 max-w-4xl">
         
         <h1 class="text-3xl font-bold mb-6 text-emerald-700 border-b pb-2">
             <span th:if="*{updateTripForm.tripId == null}"><i class="fas fa-plus-circle mr-2"></i>Thêm Chuyến Xe</span>
             <span th:if="*{updateTripForm.tripId != null}"><i class="fas fa-edit mr-2"></i>Cập Nhật Chuyến Xe</span>
         </h1>
+         <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline" th:text="${errorMessage}"></span>
+    </div>
+
 
         <form th:action="@{/admin/trips/update}" th:object="${updateTripForm}" method="post"
               class="bg-white shadow-lg rounded-xl px-8 pt-6 pb-8 mb-4 border border-gray-200">
@@ -25,22 +30,40 @@
                 <div class="space-y-6">
                     
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="routeId">Mã Tuyến</label>
-                        <input type="number" th:field="*{route.routeId}" required readonly
-                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 bg-gray-100 cursor-not-allowed">
-                    </div>
+    <label class="block text-gray-700 text-sm font-semibold mb-2" for="route.routeId">Tuyến đường</label>
+    <select th:field="*{route.routeId}" required
+            class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 bg-white">
+        <option th:each="route : ${routes}"
+                th:value="${route.routeId}"
+                th:text="${route.departureLocation + ' - ' + route.arrivalLocation + ' (' + route.estimatedTime + ')'}">
+            Tuyến đường A -> B
+        </option>
+    </select>
+</div>
+
+    <div>
+    <label class="block text-gray-700 text-sm font-semibold mb-2" for="driver.driverId">Tài xế</label>
+    <select th:field="*{driver.driverId}" required
+            class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 bg-white">
+        <option th:each="driver : ${drivers}"
+                th:value="${driver.id}" 
+                th:text="${driver.name}">
+            Tên tài xế
+        </option>
+    </select>
+</div>
 
                     <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="driverId">Mã Tài Xế</label>
-                        <input type="number" th:field="*{driver.driverId}" required
-                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="busId">Mã Số Xe</label>
-                        <input type="number" th:field="*{bus.id}" required
-                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
-                    </div>
+    <label class="block text-gray-700 text-sm font-semibold mb-2" for="bus.id">Xe</label>
+    <select th:field="*{bus.id}" required
+            class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 bg-white">
+        <option th:each="bus : ${buses}"
+                th:value="${bus.id}"
+                th:text="${bus.licensePlate + ' (' + bus.busType + ' - ' + bus.capacity + ' chỗ)'}">
+            Biển số xe
+        </option>
+    </select>
+</div>
 
                     <div>
                         <label class="block text-gray-700 text-sm font-semibold mb-2" for="tripStatus">Trạng Thái Chuyến</label>
@@ -82,12 +105,6 @@
                     <div>
                         <label class="block text-gray-700 text-sm font-semibold mb-2" for="price">Giá vé</label>
                         <input type="number" th:field="*{price}" required min="10000"
-                               class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="availableSeats">Chỗ trống</label>
-                        <input type="number" th:field="*{availableSeats}" required min="1"
                                class="shadow-sm border rounded-lg w-full py-2.5 px-4 text-gray-700 focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
                 </div>

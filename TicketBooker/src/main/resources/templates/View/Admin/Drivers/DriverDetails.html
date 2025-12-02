@@ -4,118 +4,72 @@
       layout:decorate="~{View/Layout/AdminLayout.html}">
 <head>
     <meta charset="UTF-8">
-    <title>Form Tài Xế - GreenBus</title>
+    <title>Thông tin Tài Xế</title>
 </head>
 <body class="bg-gray-50">
 <div layout:fragment="content">
-    <div class="container mx-auto p-6 max-w-xl">
+    <div class="container mx-auto p-6 max-w-3xl">
         
         <h1 class="text-3xl font-bold mb-6 text-emerald-700 border-b pb-2">
-            <span th:if="${driverDTO.id} == null"><i class="fas fa-user-plus mr-2"></i>Form Thêm Tài Xế</span>
-            <span th:if="${driverDTO.id} != null"><i class="fas fa-user-edit mr-2"></i>Form Sửa Tài Xế</span>
+            <span th:if="${driverDTO.id} == null"><i class="fas fa-user-plus mr-2"></i>Thêm Tài Xế Mới</span>
+            <span th:if="${driverDTO.id} != null"><i class="fas fa-user-edit mr-2"></i>Cập Nhật Tài Xế</span>
         </h1>
+
+        <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 shadow-sm">
+            <strong class="font-bold"><i class="fas fa-exclamation-triangle"></i> Lỗi:</strong>
+            <span class="block sm:inline" th:text="${errorMessage}"></span>
+        </div>
 
         <div class="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4 border border-gray-200">
             
-            <form th:if="${driverDTO.id} == null" th:action="@{/admin/drivers/add}" method="post"
-                  th:object="${driverDTO}">
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nameNew">Tên Lái Xe</label>
-                    <input type="text" th:field="*{name}" required
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition" placeholder="Nhập tên lái xe">
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="licenseNumberNew">Số Giấy Phép</label>
-                    <input type="text" th:field="*{licenseNumber}" required
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition" placeholder="Nhập số giấy phép">
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="phoneNew">Số Điện Thoại</label>
-                    <input type="text" th:field="*{phone}" required
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition" placeholder="Nhập số điện thoại">
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="addressNew">Địa Chỉ</label>
-                    <input type="text" th:field="*{address}" required
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition" placeholder="Nhập địa chỉ">
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="driverStatusNew">Trạng Thái</label>
-                    <select th:field="*{driverStatus}" required
-                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white">
-                        <option value="ACTIVE" th:text="ACTIVE" th:selected="*{driverStatus?.name() == 'ACTIVE'}"></option>
-                        <option value="INACTIVE" th:text="INACTIVE" th:selected="*{driverStatus?.name() == 'INACTIVE'}"></option>
-                    </select>
-                </div>
-                
-                <div class="flex items-center justify-between mt-6 border-t border-gray-100 pt-4">
-                    <button type="submit"
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow-md transition transform hover:-translate-y-0.5">
-                        <i class="fas fa-plus-circle mr-2"></i>Thực hiện
-                    </button>
-                    <a href="/admin/drivers"
-                       class="text-gray-500 hover:text-gray-700 font-bold text-sm px-4 py-2 transition">Quay lại</a>
-                </div>
-            </form>
+            <form th:action="${driverDTO.id == null} ? @{/admin/drivers/add} : @{/admin/drivers/update}" 
+                  th:object="${driverDTO}" method="post">
 
-            <form th:if="${driverDTO.id} != null" th:action="@{/admin/drivers/update}" method="post"
-                  th:object="${driverDTO}">
-                
-                <input type="hidden" th:field="*{id}">
-                
+                <input type="hidden" th:if="${driverDTO.id} != null" name="driverId" th:value="${driverDTO.id}"> 
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Tên Lái Xe</label>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Họ và Tên</label>
                     <input type="text" th:field="*{name}" required
                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 transition">
                 </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="licenseNumber">Số Giấy Phép</label>
-                    <input type="text" th:field="*{licenseNumber}" required
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 transition">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Số Điện Thoại</label>
+                        <input type="text" th:field="*{phone}" required pattern="[0-9]{10}" title="Nhập 10 chữ số"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Số Bằng Lái</label>
+                        <input type="text" th:field="*{licenseNumber}" required
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 transition">
+                    </div>
                 </div>
-                
+
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">Số Điện Thoại</label>
-                    <input type="text" th:field="*{phone}" required
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 transition">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Địa Chỉ</label>
+                    <textarea th:field="*{address}" rows="3"
+                              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 transition"></textarea>
                 </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="address">Địa Chỉ</label>
-                    <input type="text" th:field="*{address}" required
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 transition">
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="driverStatus">Trạng Thái</label>
-                    <select th:field="*{driverStatus}" required
-                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white">
-                        <option th:value="${T(com.example.ticketbooker.Util.Enum.DriverStatus).ACTIVE}"
-                                th:text="ACTIVE" th:selected="*{driverStatus == T(com.example.ticketbooker.Util.Enum.DriverStatus).ACTIVE}"></option>
-                        <option th:value="${T(com.example.ticketbooker.Util.Enum.DriverStatus).INACTIVE}"
-                                th:text="INACTIVE" th:selected="*{driverStatus == T(com.example.ticketbooker.Util.Enum.DriverStatus).INACTIVE}"></option>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Trạng Thái</label>
+                    <select th:field="*{driverStatus}"
+                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-emerald-500 bg-white transition">
+                        <option value="ACTIVE">Hoạt động (ACTIVE)</option>
+                        <option value="INACTIVE">Ngừng hoạt động (INACTIVE)</option>
                     </select>
                 </div>
-                
-                <div class="flex items-center justify-between mt-6 border-t border-gray-100 pt-4">
-                    <button type="submit"
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow-md transition transform hover:-translate-y-0.5">
-                        <i class="fas fa-save mr-2"></i>Cập nhật
+
+                <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-100">
+                    <a href="/admin/drivers" class="text-gray-500 hover:text-gray-700 font-bold text-sm px-4 py-2 transition">Hủy bỏ</a>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded shadow-md transition transform hover:-translate-y-0.5">
+                        <i class="fas fa-save mr-2"></i>Lưu Thông Tin
                     </button>
-                    <a href="/admin/drivers"
-                       class="inline-block align-baseline font-bold text-sm text-gray-500 hover:text-gray-700 px-4 py-2">Quay lại</a>
                 </div>
+
             </form>
         </div>
     </div>
 </div>
 </body>
 </html>
-
-<script type="text/javascript" th:src="@{/js/DriverManagement.js}"></script>

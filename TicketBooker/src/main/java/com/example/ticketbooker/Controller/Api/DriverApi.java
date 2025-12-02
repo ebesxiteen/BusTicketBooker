@@ -1,34 +1,37 @@
 package com.example.ticketbooker.Controller.Api;
 
-import com.example.ticketbooker.DTO.Driver.DriverDTO;
-import com.example.ticketbooker.DTO.Driver.RequestDriverIdDTO;
-import com.example.ticketbooker.DTO.Driver.ResponseDriverDTO;
-import com.example.ticketbooker.DTO.Driver.UpdateDriverDTO;
-import com.example.ticketbooker.Entity.Driver;
-import com.example.ticketbooker.Service.DriverService;
-import com.example.ticketbooker.Util.Mapper.DriverMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.example.ticketbooker.DTO.Driver.DriverDTO;
+import com.example.ticketbooker.DTO.Driver.ResponseDriverDTO;
+import com.example.ticketbooker.DTO.Driver.UpdateDriverDTO;
+import com.example.ticketbooker.Service.DriverService;
+import com.example.ticketbooker.Util.Mapper.DriverMapper;
 
 @RestController
 @RequestMapping("/api/drivers")
 public class DriverApi {
     @Autowired
     private DriverService driverService;
-    @DeleteMapping("/delete")
-    public boolean delete (@RequestBody RequestDriverIdDTO dto){
-        boolean result;
+   @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable("id") Integer id){
         try{
-            result = driverService.deleteDriver(dto.getDriverId());
+            boolean result = driverService.deleteDriver(id);
+            if(result) return ResponseEntity.ok().build();
+            else return ResponseEntity.badRequest().body("Không thể xóa (Ràng buộc dữ liệu)");
         }catch (Exception e){
-            System.out.println(e.getMessage());
-            return false;
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return result;
     }
     @PostMapping("/search")
     public ResponseDriverDTO searchUser(@RequestBody String searchTerm) {

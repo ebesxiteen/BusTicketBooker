@@ -1,179 +1,107 @@
 (function () {
     document.addEventListener("DOMContentLoaded", function () {
-        // Khởi tạo các controller
-        modalController();
+        // Khởi tạo các bộ điều khiển sự kiện khi trang tải xong
         deleteController();
-        getDetailsController();
-        searchController();
+        
+        // Nếu bạn muốn giữ lại chức năng click vào dòng để xem chi tiết (tùy chọn)
+        rowClickController();
+    });
 
-        // 1. Xử lý Xóa Tài xế
-        function deleteController() {
-            const deleteBtns = document.querySelectorAll(".delete-btn");
-            
-            deleteBtns.forEach(btn => {
-                btn.addEventListener("click", function () {
-                    const driverId = btn.dataset.id;
+    // 1. XỬ LÝ SỰ KIỆN XÓA TÀI XẾ
+    function deleteController() {
+        // Tìm tất cả các nút có class '.delete-btn' (đã thêm trong HTML mới)
+        const deleteBtns = document.querySelectorAll(".delete-btn");
+        
+        deleteBtns.forEach(btn => {
+            btn.addEventListener("click", function (e) {
+                e.preventDefault(); // Ngăn chặn hành động mặc định của nút/thẻ a
+                e.stopPropagation(); // Ngăn sự kiện click lan ra dòng (nếu có rowClickController)
+                
+                const driverId = btn.getAttribute("data-id");
+                
+                // Hiển thị hộp thoại xác nhận
+                if (confirm(`Bạn có chắc chắn muốn xóa tài xế #${driverId}? Hành động này không thể hoàn tác.`)) {
                     
-                    if (!confirm("Bạn có chắc chắn muốn xóa tài xế này?")) return;
-
-                    // SỬA: Dùng đường dẫn tương đối (bỏ localhost:8080)
-                    fetch("/admin/drivers/delete", { 
-                        method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            driverId: driverId
-                        })
+                    // Gọi API DELETE theo chuẩn RESTful: /api/drivers/{id}
+                    fetch(`/api/drivers/${driverId}`, {
+                        method: "DELETE"
                     })
                     .then(response => {
-                        if (!response.ok) throw new Error('Delete failed');
-                        return response.json(); // Backend cần trả về true/false
-                    })
-                    .then(data => {
-                        if (data === true) {
-                            alert("Xóa thành công!");
-                            btn.closest("tr").remove(); // Hoặc btn.closest("li") tùy giao diện
+                        if (response.ok) {
+                            alert("Xóa tài xế thành công!");
+                            // Reload lại trang để cập nhật danh sách mới nhất
+                            window.location.reload(); 
                         } else {
-                            alert("Xóa thất bại! Có thể tài xế đang có chuyến đi.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert("Lỗi hệ thống: " + error);
-                    });
-                });
-            });
-        }
-
-        // 2. Chuyển hướng xem chi tiết
-        function getDetailsController() {
-            const detailsBtns = document.querySelectorAll(".update-btn");
-            detailsBtns.forEach(btn => {
-                btn.addEventListener("click", function () {
-                    window.location.href = "/admin/drivers/details/" + btn.dataset.id;
-                });
-            });
-        }
-
-        // 3. Xử lý Tìm kiếm (Search)
-        function searchController() {
-            const searchBox = document.querySelector(".search-box");
-            const searchContainer = document.getElementById("searchCollapsed");
-            let timeout;
-
-            if (!searchBox) return; // Kiểm tra null
-
-            searchBox.addEventListener("input", function () {
-                clearTimeout(timeout);
-                
-                // Debounce 500ms để tránh gọi API liên tục
-                timeout = setTimeout(() => {
-                    const searchTerm = searchBox.value.trim();
-
-                    // Ẩn hiện container kết quả
-                    if (searchTerm !== "") {
-                        searchContainer.classList.remove("hidden");
-                    } else {
-                        searchContainer.classList.add("hidden");
-                        searchContainer.innerHTML = ""; // Xóa kết quả khi ô tìm kiếm rỗng
-                        return;
-                    }
-
-                    // SỬA: Dùng đường dẫn tương đối
-                    fetch("/admin/drivers/search", { 
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ searchTerm: searchTerm })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // SỬA LỖI QUAN TRỌNG: Phải xóa kết quả cũ trước khi in kết quả mới
-                        searchContainer.innerHTML = ""; 
-
-                        if (data.listDriver && data.listDriver.length > 0) {
-                            data.listDriver.forEach(driver => {
-                                // Render kết quả tìm kiếm (Thêm link bấm vào để xem chi tiết luôn cho tiện)
-                                searchContainer.innerHTML += `
-                                    <div class="user-card p-2 border-b hover:bg-gray-100 cursor-pointer" onclick="window.location.href='/admin/drivers/details/${driver.driverId}'">
-                                        <div class="font-bold text-green-600">${driver.name}</div>
-                                        <div class="text-sm text-gray-500">${driver.phone}</div>
-                                        <div class="text-xs text-gray-400">GPLX: ${driver.licenseNumber}</div>
-                                    </div>
-                                `;
+                            // Nếu server trả về lỗi (VD: do ràng buộc khóa ngoại)
+                            return response.text().then(errorMessage => {
+                                alert("Xóa thất bại: " + errorMessage);
                             });
-                        } else {
-                            searchContainer.innerHTML = '<div class="p-2 text-gray-500">Không tìm thấy tài xế nào</div>';
                         }
                     })
                     .catch(error => {
-                        console.error("Search error:", error);
+                        console.error("Lỗi hệ thống:", error);
+                        alert("Đã xảy ra lỗi khi kết nối đến server.");
                     });
-                }, 500); // Giảm xuống 500ms cho mượt
-            });
-            
-            // Click ra ngoài thì ẩn bảng tìm kiếm
-            document.addEventListener("click", function(event) {
-                if (!searchBox.contains(event.target) && !searchContainer.contains(event.target)) {
-                    searchContainer.classList.add("hidden");
                 }
             });
-        }
+        });
+    }
 
-        // 4. Modal Thêm mới
-        function modalController() {
-            const addUserOpenBtn = document.querySelector(".add-user-open"); // Nút mở modal
-            const addUserCloseBtn = document.querySelector(".add-user-close"); // Nút đóng modal
-            const modalContainer = document.querySelector(".modal-container");
-            const modal = modalContainer ? modalContainer.querySelector(".modal") : null;
-            const addUserForm = document.querySelector("#add-user-form"); // Form thêm driver
-            const formSubmitBtn = modal ? modal.querySelector(".add-user-submit") : null;
-            
-            if (!addUserOpenBtn || !modalContainer) return;
+    // 2. (Tùy chọn) CLICK VÀO DÒNG ĐỂ XEM CHI TIẾT
+    // Hàm này giúp người dùng bấm vào bất kỳ đâu trên dòng cũng xem được, không cần bấm chính xác nút Sửa
+    function rowClickController() {
+        const rows = document.querySelectorAll("tbody tr");
+        rows.forEach(row => {
+            row.addEventListener("click", function(e) {
+                // Nếu click vào nút Xóa hoặc Select box thì không chuyển trang
+                if (e.target.closest('.delete-btn') || e.target.closest('select')) return;
 
-            let isMouseHoveringForm = false;
-
-            // Xử lý đóng/mở
-            addUserOpenBtn.addEventListener("click", () => {
-                modalContainer.classList.remove("hidden");
-                // Animation trượt lên (nếu có class tailwind)
-                setTimeout(() => modal.classList.remove("-bottom-full"), 10);
+                // Tìm nút sửa trong dòng đó để lấy ID (hoặc lấy từ data-id của nút xóa)
+                const editBtn = row.querySelector("a[href*='/admin/drivers/']");
+                if (editBtn) {
+                    window.location.href = editBtn.getAttribute("href");
+                }
             });
+            // Thêm style con trỏ chuột để user biết là bấm được
+            row.style.cursor = "pointer";
+        });
+    }
 
-            const closeModal = () => {
-                modal.classList.add("-bottom-full");
-                setTimeout(() => modalContainer.classList.add("hidden"), 300);
-                // Reset form khi đóng
-                if(addUserForm) addUserForm.reset(); 
-            };
+    // 3. XỬ LÝ CẬP NHẬT TRẠNG THÁI (Global Function)
+    // Hàm này phải khai báo dạng window.func để HTML có thể gọi trực tiếp qua onchange="..."
+    window.updateDriverStatus = function(selectElement) {
+        const driverId = selectElement.getAttribute('data-id');
+        const newStatus = selectElement.value;
 
-            if(addUserCloseBtn) addUserCloseBtn.addEventListener("click", closeModal);
-
-            // Đóng khi click ra ngoài vùng modal
-            modalContainer.addEventListener("click", function () {
-                if (!isMouseHoveringForm) closeModal();
-            });
-
-            // Kiểm tra chuột có đang ở trong form không
-            if (modal) {
-                modal.addEventListener("mouseenter", () => isMouseHoveringForm = true);
-                modal.addEventListener("mouseleave", () => isMouseHoveringForm = false);
+        // Gọi API PATCH để cập nhật trạng thái
+        fetch(`/api/drivers/${driverId}/status`, {
+            method: 'PATCH',
+            headers: { 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({ driverStatus: newStatus })
+        })
+        .then(response => {
+            if (response.ok) {
+                // Cập nhật màu sắc hiển thị ngay lập tức để tăng trải nghiệm người dùng
+                if (newStatus === 'ACTIVE') {
+                    selectElement.classList.remove('text-gray-400');
+                    selectElement.classList.add('text-emerald-600');
+                } else {
+                    selectElement.classList.remove('text-emerald-600');
+                    selectElement.classList.add('text-gray-400');
+                }
+                // Có thể hiện thông báo nhỏ hoặc bỏ qua cho mượt
+                // console.log("Cập nhật trạng thái thành công");
+            } else {
+                alert('Cập nhật trạng thái thất bại!');
+                // Reset lại giá trị cũ nếu muốn (cần lưu giá trị cũ trước khi đổi)
             }
+        })
+        .catch(error => {
+            console.error("Lỗi cập nhật trạng thái:", error);
+            alert("Lỗi kết nối server.");
+        });
+    };
 
-            // Submit form
-            if (formSubmitBtn && addUserForm) {
-                formSubmitBtn.addEventListener("click", function (e) {
-                    e.preventDefault(); // Ngăn submit mặc định để kiểm tra validate nếu cần
-                    
-                    // Có thể thêm Validate dữ liệu ở đây trước khi submit
-                    // if(validateDriverForm()) { ... }
-
-                    addUserForm.submit(); 
-                    closeModal();
-                });
-            }
-        }
-    });
 })();

@@ -71,4 +71,13 @@ Page<Trips> findByTripStatus(Enum tripStatus, Pageable pageable);
         @Param("newArrivalTime") LocalDateTime newArrivalTime, 
         @Param("tripIdToExclude") Integer tripIdToExclude
     );
+
+     // Đếm số chuyến xe đang ở trạng thái SCHEDULED của tài xế
+    @Query("SELECT COUNT(t) FROM Trips t WHERE t.driver.driverId = :driverId AND t.tripStatus = 'SCHEDULED'")
+    long countScheduledTripsByDriverId(@Param("driverId") Integer driverId);
+    
+    // Nếu bạn muốn chặt chẽ hơn (kiểm tra cả lịch sử để tránh lỗi Khóa Ngoại database):
+    @Query("SELECT COUNT(t) FROM Trips t WHERE t.driver.driverId = :driverId")
+    long countAllTripsByDriverId(@Param("driverId") Integer driverId);
+
 }

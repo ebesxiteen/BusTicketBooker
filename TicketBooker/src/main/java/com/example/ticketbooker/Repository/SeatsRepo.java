@@ -15,7 +15,7 @@ import com.example.ticketbooker.Entity.Seats;
 public interface SeatsRepo extends JpaRepository<Seats, Integer> {
     List<Seats> findByTripId(Integer tripId);
 
-    boolean existsByTripIdAndSeatCode(Integer id, String seatCode);
+    boolean existsByTripIdAndSeatCode(Integer id, String seatCode); 
     
     @Modifying
     @Transactional
@@ -28,5 +28,8 @@ public interface SeatsRepo extends JpaRepository<Seats, Integer> {
     @Transactional
     @Query("DELETE FROM Seats s WHERE s.trip.id = :tripId")
     void deleteAllByTripId(@Param("tripId") Integer tripId);
+
+    @Query("SELECT COUNT(s) FROM Seats s WHERE s.trip.id = :tripId")
+    long countBookedSeatsByTripId(@Param("tripId") Integer tripId);
 }
 

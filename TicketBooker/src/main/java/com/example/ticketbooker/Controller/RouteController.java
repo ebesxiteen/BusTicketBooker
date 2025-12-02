@@ -26,16 +26,28 @@ public class RouteController {
     @Autowired
     private RouteService routeService;
 
-    @GetMapping
+@GetMapping
     public String RouteManagement(
             Model model,
             @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "status", required = false, defaultValue = "ALL") String status) { // Thêm status
+
         Pageable pageable = PageRequest.of(page, size);
-        Page<RouteDTO> routePage = routeService.findAllRoutes(pageable);
+        
+        // Gọi Service (đã sửa ở bước 2)
+        Page<RouteDTO> routePage = routeService.searchRoutesByStatus(keyword, status, pageable);
+
+        // Gửi dữ liệu ra View
         model.addAttribute("routes", routePage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", routePage.getTotalPages());
+        
+        // Gửi lại keyword và status để giữ giá trị trong ô input/select
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("currentStatus", status);
+
         return "View/Admin/Routes/RouteManagement";
     }
 

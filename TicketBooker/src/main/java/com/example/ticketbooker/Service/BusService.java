@@ -20,4 +20,5 @@ public interface BusService {
     Page<BusDTO> getBusesByLicensePlateContaining(String licensePlate, Pageable pageable);
     Integer getBusCapacityById(Integer busId);
     Buses getBusEntityById(Integer id);
+    Page<BusDTO> searchBuses(String keyword, String statusStr, String typeStr, Pageable pageable);
 }

@@ -177,4 +177,33 @@ public class RouteServiceImp implements RouteService {
         return dtos;
     }
 
+    @Override
+    public Page<RouteDTO> searchRoutes(String keyword, Pageable pageable) {
+    Page<Routes> routes;
+    if (keyword != null && !keyword.trim().isEmpty()) {
+        routes = routeRepo.searchByKeyword(keyword, pageable);
+    } else {
+        routes = routeRepo.findAll(pageable);
+    }
+    return routes.map(RouteMapper::toDTO);
+    }
+
+    @Override
+    public Page<RouteDTO> searchRoutesByStatus(String keyword, String statusStr, Pageable pageable) {
+        RouteStatus statusEnum = null;
+        
+        // Chuyển String sang Enum (Nếu không phải 'ALL')
+        if (statusStr != null && !statusStr.isEmpty() && !statusStr.equals("ALL")) {
+            try {
+                statusEnum = RouteStatus.valueOf(statusStr);
+            } catch (IllegalArgumentException e) {
+                // Nếu status gửi lên bị sai -> coi như là null
+            }
+        }
+
+        // Gọi Repository
+        Page<Routes> routes = routeRepo.findWithFilter(keyword, statusEnum, pageable);
+        
+        return routes.map(RouteMapper::toDTO);
+    }
 }

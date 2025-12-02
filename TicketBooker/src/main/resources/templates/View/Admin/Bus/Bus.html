@@ -11,21 +11,51 @@
             <h1 class="text-2xl font-bold text-gray-800">Quản Lý Xe Khách</h1>
             <p class="text-sm text-gray-500">Danh sách phương tiện và tình trạng hoạt động</p>
         </div>
-        <a href="/admin/buses/add" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-sm font-medium transition-all flex items-center gap-2">
+        <a th:href="@{/admin/buses/add}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-sm font-medium transition-all flex items-center gap-2">
             <i class="fas fa-plus"></i> <span>Thêm Xe Mới</span>
         </a>
     </div>
+    <div th:if="${successMessage}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 shadow-sm" role="alert">
+        <strong class="font-bold"><i class="fas fa-check-circle"></i> Thành công!</strong>
+        <span class="block sm:inline" th:text="${successMessage}"></span>
+    </div>
 
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center">
-        <div class="relative flex-1 w-full">
-            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="text" id="searchInput" class="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" 
-                   placeholder="Tìm kiếm theo biển số xe..." th:value="${param.licensePlate}">
-            <i class="fas fa-microphone absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 cursor-pointer" onclick="startSpeechRecognition()"></i>
-        </div>
-        <button onclick="searchBuses()" class="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition shadow-sm w-full md:w-auto">
-            Tìm kiếm
-        </button>
+    <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 shadow-sm" role="alert">
+        <strong class="font-bold"><i class="fas fa-exclamation-triangle"></i> Lỗi:</strong>
+        <span class="block sm:inline" th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-end">
+        <form id="searchForm" th:action="@{/admin/buses}" method="get" 
+              class="flex flex-col sm:flex-row w-full md:w-auto items-center gap-2">
+            
+            <select name="type" onchange="this.form.submit()"
+                    class="w-full sm:w-32 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-sm text-gray-700 cursor-pointer">
+                <option value="ALL" th:selected="${currentType == 'ALL'}">Tất cả loại</option>
+                <option value="SEAT" th:selected="${currentType == 'SEAT'}">Ghế ngồi</option>
+                <option value="BEDSEAT" th:selected="${currentType == 'BEDSEAT'}">Giường nằm</option>
+            </select>
+
+            <select name="status" onchange="this.form.submit()"
+                    class="w-full sm:w-40 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-sm text-gray-700 cursor-pointer">
+                <option value="ALL" th:selected="${currentStatus == 'ALL'}">Tất cả trạng thái</option>
+                <option value="ACTIVE" th:selected="${currentStatus == 'ACTIVE'}">Đang hoạt động</option>
+                <option value="INACTIVE" th:selected="${currentStatus == 'INACTIVE'}">Ngừng hoạt động</option>
+            </select>
+
+            <div class="relative w-full sm:w-64 md:w-80">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="keyword" 
+                       class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-sm" 
+                       placeholder="Tìm biển số xe..." 
+                       th:value="${keyword}"> 
+            </div>
+            
+            <button type="submit" 
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm whitespace-nowrap">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -35,7 +65,7 @@
                     <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold border-b border-gray-200">
                         <th class="px-6 py-4 text-center">ID</th>
                         <th class="px-6 py-4">Biển Số</th>
-                        <th class="px-6 py-4 text-center">Tuyến (Route ID)</th>
+                        <th class="px-6 py-4 text-center">Tuyến</th>
                         <th class="px-6 py-4 text-center">Loại Xe</th>
                         <th class="px-6 py-4 text-center">Số Chỗ</th>
                         <th class="px-6 py-4 text-center">Trạng Thái</th>
@@ -45,29 +75,30 @@
                 <tbody class="divide-y divide-gray-100 text-sm">
                     <tr th:each="bus : ${buses}" class="hover:bg-emerald-50/50 transition duration-200">
                         <td class="px-6 py-4 text-center font-medium text-gray-500" th:text="'#' + ${bus.id}"></td>
-                        
                         <td class="px-6 py-4 font-bold text-gray-800 font-mono" th:text="${bus.licensePlate}"></td>
-
+                        
                         <td class="px-6 py-4 text-center">
                             <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-semibold" 
-                                  th:text="'Route ' + ${bus.routeId.routeId}"></span>
+                                  th:if="${bus.routeId != null}"
+                                  th:text="'Route #' + ${bus.routeId.routeId}"></span>
+                            <span class="text-gray-400 text-xs italic" th:if="${bus.routeId == null}">Chưa gán</span>
                         </td>
                         
                         <td class="px-6 py-4 text-center">
                             <span class="px-3 py-1 rounded-full text-xs font-semibold"
                                   th:classappend="${bus.busType?.name() == 'BEDSEAT'} ? 'bg-purple-100 text-purple-700' : 'bg-indigo-100 text-indigo-700'"
-                                  th:text="${bus.busType}">
+                                  th:text="${bus.busType?.name() == 'BEDSEAT' ? 'Giường Nằm' : 'Ghế Ngồi'}">
                             </span>
                         </td>
                         
-                        <td class="px-6 py-4 text-center font-semibold" th:text="${bus.capacity}"></td>
+                        <td class="px-6 py-4 text-center font-semibold text-gray-700" th:text="${bus.capacity}"></td>
                         
                         <td class="px-6 py-4 text-center">
                             <select th:data-busid="${bus.id}" onchange="updateBusStatus(this)"
                                     class="border-0 bg-transparent text-xs font-bold cursor-pointer focus:ring-0"
                                     th:classappend="${bus.busStatus?.name() == 'ACTIVE'} ? 'text-emerald-600' : 'text-gray-400'">
-                                <option value="ACTIVE" th:selected="${bus.busStatus?.name() == 'ACTIVE'}">ACTIVE</option>
-                                <option value="INACTIVE" th:selected="${bus.busStatus?.name() == 'INACTIVE'}">INACTIVE</option>
+                                <option value="ACTIVE" th:selected="${bus.busStatus?.name() == 'ACTIVE'}">HOẠT ĐỘNG</option>
+                                <option value="INACTIVE" th:selected="${bus.busStatus?.name() == 'INACTIVE'}">BẢO TRÌ</option>
                             </select>
                         </td>
 
@@ -77,8 +108,8 @@
                                    class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition flex items-center justify-center">
                                     <i class="fas fa-pen text-xs"></i>
                                 </a>
-                                <button th:data-name="${bus.id}" onclick="deleteBus(this)"
-                                        class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center">
+                                <button type="button" th:attr="data-id=${bus.id}" 
+                                        class="delete-btn w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
                             </div>
@@ -87,99 +118,40 @@
                 </tbody>
             </table>
         </div>
-        
-        <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-center" th:if="${totalPages > 1}">
-            <nav class="flex space-x-1">
-                <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                   th:href="@{/admin/buses(page=${i})}"
-                   th:text="${i + 1}"
-                   class="px-3 py-1 rounded text-sm font-medium transition"
-                   th:classappend="${currentPage == i} ? 'bg-emerald-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-200'">
-                </a>
-            </nav>
-        </div>
     </div>
+
+    <div th:if="${totalPages > 0}" class="flex justify-center items-center gap-2 pt-6">
+        <a th:if="${currentPage > 0}"
+           th:href="@{/admin/buses(page=${currentPage - 1}, keyword=${keyword}, status=${currentStatus}, type=${currentType})}"
+           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-chevron-left"></i> Trang trước
+        </a>
+        <span th:unless="${currentPage > 0}" class="px-4 py-2 text-sm font-medium text-gray-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+            <i class="fas fa-chevron-left"></i> Trang trước
+        </span>
+
+        <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+            <a th:if="${i >= currentPage - 2 and i <= currentPage + 2}"
+               th:href="@{/admin/buses(page=${i}, keyword=${keyword}, status=${currentStatus}, type=${currentType})}"
+               th:class="${i == currentPage ? 'bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition' : 'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition'}">
+                <span th:text="${i + 1}"></span>
+            </a>
+        </span>
+        
+        <a th:if="${currentPage < totalPages - 1}"
+           th:href="@{/admin/buses(page=${currentPage + 1}, keyword=${keyword}, status=${currentStatus}, type=${currentType})}"
+           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+            Trang sau <i class="fas fa-chevron-right"></i>
+        </a>
+        <span th:unless="${currentPage < totalPages - 1}" class="px-4 py-2 text-sm font-medium text-gray-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+            Trang sau <i class="fas fa-chevron-right"></i>
+        </span>
+    </div>
+
 </div>
-<script>
-    // 1. Xóa Xe
-    function deleteBus(button) {
-        const id = button.dataset.name;
-        if (confirm('Bạn có chắc chắn muốn xóa xe này?')) {
-            // Sửa URL thành tương đối
-            fetch(`/api/buses/${id}`, { method: 'DELETE' })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Xóa xe thành công!');
-                        window.location.reload();
-                    } else {
-                        alert('Xóa xe thất bại! Có thể xe đang được sử dụng.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Lỗi hệ thống khi xóa xe.');
-                });
-        }
-    }
 
-    // 2. Cập nhật Trạng thái
-    function updateBusStatus(select) {
-        const busId = select.dataset.busid;
-        const newStatus = select.value;
-
-        fetch(`/api/buses/${busId}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ busStatus: newStatus })
-        })
-        .then(response => {
-            if (response.ok) {
-                alert('Cập nhật trạng thái thành công!');
-                window.location.reload();
-            } else {
-                alert('Cập nhật trạng thái thất bại!');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    // 3. Tìm kiếm
-    function searchBuses() {
-        const licensePlate = document.getElementById("searchInput").value.trim();
-        if(licensePlate) {
-            window.location.href = `/admin/buses/search?licensePlate=${encodeURIComponent(licensePlate)}`;
-        } else {
-            window.location.href = `/admin/buses`; // Reset tìm kiếm
-        }
-    }
-
-    // Enter để tìm kiếm
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById("searchInput");
-        if(searchInput){
-            searchInput.addEventListener("keyup", function(event) {
-                if (event.key === "Enter") searchBuses();
-            });
-        }
-    });
-
-    // Voice Search (Giữ nguyên logic của bạn)
-    function startSpeechRecognition() {
-        const searchInput = document.getElementById("searchInput");
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            alert("Trình duyệt không hỗ trợ tìm kiếm giọng nói.");
-            return;
-        }
-        const recognition = new SpeechRecognition();
-        recognition.onresult = function(event) {
-            let result = event.results[0][0].transcript.replace(/\s+/g, ''); // Xóa khoảng trắng
-            searchInput.value = result;
-            searchBuses();
-        };
-        recognition.start();
-    }
-</script>
-
+<th:block layout:fragment="scripts">
+    <script type="text/javascript" th:src="@{/js/Bus.js}"></script>
+</th:block>
 </body>
 </html>

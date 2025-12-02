@@ -27,4 +27,6 @@ public interface RouteService {
     public ResponseRouteDTO findByLocation(String arrivalLocation);
     public ResponseRouteDTO findByLocations(SearchRouteRequest request);
     public List<RouteDTO> getAllRoutes();
+    Page<RouteDTO> searchRoutes(String keyword, Pageable pageable);
+    Page<RouteDTO> searchRoutesByStatus(String keyword, String statusStr, Pageable pageable);
 }

@@ -201,7 +201,7 @@ public class TripServiceImp implements TripService {
 
             if (!bookedSeatCodes.isEmpty()) {
                 // C. VALIDATE: Kiểm tra xem các ghế đã đặt có tồn tại trên xe mới không?
-                Set<String> allowedNewSeats = this.generateExpectedSeatCodes(newBus);
+                Set<String> allowedNewSeats = this.generateExpectedSeatCodes(newBus.getCapacity());
 
                 List<String> conflictSeats = new ArrayList<>();
                 for (String code : bookedSeatCodes) {
@@ -417,21 +417,21 @@ public Page<TripDTO> getAllTrips(Pageable pageable) {
     return getAllTrips("ALL", pageable);
 }
 
-private Set<String> generateExpectedSeatCodes(Buses bus) {
-    Set<String> validSeats = new HashSet<>();
-    int capacity = bus.getCapacity();
-
-    int seatsPerFloor = capacity / 2;
-    // Tầng A
-    for (int i = 1; i <= seatsPerFloor; i++) {
-        validSeats.add(String.format("A%02d", i)); // Tạo A01, A02...
+// Hàm này copy từ TripServiceImp qua (để dùng chung logic sinh ghế)
+    private Set<String> generateExpectedSeatCodes(int capacity) {
+        Set<String> validSeats = new HashSet<>();
+        int seatsPerFloor = capacity / 2;
+        
+        // Tầng A
+        for (int i = 1; i <= seatsPerFloor; i++) {
+            validSeats.add(String.format("A%02d", i)); // A01...
+        }
+        // Tầng B (nếu còn)
+        for (int i = 1; i <= (capacity - seatsPerFloor); i++) {
+            validSeats.add(String.format("B%02d", i)); // B01...
+        }
+        return validSeats;
     }
-    // Tầng B
-    for (int i = 1; i <= (capacity - seatsPerFloor); i++) {
-        validSeats.add(String.format("B%02d", i)); // Tạo B01, B02...
-    }
-    return validSeats;
-}
 @Override
     @Transactional
     public boolean cancelTrip(Integer tripId) {

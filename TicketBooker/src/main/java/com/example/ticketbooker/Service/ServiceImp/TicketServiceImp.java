@@ -171,6 +171,10 @@ String html = ""
                 return false;
             }
 
+            if (currentStatus == TicketStatus.CANCELLED && dto.getTicketStatus() != TicketStatus.CANCELLED) {
+                return false;
+            }
+
             // 2. Cập nhật trip nếu tripId khác 0
             if (dto.getTripId() != 0) {
                 Optional<Trips> trip = tripRepos.findById(dto.getTripId());

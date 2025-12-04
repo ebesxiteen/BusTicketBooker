@@ -24,10 +24,9 @@
             <option value="PENDING">Chờ xử lý</option>
         </select>
         
-        <select id="paymentMethod" 
+        <select id="paymentMethod"
                 class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
             <option value="">-- Phương thức --</option>
-            <option value="CREDITCARD">Thẻ tín dụng</option>
             <option value="CASH">Tiền mặt</option>
             <option value="EWALLET">Ví điện tử</option>
         </select>
@@ -47,12 +46,34 @@
                         <th class="px-6 py-4 text-center">Trạng Thái</th>
                         <th class="px-6 py-4 text-center">Thời Gian</th>
                         <th class="px-6 py-4 text-center">Phương Thức</th>
+                        <th class="px-6 py-4 text-center">Cập Nhật</th>
                     </tr>
                 </thead>
                 <tbody id="invoiceTableBody" class="text-sm text-gray-600 divide-y divide-gray-100">
-                    <tr><td colspan="5" class="text-center py-8 text-gray-500">Đang tải dữ liệu...</td></tr>
+                    <tr><td colspan="6" class="text-center py-8 text-gray-500">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
+        <div class="flex items-center gap-2">
+            <label for="pageSize" class="text-sm text-gray-600">Hiển thị</label>
+            <select id="pageSize" class="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+            </select>
+            <span class="text-sm text-gray-600">hóa đơn/trang</span>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+            <button id="prevPage" onclick="changePage(-1)" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm transition">
+                <i class="fas fa-chevron-left mr-1"></i>Trước
+            </button>
+            <span id="pageInfo" class="text-sm text-gray-600">Trang 1/1</span>
+            <button id="nextPage" onclick="changePage(1)" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm transition">
+                Tiếp<i class="fas fa-chevron-right ml-1"></i>
+            </button>
         </div>
     </div>
     <div layout:fragment="scripts">

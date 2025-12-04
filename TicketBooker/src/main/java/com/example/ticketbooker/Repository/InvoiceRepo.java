@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,14 +22,19 @@ public interface InvoiceRepo extends JpaRepository<Invoices, Integer> {
         
     ArrayList<Invoices> findAll();
 
-    @Query("SELECT i FROM Invoices i WHERE " +
+    @Query(value = "SELECT i FROM Invoices i WHERE " +
             "(:totalAmount IS NULL OR i.totalAmount = :totalAmount) AND " +
             "(:paymentStatus IS NULL OR i.paymentStatus = :paymentStatus) AND " +
-            "(:paymentMethod IS NULL OR i.paymentMethod = :paymentMethod)")
-    ArrayList<Invoices> searchInvoices(
+            "(:paymentMethod IS NULL OR i.paymentMethod = :paymentMethod)",
+            countQuery = "SELECT COUNT(i) FROM Invoices i WHERE " +
+                    "(:totalAmount IS NULL OR i.totalAmount = :totalAmount) AND " +
+                    "(:paymentStatus IS NULL OR i.paymentStatus = :paymentStatus) AND " +
+                    "(:paymentMethod IS NULL OR i.paymentMethod = :paymentMethod)")
+    Page<Invoices> searchInvoices(
             @Param("totalAmount") Integer totalAmount,
             @Param("paymentStatus") PaymentStatus paymentStatus,
-            @Param("paymentMethod") PaymentMethod paymentMethod);
+            @Param("paymentMethod") PaymentMethod paymentMethod,
+            Pageable pageable);
 
     List<Invoices> findAllByPaymentTimeBetweenAndPaymentStatus(LocalDateTime start, LocalDateTime end, PaymentStatus paymentStatus);
 

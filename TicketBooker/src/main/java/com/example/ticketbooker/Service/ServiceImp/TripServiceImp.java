@@ -314,13 +314,24 @@ public class TripServiceImp implements TripService {
         ResponseTripDTO result = new ResponseTripDTO();
         try {
             int seats = dto.getTicketQuantity() > 0 ? dto.getTicketQuantity() : 1;
+            LocalDateTime startDate = dto.getDepartureDate() != null ? dto.getDepartureDate() : LocalDateTime.now();
 
-            List<Trips> trips = tripRepo.findTripsFlexible(
-                        dto.getArrival(),
-                        dto.getDeparture(), 
-                        dto.getDepartureDate(),
+            List<Trips> trips;
+
+            if (dto.getKeyword() != null && !dto.getKeyword().trim().isEmpty()) {
+                trips = tripRepo.findTripsByKeyword(
+                        dto.getKeyword().trim(),
+                        startDate,
                         seats
-            );
+                );
+            } else {
+                trips = tripRepo.findTripsFlexible(
+                        dto.getArrival(),
+                        dto.getDeparture(),
+                        startDate,
+                        seats
+                );
+            }
             
             for (Trips t : trips) {
                  if (t.getRoute() != null) {

@@ -91,17 +91,23 @@
                 </p>
 
                 <div th:if="${responseTripDTO.tripsCount > 0}" class="flex items-center flex-wrap">
-                    <span th:if="${searchData.departure != null && searchData.departure != ''}" 
+                    <span th:if="${searchData.keyword != null && searchData.keyword != ''}" class="text-xl font-bold text-emerald-700 flex items-center">
+                        Kết quả cho từ khóa "<span th:text="${searchData.keyword}"></span>"
+                    </span>
+
+                    <span th:if="${searchData.departure != null && searchData.departure != ''}"
                           class="text-xl font-bold text-emerald-700 flex items-center">
                         <span th:text="${searchData.departure}"></span>
                         <i class="fas fa-long-arrow-alt-right mx-2 text-gray-400"></i>
                         <span th:text="${searchData.arrival}"></span>
                     </span>
 
-                    <span th:if="${searchData.departure == null || searchData.departure == ''}" 
+                    <span th:if="${searchData.departure == null || searchData.departure == ''}"
                           class="text-xl font-bold text-emerald-700">
-                        <i class="fas fa-map-marker-alt mr-2"></i>
-                        Các chuyến đi đến <span th:text="${searchData.arrival}"></span>
+                        <i class="fas fa-map-marker-alt mr-2" th:if="${searchData.keyword == null || searchData.keyword == ''}"></i>
+                        <span th:if="${searchData.keyword == null || searchData.keyword == ''}">
+                            Các chuyến đi đến <span th:text="${searchData.arrival}"></span>
+                        </span>
                     </span>
 
                     <span id="tripCountDisplay" class="text-gray-500 font-normal text-lg ml-3">

@@ -1,4 +1,4 @@
-// file: searchInvoices.js
+// file: InvoiceManagement.js
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Gọi tìm kiếm ngay khi vào trang (để hiện danh sách ban đầu)

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.ticketbooker.DTO.Ticket.TicketDTO;
 import com.example.ticketbooker.DTO.Ticket.TicketIdRequest;
 import com.example.ticketbooker.DTO.Ticket.TicketResponse;
 import com.example.ticketbooker.DTO.Ticket.UpdateTicketRequest;
@@ -70,12 +71,15 @@ public class TicketController {
         TicketIdRequest ticketIdRequest = new TicketIdRequest(id);
         
         TicketResponse response = ticketService.getTicketById(ticketIdRequest);
-
+        TicketDTO ticket = null;
+        
         if(response.getTicketsCount() == 1){
-            // Dòng này giờ sẽ HẾT LỖI nhờ hàm Mapper mới thêm
-            updateRequest = TicketMapper.toUpdateDTO(response.getListTickets().get(0));
+    
+            ticket = response.getListTickets().get(0);
+            updateRequest = TicketMapper.toUpdateDTO(ticket);
         }
         
+        model.addAttribute("ticket", ticket);
         model.addAttribute("updateRequest", updateRequest);
         return "View/Admin/Tickets/TicketDetails";
     }

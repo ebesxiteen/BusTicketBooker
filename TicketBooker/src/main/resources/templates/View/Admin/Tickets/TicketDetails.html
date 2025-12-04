@@ -17,16 +17,15 @@
 
         <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" th:if="${ticket != null}">
                 
                 <div class="md:col-span-2">
                     <h2 class="text-xl font-semibold text-gray-800 mb-3 border-l-4 border-emerald-500 pl-3">Thông Tin Chuyến</h2>
                     <div class="space-y-2 text-gray-700">
-                        <p><strong>Mã Chuyến:</strong> <span th:text="${updateRequest.trip.id}"></span></p>
-                        <p><strong>Lộ Trình:</strong> <span th:text="${updateRequest.trip.departureStation} + ' ➝ ' + ${updateRequest.trip.arrivalStation}"></span></p>
-                        <p><strong>Thời Gian Khởi Hành:</strong> <span th:text="${#temporals.format(updateRequest.trip.departureTime, 'HH:mm dd/MM/yyyy')}"></span></p>
-                        <p><strong>Ghế:</strong> <span class="font-bold text-emerald-600" th:text="${updateRequest.seat.seatCode}"></span></p>
-                        <p>
+                        <p><strong>Mã Chuyến:</strong> <span th:text="${ticket.trip.id}"></span></p>
+                        <p><strong>Lộ Trình:</strong> <span th:text="|${ticket.trip.departureStation} ➝ ${ticket.trip.arrivalStation}|"></span></p>
+                        <p><strong>Thời Gian Khởi Hành:</strong> <span th:text="${#temporals.format(ticket.trip.departureTime, 'HH:mm dd/MM/yyyy')}"></span></p>
+                        <p><strong>Ghế:</strong> <span class="font-bold text-emerald-600" th:text="${ticket.seatCodes != null && !ticket.seatCodes.isEmpty() ? ticket.seatCodes : 'Chưa gán'}"></span></p>
                             <strong>Trạng Thái Vé:</strong> 
                             <span th:text="${updateRequest.ticketStatus}"
                                   th:classappend="${updateRequest.ticketStatus.name() == 'USED'} ? 'bg-green-100 text-green-700' : 
@@ -39,10 +38,10 @@
                 
                 <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
                     <h2 class="text-xl font-semibold text-emerald-700 mb-3">Người Đặt (Booker)</h2>
-                    <p><strong>Tên:</strong> <span th:text="${updateRequest.booker.fullName}"></span></p>
-                    <p><strong>Email:</strong> <span th:text="${updateRequest.booker.email}"></span></p>
-                    <p><strong>Loại TK:</strong> <span th:text="${updateRequest.booker.provider}"></span></p>
-                    <p><strong>ID Booker:</strong> <span th:text="${updateRequest.booker.id}"></span></p>
+                    <p><strong>Tên:</strong> <span th:text="${ticket.booker.fullName}"></span></p>
+                    <p><strong>Email:</strong> <span th:text="${ticket.booker.email}"></span></p>
+                    <p><strong>Loại TK:</strong> <span th:text="${ticket.booker.provider}"></span></p>
+                    <p><strong>ID Booker:</strong> <span th:text="${ticket.booker.userId}"></span></p>
                 </div>
             </div>
 

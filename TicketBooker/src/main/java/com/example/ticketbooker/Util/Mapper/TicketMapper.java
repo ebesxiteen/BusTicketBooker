@@ -46,6 +46,7 @@ public class TicketMapper {
             .customerPhone(entity.getCustomerPhone())
             .qrCode(entity.getQrCode())
             .ticketStatus(entity.getTicketStatus())
+            .seatCodes(seatCodes)
             .seatIds(seatIds)             // field mới trong TicketDTO
             .booker(UserMapper.toDTO(entity.getBooker()))  // Chuyển Users entity sang UserDTO rồi lấy userId
             .build();

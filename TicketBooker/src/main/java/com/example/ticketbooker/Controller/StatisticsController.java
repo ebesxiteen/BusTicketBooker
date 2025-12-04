@@ -50,6 +50,8 @@ public class StatisticsController {
         //Đếm Hóa đơn, vé mới trong tháng
         int newMonthlyOrders = statisticsService.countOrders(LocalDate.now().minusMonths(1), LocalDate.now());
         int newMonthlyTickets = statisticsService.countTickets(LocalDate.now().minusMonths(1), LocalDate.now());
+        int completedOrders = statisticsService.countCompletedOrders(startDate, endDate);
+        int uncompletedOrders = statisticsService.countUncompletedOrders(startDate, endDate);
 
         // Chuyển đổi dữ liệu thành JSON để hiển thị trên biểu đồ
         Map<String, Object> chartDataJson = new HashMap<>();
@@ -65,8 +67,10 @@ public class StatisticsController {
         ObjectMapper objectMapper =  new ObjectMapper();
         model.addAttribute("chartDataJson", objectMapper.writeValueAsString(chartDataJson));
         model.addAttribute("newMonthlyOrders", newMonthlyOrders);
-        model.addAttribute("newMonthlyTickets", newMonthlyTickets);;
+        model.addAttribute("newMonthlyTickets", newMonthlyTickets);
         model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("completedOrders", completedOrders);
+        model.addAttribute("uncompletedOrders", uncompletedOrders);
         return "View/Admin/Statistics/ThongKe";
     }
 

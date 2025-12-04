@@ -1,5 +1,7 @@
 package com.example.ticketbooker.DTO.Ticket;
 
+import java.util.List;
+
 import com.example.ticketbooker.DTO.Users.UserDTO;
 import com.example.ticketbooker.Entity.Invoices;
 import com.example.ticketbooker.Entity.Trips;
@@ -17,12 +19,10 @@ import lombok.NoArgsConstructor;
 public class TicketDTO {
     private Integer id;
     
-    // Dùng UserDTO thay vì Users Entity để che giấu password
     private UserDTO booker;
     
-    // Nếu chăm chỉ, bạn nên tạo cả TripDTO, SeatDTO. 
-    // Tạm thời dùng Entity cho Trip/Seat/Invoice cũng được nếu chúng không chứa dữ liệu nhạy cảm.
     private Trips trip;
+    private List<Integer> seatIds;
     private String seatCodes;
     private Invoices invoice;
 

@@ -25,12 +25,17 @@ public class TicketMapper {
     if (entity == null) return null;
 
     String seatCodes = "";
+    List<Integer> seatIds = new java.util.ArrayList<>();
     if (entity.getSeats() != null && !entity.getSeats().isEmpty()) {
         seatCodes = entity.getSeats().stream()
                 .map(Seats::getSeatCode)
                 .distinct()
                 .sorted()
                 .collect(Collectors.joining(", "));
+                
+        seatIds = entity.getSeats().stream()
+                .map(Seats::getId)
+                .collect(Collectors.toList());
     }
 
     return TicketDTO.builder()
@@ -41,7 +46,7 @@ public class TicketMapper {
             .customerPhone(entity.getCustomerPhone())
             .qrCode(entity.getQrCode())
             .ticketStatus(entity.getTicketStatus())
-            .seatCodes(seatCodes)              // field mới trong TicketDTO
+            .seatIds(seatIds)             // field mới trong TicketDTO
             .booker(UserMapper.toDTO(entity.getBooker()))  // Chuyển Users entity sang UserDTO rồi lấy userId
             .build();
 }
@@ -126,15 +131,9 @@ public class TicketMapper {
             bookerEntity.setPhone(dto.getBooker().getPhone());
         }
         List<Integer> seatIds = new java.util.ArrayList<>();
-        if (dto.getSeatCodes() != null && !dto.getSeatCodes().isBlank()) {
-        String[] parts = dto.getSeatCodes().split(",");
-        for (String part : parts) {
-            part = part.trim();
-            if (!part.isEmpty()) {
-                seatIds.add(Integer.parseInt(part)); // nếu id ghế là số
-            }
+        if (dto.getSeatIds() != null && !dto.getSeatIds().isEmpty()) {
+            seatIds.addAll(dto.getSeatIds());
         }
-    }
 
         return UpdateTicketRequest.builder()
                 .id(dto.getId())

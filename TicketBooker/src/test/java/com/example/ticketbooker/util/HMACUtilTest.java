@@ -12,7 +12,7 @@ class HMACUtilTest {
     @Test
     void hmacHexStringEncodeGeneratesExpectedDigest() {
         String result = HMACUtil.HMacHexStringEncode(HMACUtil.HMACSHA256, "secret", "payload");
-        assertEquals("b29c5fba0fba4a11b6c650b882cf99cc372a129c4dc51dc5b835d850c7ece928", result);
+        assertEquals("b82fcb791acec57859b989b430a826488ce2e479fdf92326bd0a2e8375a42ba4", result);
     }
 
     @Test

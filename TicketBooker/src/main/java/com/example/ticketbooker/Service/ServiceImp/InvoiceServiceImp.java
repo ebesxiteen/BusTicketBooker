@@ -17,14 +17,19 @@ import com.example.ticketbooker.DTO.Invoice.ResponseInvoiceDTO;
 import com.example.ticketbooker.DTO.Invoice.RevenueStatsDTO;
 import com.example.ticketbooker.Entity.Invoices;
 import com.example.ticketbooker.Repository.InvoiceRepo;
+import com.example.ticketbooker.Repository.TicketRepo;
 import com.example.ticketbooker.Service.InvoiceService;
 import com.example.ticketbooker.Util.Enum.PaymentStatus;
+import com.example.ticketbooker.Util.Enum.TicketStatus;
 import com.example.ticketbooker.Util.Mapper.InvoiceMapper;
 
 @Service
 public class InvoiceServiceImp implements InvoiceService {
     @Autowired
     private InvoiceRepo invoicesRepo;
+
+    @Autowired
+    private TicketRepo ticketRepo;
     
     @Override
     public int addInvoice(AddInvoiceDTO dto) {
@@ -146,6 +151,15 @@ Invoices savedInvoice=invoicesRepo.save(invoice);
         Invoices invoice = invoicesRepo.findById(id).orElse(null);
         if (invoice == null || invoice.getPaymentStatus() == PaymentStatus.CANCELLED) {
             return false;
+        }
+
+        boolean hasUsedTicket = ticketRepo.existsByInvoice_IdAndTicketStatus(id, TicketStatus.USED);
+        if (hasUsedTicket && invoice.getPaymentStatus() == PaymentStatus.PAID && paymentStatus != PaymentStatus.PAID) {
+            return false;
+        }
+
+        if (invoice.getPaymentStatus() == paymentStatus) {
+            return true;
         }
 
         invoice.setPaymentStatus(paymentStatus);

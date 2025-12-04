@@ -166,6 +166,7 @@ String html = ""
 
             TicketStatus currentStatus = ticket.getTicketStatus();
             boolean cancellingTicket = dto.getTicketStatus() == TicketStatus.CANCELLED;
+            boolean markingAsUsed = dto.getTicketStatus() == TicketStatus.USED && currentStatus != TicketStatus.USED;
 
             if (currentStatus == TicketStatus.USED && dto.getTicketStatus() != TicketStatus.USED) {
                 return false;
@@ -217,6 +218,11 @@ String html = ""
             ticket.setCustomerPhone(dto.getCustomerPhone());
             ticket.setQrCode(dto.getQrCode());
             ticket.setTicketStatus(dto.getTicketStatus());
+
+            if (markingAsUsed && ticket.getInvoice() != null && ticket.getInvoice().getPaymentStatus() != PaymentStatus.CANCELLED) {
+                markInvoiceAsPaid(ticket.getInvoice());
+                sendTripCompletionEmail(ticket);
+            }
 
             PaymentStatus previousPaymentStatus = null;
             if (cancellingTicket && ticket.getInvoice() != null) {
@@ -407,6 +413,50 @@ String html = ""
     public ByteArrayInputStream exportAllTicketsToExcel() {
         List<Tickets> tickets = ticketRepository.findAll();
         return generateExcel(tickets);
+    }
+
+    private void markInvoiceAsPaid(Invoices invoice) {
+        if (invoice.getPaymentStatus() != PaymentStatus.PAID) {
+            invoice.setPaymentStatus(PaymentStatus.PAID);
+            if (invoice.getPaymentTime() == null) {
+                invoice.setPaymentTime(LocalDateTime.now());
+            }
+            invoiceRepo.save(invoice);
+        }
+    }
+
+    private void sendTripCompletionEmail(Tickets ticket) {
+        Users booker = ticket.getBooker();
+        if (booker == null || booker.getEmail() == null) {
+            return;
+        }
+
+        String customerName = booker.getFullName() != null ? booker.getFullName() : "Quý khách";
+        String route = ticket.getTrip().getRoute().getDepartureLocation() + " → " + ticket.getTrip().getRoute().getArrivalLocation();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String formattedDeparture = ticket.getTrip().getDepartureTime().format(formatter);
+        String seatList = ticket.getSeats() != null ? ticket.getSeats().stream()
+                .map(Seats::getSeatCode)
+                .collect(Collectors.joining(", ")) : "";
+
+        String html = "<html><body style='font-family:Arial, sans-serif; line-height:1.6;'>"
+                + "<p>Xin chào <b>" + customerName + "</b>,</p>"
+                + "<p>Cảm ơn bạn đã lựa chọn GreenBus. Chúng tôi ghi nhận bạn đã hoàn thành chuyến đi vừa qua.</p>"
+                + "<p>Thông tin chuyến đi:</p>"
+                + "<ul>"
+                + "<li><b>Tuyến đường:</b> " + route + "</li>"
+                + "<li><b>Thời gian khởi hành:</b> " + formattedDeparture + "</li>"
+                + "<li><b>Ghế:</b> " + seatList + "</li>"
+                + "</ul>"
+                + "<p>Hóa đơn của bạn đã được xác nhận thanh toán. Chúc bạn có những trải nghiệm vui vẻ cùng GreenBus!</p>"
+                + "<p>Trân trọng,<br/>GreenBus Line</p>"
+                + "</body></html>";
+
+        emailService.sendHtmlContent(
+                booker.getEmail(),
+                "Cảm ơn bạn đã đồng hành cùng GreenBus",
+                html
+        );
     }
 
     // Viết hàm chung để đỡ lặp code

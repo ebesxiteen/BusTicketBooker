@@ -15,7 +15,7 @@ public interface StatisticRepo extends JpaRepository<Tickets,Long> {
     @Query(value = "SELECT DATE(i.paymentTime) AS paymentDate, " +
             "COUNT(DISTINCT t.invoiceId) AS totalTickets, " +
             "COUNT(i.invoiceId) AS totalInvoices, " +
-            "SUM(i.totalAmount) AS totalRevenue " +
+            "SUM(CASE WHEN i.paymentStatus = 'PAID' THEN i.totalAmount ELSE 0 END) AS totalRevenue " +
             "FROM Tickets t " +
             "JOIN Invoices i ON t.invoiceId = i.invoiceId " +
             "WHERE DATE(i.paymentTime) BETWEEN :startDate AND :endDate " +
@@ -28,5 +28,15 @@ public interface StatisticRepo extends JpaRepository<Tickets,Long> {
     int countOrders(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     @Query("SELECT COUNT(distinct t.id) from Invoices i join Tickets t on i.id = t.invoice.id where DATE(i.paymentTime) between :startDate and :endDate")
     int countTickets(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(DISTINCT t.invoice.id) FROM Tickets t " +
+            "WHERE FUNCTION('DATE', t.invoice.paymentTime) BETWEEN :startDate AND :endDate " +
+            "AND t.ticketStatus = 'USED'")
+    int countCompletedOrders(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(DISTINCT t.invoice.id) FROM Tickets t " +
+            "WHERE FUNCTION('DATE', t.invoice.paymentTime) BETWEEN :startDate AND :endDate " +
+            "AND t.ticketStatus IN ('BOOKED')")
+    int countUncompletedOrders(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 }

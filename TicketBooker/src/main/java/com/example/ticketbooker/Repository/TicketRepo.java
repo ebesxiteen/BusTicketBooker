@@ -51,6 +51,10 @@ public interface TicketRepo extends JpaRepository<Tickets, Integer> {
            "WHERE t.trip.departureTime < :now AND t.ticketStatus = 'BOOKED'")
     int updateUsedTickets(@Param("now") LocalDateTime now);
 
+    List<Tickets> findAllByTrip_DepartureTimeBeforeAndTicketStatus(LocalDateTime now, TicketStatus status);
+
+    boolean existsByInvoice_IdAndTicketStatus(Integer invoiceId, TicketStatus status);
+
     @Query("SELECT COUNT(t) FROM Tickets t WHERE t.trip.id = :tripId AND t.ticketStatus IN ('BOOKED', 'USED')")
     long countBookedOrUsedTicketsByTripId(@Param("tripId") Integer tripId);
 

@@ -28,6 +28,9 @@ public class StatisticsService {
             long totalTickets = (Long) row[1];
             long totalInvoices = (Long) row[2];
             BigDecimal totalRevenue = (BigDecimal) row[3];
+            if (totalRevenue == null) {
+                totalRevenue = BigDecimal.ZERO;
+            }
 //            LocalDate localPaymentDate = paymentDate.toLocalDate();
             ChartData chartData = new ChartData(paymentDate, totalTickets, totalInvoices, totalRevenue);
             chartDataList.add(chartData);
@@ -42,5 +45,13 @@ public class StatisticsService {
     }
     public int countTickets(LocalDate startDate, LocalDate endDate) {
         return statisticRepo.countTickets(startDate, endDate);
+    }
+
+    public int countCompletedOrders(LocalDate startDate, LocalDate endDate) {
+        return statisticRepo.countCompletedOrders(startDate, endDate);
+    }
+
+    public int countUncompletedOrders(LocalDate startDate, LocalDate endDate) {
+        return statisticRepo.countUncompletedOrders(startDate, endDate);
     }
 }

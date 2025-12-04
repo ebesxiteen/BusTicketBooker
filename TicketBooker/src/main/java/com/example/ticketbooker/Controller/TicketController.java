@@ -13,9 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.ticketbooker.DTO.Ticket.TicketDTO;
 import com.example.ticketbooker.DTO.Ticket.TicketIdRequest;
@@ -84,6 +87,20 @@ public class TicketController {
         return "View/Admin/Tickets/TicketDetails";
     }
 
+    @PostMapping("/update")
+    public String updateTicket(@ModelAttribute("updateRequest") UpdateTicketRequest updateRequest,
+                               RedirectAttributes redirectAttributes) {
+        boolean updated = ticketService.updateTicket(updateRequest);
+
+        if (updated) {
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật vé thành công!");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Cập nhật vé không thành công. Vui lòng thử lại.");
+        }
+
+        return "redirect:/admin/tickets/details/" + updateRequest.getId();
+    }
+    
     // 3. Xuất Excel
     @GetMapping("/export/excel")
     public ResponseEntity<InputStreamResource> exportTicketsToExcel(@RequestParam(value = "tripId", required = false) Integer tripId) {

@@ -27,7 +27,7 @@ public class TicketMapper {
     String seatCodes = "";
     if (entity.getSeats() != null && !entity.getSeats().isEmpty()) {
         seatCodes = entity.getSeats().stream()
-                .map(s -> String.valueOf(s.getId()))  // hoặc s.getCode()
+                .map(Seats::getSeatCode)
                 .collect(Collectors.joining(", "));
     }
 

@@ -29,8 +29,20 @@ public class TicketApi {
 
     @Autowired
     private TicketService ticketsService;
+
     @Autowired
-private EmailService emailService;
+    private EmailService emailService;
+
+    @DeleteMapping("/delete")
+    public boolean deleteTicket(@RequestBody TicketIdRequest id) {
+        try {
+            return ticketsService.deleteTicket(id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
     // 1. Hủy vé (SỬA LOGIC)
     @DeleteMapping("/cancel-ticket")
     public boolean cancelTicket(@RequestBody TicketIdRequest id) {

@@ -209,9 +209,31 @@ String html = ""
             ticket.setQrCode(dto.getQrCode());
             ticket.setTicketStatus(dto.getTicketStatus());
 
+            PaymentStatus previousPaymentStatus = null;
             if (cancellingTicket && ticket.getInvoice() != null) {
+                previousPaymentStatus = ticket.getInvoice().getPaymentStatus();
                 ticket.getInvoice().setPaymentStatus(PaymentStatus.CANCELLED);
                 invoiceRepo.save(ticket.getInvoice());
+                
+                if (previousPaymentStatus == PaymentStatus.PAID) {
+                    Users booker = ticket.getBooker();
+                    if (booker != null && booker.getEmail() != null) {
+                        String formattedAmount = String.format("%,d", ticket.getInvoice().getTotalAmount());
+                        String html = "<html><body style='font-family:Arial, sans-serif; line-height:1.6;'>"
+                                + "<p>Xin chào <b>" + booker.getFullName() + "</b>,</p>"
+                                + "<p>Vé của bạn đã được hủy. Chúng tôi đã tiến hành hoàn tiền cho hóa đơn #"
+                                + ticket.getInvoice().getId() + " với số tiền <b>" + formattedAmount + "đ</b>.</p>"
+                                + "<p>Nếu có thắc mắc, vui lòng liên hệ tổng đài <b>1900 1990</b>.</p>"
+                                + "<p>Trân trọng,<br/>GreenBus Line</p>"
+                                + "</body></html>";
+
+                        emailService.sendHtmlContent(
+                                booker.getEmail(),
+                                "Thông báo hoàn tiền - GreenBus",
+                                html
+                        );
+                    }
+                }
             }
 
             // 7. Lưu lại

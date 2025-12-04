@@ -42,7 +42,7 @@ public class TicketApi {
             return false;
         }
     }
-    
+
     // 1. Hủy vé (SỬA LOGIC)
     @DeleteMapping("/cancel-ticket")
     public boolean cancelTicket(@RequestBody TicketIdRequest id) {
@@ -65,68 +65,68 @@ public class TicketApi {
                 updated.setTicketStatus(TicketStatus.CANCELLED);
                 boolean result = this.ticketsService.updateTicket(updated);
 
-            if (result) {
-    // ===== GỬI EMAIL HỦY VÉ Ở ĐÂY =====
+ if (result) {
+                    // ===== GỬI EMAIL HỦY VÉ Ở ĐÂY =====
 
-    // Lấy info người đặt
-    String customerName = ticketDTO.getBooker() != null
-            ? ticketDTO.getBooker().getFullName()
-            : "Quý khách";
+                    // Lấy info người đặt
+                    String customerName = ticketDTO.getBooker() != null
+                            ? ticketDTO.getBooker().getFullName()
+                            : "Quý khách";
 
-    String email = ticketDTO.getBooker() != null
-            ? ticketDTO.getBooker().getEmail()
-            : null;
+                    String email = ticketDTO.getBooker() != null
+                            ? ticketDTO.getBooker().getEmail()
+                            : null;
 
-    if (email != null) {
+                    if (email != null) {
 
-        // Tuyến đường
-        String route = ticketDTO.getTrip().getRoute().getDepartureLocation()
-                + " → "
-                + ticketDTO.getTrip().getRoute().getArrivalLocation();
+                        // Tuyến đường
+                        String route = ticketDTO.getTrip().getRoute().getDepartureLocation()
+                                + " → "
+                                + ticketDTO.getTrip().getRoute().getArrivalLocation();
 
-        // Format thời gian khởi hành cho đẹp
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        String formattedDeparture = ticketDTO.getTrip().getDepartureTime().format(formatter);
+                        // Format thời gian khởi hành cho đẹp
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                        String formattedDeparture = ticketDTO.getTrip().getDepartureTime().format(formatter);
 
-        // Danh sách số ghế (chuỗi như: A01, A02)
-        String seatList = (ticketDTO.getSeatCodes() != null
-                ? ticketDTO.getSeatCodes()
-                : "Không xác định");
+                        // Danh sách số ghế (chuỗi như: A01, A02)
+                        String seatList = (ticketDTO.getSeatCodes() != null
+                                ? ticketDTO.getSeatCodes()
+                                : "Không xác định");
 
-        // Biển số xe (nếu cần, có thể bỏ nếu chưa map Bus trong Trip)
-        String licensePlate = ticketDTO.getTrip().getBus() != null
-                ? ticketDTO.getTrip().getBus().getLicensePlate()
-                : "Đang cập nhật";
+                        // Biển số xe (nếu cần, có thể bỏ nếu chưa map Bus trong Trip)
+                        String licensePlate = ticketDTO.getTrip().getBus() != null
+                                ? ticketDTO.getTrip().getBus().getLicensePlate()
+                                : "Đang cập nhật";
 
-        String html = ""
-                + "<html><body style='font-family:Arial, sans-serif; line-height:1.6;'>"
-                + "<p>Xin chào <b>" + customerName + "</b>,</p>"
-                + "<p>Vé của bạn đã được "
-                + "<span style='color:red;font-weight:bold;'>HỦY THÀNH CÔNG</span>.</p>"
-                + "<p>Thông tin vé đã hủy:</p>"
-                + "<ul>"
-                + "<li><b>Mã vé:</b> " + ticketDTO.getId() + "</li>"
-                + "<li><b>Tuyến đường:</b> " + route + "</li>"
-                + "<li><b>Thời gian khởi hành:</b> " + formattedDeparture + "</li>"
-                + "<li><b>Biển số xe:</b> " + licensePlate + "</li>"
-                + "<li><b>Số ghế:</b> " + seatList + "</li>"
-                + "</ul>"
-                + "<p>Nếu đây không phải là yêu cầu của bạn, vui lòng liên hệ tổng đài "
-                + "<b>1900 1990</b>.</p>"
-                + "<p>Trân trọng,<br/>GreenBus Line</p>"
-                + "</body></html>";
+                        String html = ""
+                                + "<html><body style='font-family:Arial, sans-serif; line-height:1.6;'>"
+                                + "<p>Xin chào <b>" + customerName + "</b>,</p>"
+                                + "<p>Vé của bạn đã được "
+                                + "<span style='color:red;font-weight:bold;'>HỦY THÀNH CÔNG</span>.</p>"
+                                + "<p>Thông tin vé đã hủy:</p>"
+                                + "<ul>"
+                                + "<li><b>Mã vé:</b> " + ticketDTO.getId() + "</li>"
+                                + "<li><b>Tuyến đường:</b> " + route + "</li>"
+                                + "<li><b>Thời gian khởi hành:</b> " + formattedDeparture + "</li>"
+                                + "<li><b>Biển số xe:</b> " + licensePlate + "</li>"
+                                + "<li><b>Số ghế:</b> " + seatList + "</li>"
+                                + "</ul>"
+                                + "<p>Nếu đây không phải là yêu cầu của bạn, vui lòng liên hệ tổng đài "
+                                + "<b>1900 1990</b>.</p>"
+                                + "<p>Trân trọng,<br/>GreenBus Line</p>"
+                                + "</body></html>";
 
-        emailService.sendHtmlContent(
-                email,
-                "Hủy vé thành công - GreenBus",
-                html
-        );
-    } else {
-        System.out.println("Không tìm thấy email booker, bỏ qua gửi mail hủy vé.");
-    }
-}
+                        emailService.sendHtmlContent(
+                                email,
+                                "Hủy vé thành công - GreenBus",
+                                html
+                        );
+                    } else {
+                        System.out.println("Không tìm thấy email booker, bỏ qua gửi mail hủy vé.");
+                    }
+                }
 
-                return this.ticketsService.updateTicket(updated);
+                return result;
             }
         } catch (Exception e) {
             e.printStackTrace();

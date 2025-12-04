@@ -28,7 +28,7 @@ INSERT INTO Users (
 ) VALUES 
 ('Quản Trị Hệ Thống', 'admin@greenbus.vn', @BCRYPT_PASS, '0901234567', 'Quận 1, TP.HCM', 'MALE',   '1990-01-01', 'ADMIN', 'LOCAL', 'ACTIVE', 1),
 ('Trần Nhân Viên',   'staff@greenbus.vn', @BCRYPT_PASS, '0909000222', 'Quận 3, TP.HCM', 'FEMALE', '1995-05-05', 'STAFF', 'LOCAL', 'ACTIVE', 1),
-('Lê Khách Hàng',    'customer@gmail.com',@BCRYPT_PASS, '0909000333', 'TP. Đà Lạt',      'FEMALE', '2000-10-10', 'USER',  'LOCAL', 'ACTIVE', 1), -- ID 3 (BOOKER)
+('Lê Khách Hàng',    'customer.greenbus@gmail.com',@BCRYPT_PASS, '0909000333', 'TP. Đà Lạt',      'FEMALE', '2000-10-10', 'USER',  'LOCAL', 'ACTIVE', 1), -- ID 3 (BOOKER)
 ('Google User Test', 'googleuser@gmail.com', NULL, NULL, NULL,     'MALE',     NULL,    'USER',  'GOOGLE','ACTIVE', 1);
 
 -- =========================================

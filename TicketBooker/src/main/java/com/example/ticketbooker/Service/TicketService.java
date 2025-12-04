@@ -17,7 +17,6 @@ import com.example.ticketbooker.Util.Enum.TicketStatus;
 public interface TicketService {
     boolean addTicket(AddTicketRequest dto);
     boolean updateTicket(UpdateTicketRequest dto);
-    boolean deleteTicket(TicketIdRequest dto);
     
     TicketResponse getAllTickets();
     TicketResponse getTicketById(TicketIdRequest dto);

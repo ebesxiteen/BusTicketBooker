@@ -28,9 +28,12 @@
                         <p><strong>Ghế:</strong> <span class="font-bold text-emerald-600" th:text="${ticket.seatCodes != null && !ticket.seatCodes.isEmpty() ? ticket.seatCodes : 'Chưa gán'}"></span></p>
                             <strong>Trạng Thái Vé:</strong> 
                             <span th:text="${updateRequest.ticketStatus}"
-                                  th:classappend="${updateRequest.ticketStatus.name() == 'USED'} ? 'bg-green-100 text-green-700' : 
-                                                  (updateRequest.ticketStatus.name() == 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')"
-                                  class="px-3 py-1 rounded-full text-xs font-semibold">
+                                                                    th:classappend="${updateRequest.ticketStatus.name() == 'USED'
+                                                  ? 'bg-green-100 text-green-700'
+                                                  : (updateRequest.ticketStatus.name() == 'CANCELLED'
+                                                     ? 'bg-red-100 text-red-700'
+                                                     : 'bg-yellow-100 text-yellow-700')}"
+                                class="px-3 py-1 rounded-full text-xs font-semibold">
                             </span>
                         </p>
                     </div>

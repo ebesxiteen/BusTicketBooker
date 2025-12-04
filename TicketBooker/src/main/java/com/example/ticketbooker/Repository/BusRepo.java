@@ -16,7 +16,6 @@ import com.example.ticketbooker.Util.Enum.BusType;
 
 @Repository
 public interface BusRepo extends JpaRepository<Buses, Integer> {
-    Buses findById(int id);
     List<Buses> findAll();
     Optional<Buses> findByLicensePlate(String licensePlate); // New method
     Page<Buses> findByLicensePlateContainingIgnoreCase(String licensePlate, Pageable pageable);

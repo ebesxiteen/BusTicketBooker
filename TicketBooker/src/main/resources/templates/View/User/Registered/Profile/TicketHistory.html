@@ -80,6 +80,8 @@
                         class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Số tiền</th>
                     <th scope="col"
                         class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Trạng thái</th>
+                    <th scope="col"
+                        class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Thao tác</th>
                 </tr>
                 </thead>
 
@@ -98,12 +100,27 @@
                         th:text="${#numbers.formatDecimal(ticket.trip.price, 0, 'POINT', 0, 'COMMA') + ' đ'}"></td>
 
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-center border"
-                        th:classappend="${ticket.ticketStatus.name() == 'BOOKED' 
+                        th:classappend="${ticket.ticketStatus.name() == 'BOOKED'
                                             ? ' bg-yellow-100 text-yellow-700'
-                                            : (ticket.ticketStatus.name() == 'USED' 
+                                            : (ticket.ticketStatus.name() == 'USED'
                                                     ? ' bg-emerald-100 text-emerald-700'
                                                     : ' bg-red-100 text-red-700')}">
                         <span th:text="${ticket.ticketStatus}"></span>
+                    </td>
+
+                    <td class="px-6 py-4 text-sm text-center border">
+                        <button type="button"
+                                th:if="${ticket.ticketStatus.name() == 'BOOKED'}"
+                                class="cancel-ticket-btn inline-flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md shadow-sm hover:bg-red-600 transition"
+                                th:data-ticket-id="${ticket.id}"
+                                th:data-route="${ticket.trip.route.departureLocation} + ' → ' + ${ticket.trip.route.arrivalLocation}"
+                                th:data-departure="${#temporals.format(ticket.trip.departureTime, 'HH:mm dd/MM')}"
+                                th:data-seat="${ticket.seatCodes}">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Hủy vé</span>
+                        </button>
+
+                        <span th:if="${ticket.ticketStatus.name() != 'BOOKED'}" class="text-gray-400 italic">Không khả dụng</span>
                     </td>
 
                 </tr>

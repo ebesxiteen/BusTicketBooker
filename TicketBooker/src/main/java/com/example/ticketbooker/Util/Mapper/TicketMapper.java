@@ -27,13 +27,16 @@ public class TicketMapper {
     String seatCodes = "";
     List<Integer> seatIds = new java.util.ArrayList<>();
     if (entity.getSeats() != null && !entity.getSeats().isEmpty()) {
-        seatCodes = entity.getSeats().stream()
+        var sortedSeats = entity.getSeats().stream()
+                .sorted((first, second) -> first.getSeatCode().compareToIgnoreCase(second.getSeatCode()))
+                .toList();
+
+        seatCodes = sortedSeats.stream()
                 .map(Seats::getSeatCode)
                 .distinct()
-                .sorted()
                 .collect(Collectors.joining(", "));
-                
-        seatIds = entity.getSeats().stream()
+
+        seatIds = sortedSeats.stream()
                 .map(Seats::getId)
                 .collect(Collectors.toList());
     }

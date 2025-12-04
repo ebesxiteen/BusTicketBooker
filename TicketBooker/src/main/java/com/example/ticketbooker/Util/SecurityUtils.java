@@ -12,8 +12,18 @@ public class SecurityUtils {
 
     public static boolean isLoggedIn() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && authentication.isAuthenticated()
-                && !authentication.getPrincipal().equals("anonymousUser");
+        if (authentication == null) {
+            return false;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return false;
+        }
+
+        return authentication.isAuthenticated()
+                || principal instanceof CustomUserDetails
+                || principal instanceof CustomOAuth2User;
     }
 
     // Đổi tên hàm và kiểu trả về: extractAccount -> extractUser

@@ -16,7 +16,6 @@ import com.example.ticketbooker.Util.Enum.DriverStatus;
 public interface DriverRepo  extends JpaRepository<Driver, Integer> {
     ArrayList<Driver> findAll();
     Page<Driver> findAll(Pageable pageable);
-    Driver findById(int id);
     ArrayList<Driver> findAllDriversByName(String name);
     ArrayList<Driver> findAllDriversByDriverStatus(DriverStatus status);
     ArrayList<Driver> findAllDriversByPhone(String phone);

@@ -46,7 +46,7 @@ public class TicketController {
         
         ResponseTripDTO responseTripDTO = tripService.getAllTrips();
         List<Trips> trips = responseTripDTO.getListTrips();
-        TicketResponse ticketResponse;
+        TicketResponse ticketResponse = ticketService.getAllTickets(pageable);
 
         if (tripId != null && ticketStatus != null) {
             ticketResponse = ticketService.getTicketsByTripIdAndStatus(tripId, ticketStatus, pageable);
@@ -59,7 +59,6 @@ public class TicketController {
         model.addAttribute("trips", trips);
         model.addAttribute("ticketStatuses", TicketStatus.values());
         model.addAttribute("selectedTicketStatus", ticketStatus);
-        model.addAttribute("ticketResponse", ticketResponse);
         model.addAttribute("ticketResponse", ticketResponse);
         return "View/Admin/Tickets/ListTicket";
     }

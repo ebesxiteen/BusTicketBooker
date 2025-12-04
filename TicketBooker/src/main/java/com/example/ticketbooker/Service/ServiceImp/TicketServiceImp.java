@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ticketbooker.DTO.Ticket.AddTicketRequest;
 import com.example.ticketbooker.DTO.Ticket.PaymentInforRequest;
@@ -33,12 +34,14 @@ import com.example.ticketbooker.Entity.Seats;
 import com.example.ticketbooker.Entity.Tickets;
 import com.example.ticketbooker.Entity.Trips;
 import com.example.ticketbooker.Entity.Users;
+import com.example.ticketbooker.Repository.InvoiceRepo;
 import com.example.ticketbooker.Repository.SeatsRepo;
 import com.example.ticketbooker.Repository.TicketRepo;
 import com.example.ticketbooker.Repository.TripRepo;
 import com.example.ticketbooker.Repository.UserRepo;
 import com.example.ticketbooker.Service.TicketService;
 import com.example.ticketbooker.Service.OutSource.EmailService;
+import com.example.ticketbooker.Util.Enum.PaymentStatus;
 import com.example.ticketbooker.Util.Enum.TicketStatus;
 import com.example.ticketbooker.Util.Mapper.TicketMapper;
 
@@ -54,6 +57,8 @@ public class TicketServiceImp implements TicketService {
     private UserRepo userRepository;  // repo của entity Users
     @Autowired
     private TripRepo tripRepos;
+    @Autowired
+    private InvoiceRepo invoiceRepo;
 
 
    @Override
@@ -152,59 +157,72 @@ String html = ""
 
 
     @Override
-public boolean updateTicket(UpdateTicketRequest dto) {
-    try {
-        // 1. Lấy ticket hiện tại từ DB
-        Tickets ticket = ticketRepository.findById(dto.getId())
-                .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + dto.getId()));
+    @Transactional
+    public boolean updateTicket(UpdateTicketRequest dto) {
+        try {
+            // 1. Lấy ticket hiện tại từ DB
+            Tickets ticket = ticketRepository.findById(dto.getId())
+                    .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + dto.getId()));
 
-        // 2. Cập nhật trip nếu tripId khác 0
-        if (dto.getTripId() != 0) {
-            Optional<Trips> trip = tripRepos.findById(dto.getTripId());
-            if (trip == null) {
-            throw new RuntimeException("Trip not found with id: " + dto.getTripId());
+            boolean cancellingTicket = dto.getTicketStatus() == TicketStatus.CANCELLED;
+
+            // 2. Cập nhật trip nếu tripId khác 0
+            if (dto.getTripId() != 0) {
+                Optional<Trips> trip = tripRepos.findById(dto.getTripId());
+                if (trip == null) {
+                    throw new RuntimeException("Trip not found with id: " + dto.getTripId());
+                }
             }
 
-        }
-
-        // 3. Cập nhật booker nếu bookerId khác 0
-        if (dto.getBookerId() != 0) {
-            Users booker = userRepository.findById(dto.getBookerId())
-                    .orElseThrow(() -> new RuntimeException("User not found: " + dto.getBookerId()));
-            ticket.setBooker(booker);
-        }
-
-        // 4. Cập nhật invoice (nếu cho phép sửa)
-        if (dto.getInvoice() != null) {
-            ticket.setInvoice(dto.getInvoice());
-        }
-
-        // 5. Cập nhật danh sách ghế (nếu cho phép sửa ghế)
-        if (dto.getSeat() != null && !dto.getSeat().isEmpty()) {
-            List<Seats> seatEntities = new java.util.ArrayList<>();
-            for (Integer seatId : dto.getSeat()) {
-                Seats seat = seatsRepo.findById(seatId)
-                        .orElseThrow(() -> new RuntimeException("Seat not found: " + seatId));
-                seatEntities.add(seat);
+            // 3. Cập nhật booker nếu bookerId khác 0
+            if (dto.getBookerId() != 0) {
+                Users booker = userRepository.findById(dto.getBookerId())
+                        .orElseThrow(() -> new RuntimeException("User not found: " + dto.getBookerId()));
+                ticket.setBooker(booker);
             }
-            ticket.setSeats(seatEntities);   // nhớ: field trong Tickets là List<Seat> seats
+
+            // 4. Cập nhật invoice (nếu cho phép sửa)
+            if (!cancellingTicket && dto.getInvoice() != null) {
+                ticket.setInvoice(dto.getInvoice());
+            }
+
+            // 5. Xử lý danh sách ghế
+            if (cancellingTicket) {
+                List<Seats> seatsToRemove = new java.util.ArrayList<>(ticket.getSeats());
+                ticket.getSeats().clear(); // xóa liên kết bảng ticket_seats
+                if (!seatsToRemove.isEmpty()) {
+                    seatsRepo.deleteAll(seatsToRemove); // xóa ghế trong bảng seats
+                }
+            } else if (dto.getSeat() != null && !dto.getSeat().isEmpty()) {
+                List<Seats> seatEntities = new java.util.ArrayList<>();
+                for (Integer seatId : dto.getSeat()) {
+                    Seats seat = seatsRepo.findById(seatId)
+                            .orElseThrow(() -> new RuntimeException("Seat not found: " + seatId));
+                    seatEntities.add(seat);
+                }
+                ticket.setSeats(seatEntities);   // nhớ: field trong Tickets là List<Seat> seats
+            }
+
+            // 6. Cập nhật các field đơn giản
+            ticket.setCustomerName(dto.getCustomerName());
+            ticket.setCustomerPhone(dto.getCustomerPhone());
+            ticket.setQrCode(dto.getQrCode());
+            ticket.setTicketStatus(dto.getTicketStatus());
+
+            if (cancellingTicket && ticket.getInvoice() != null) {
+                ticket.getInvoice().setPaymentStatus(PaymentStatus.CANCELLED);
+                invoiceRepo.save(ticket.getInvoice());
+            }
+
+            // 7. Lưu lại
+            ticketRepository.save(ticket);
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-
-        // 6. Cập nhật các field đơn giản
-        ticket.setCustomerName(dto.getCustomerName());
-        ticket.setCustomerPhone(dto.getCustomerPhone());
-        ticket.setQrCode(dto.getQrCode());
-        ticket.setTicketStatus(dto.getTicketStatus());
-
-        // 7. Lưu lại
-        ticketRepository.save(ticket);
-        return true;
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
     }
-}
 
 
     @Override

@@ -80,7 +80,8 @@
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-1">Trạng Thái Vé</label>
                         <select th:field="*{ticketStatus}" required
-                                class="w-full px-4 py-2 border rounded shadow-sm focus:border-emerald-500 bg-white">
+                                class="w-full px-4 py-2 border rounded shadow-sm focus:border-emerald-500 bg-white"
+                                th:disabled="${updateRequest.ticketStatus.name() == 'USED'}">
                             <option th:each="status : ${T(com.example.ticketbooker.Util.Enum.TicketStatus).values()}"
                                     th:value="${status}" th:text="${status}"></option>
                         </select>
@@ -97,7 +98,8 @@
                         <i class="fas fa-save mr-2"></i> Lưu Cập Nhật
                     </button>
                     
-                    <button type="button" th:attr="onclick=|confirmCancelTicket(${updateRequest.id})|"
+                    <button type="button" th:if="${updateRequest.ticketStatus.name() != 'USED'}"
+                            th:attr="onclick=|confirmCancelTicket(${updateRequest.id})|"
                             class="px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-bold shadow-md">
                         <i class="fas fa-times-circle mr-2"></i> Hủy Vé
                     </button>

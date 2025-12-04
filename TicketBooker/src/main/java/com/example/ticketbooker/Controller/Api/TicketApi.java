@@ -33,16 +33,6 @@ public class TicketApi {
     @Autowired
     private EmailService emailService;
 
-    @DeleteMapping("/delete")
-    public boolean deleteTicket(@RequestBody TicketIdRequest id) {
-        try {
-            return ticketsService.deleteTicket(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     // 1. Hủy vé (SỬA LOGIC)
     @DeleteMapping("/cancel-ticket")
     public boolean cancelTicket(@RequestBody TicketIdRequest id) {
@@ -57,6 +47,10 @@ public class TicketApi {
             if (response.getTicketsCount() > 0) {
                 // Lấy DTO đầu tiên
                 TicketDTO ticketDTO = response.getListTickets().get(0);
+
+                if (ticketDTO.getTicketStatus() == TicketStatus.USED) {
+                    return false;
+                }
 
                 // Bước 3: Convert DTO -> UpdateRequest (Dùng hàm mới viết trong Mapper)
                 UpdateTicketRequest updated = TicketMapper.toUpdateDTO(ticketDTO);

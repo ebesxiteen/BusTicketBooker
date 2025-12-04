@@ -164,7 +164,12 @@ String html = ""
             Tickets ticket = ticketRepository.findById(dto.getId())
                     .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + dto.getId()));
 
+            TicketStatus currentStatus = ticket.getTicketStatus();
             boolean cancellingTicket = dto.getTicketStatus() == TicketStatus.CANCELLED;
+
+            if (currentStatus == TicketStatus.USED && dto.getTicketStatus() != TicketStatus.USED) {
+                return false;
+            }
 
             // 2. Cập nhật trip nếu tripId khác 0
             if (dto.getTripId() != 0) {
@@ -246,17 +251,6 @@ String html = ""
         }
     }
 
-
-    @Override
-    public boolean deleteTicket(TicketIdRequest dto) {
-        try {
-            ticketRepository.deleteById(dto.getId());
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-        return true;
-    }
 
     @Override
     public TicketResponse getAllTickets() {

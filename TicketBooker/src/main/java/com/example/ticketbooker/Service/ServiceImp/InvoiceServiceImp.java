@@ -7,6 +7,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import com.example.ticketbooker.DTO.Invoice.AddInvoiceDTO;
 import com.example.ticketbooker.DTO.Invoice.RequestInvoiceDTO;
@@ -57,10 +60,16 @@ Invoices savedInvoice=invoicesRepo.save(invoice);
     public ResponseInvoiceDTO searchInvoices(RequestInvoiceDTO requestDTO) {
         ResponseInvoiceDTO result = new ResponseInvoiceDTO();
         try {
-            ArrayList<Invoices> filteredInvoices = invoicesRepo.searchInvoices(
+            int page = requestDTO.getPage() != null && requestDTO.getPage() >= 0 ? requestDTO.getPage() : 0;
+            int size = requestDTO.getSize() != null && requestDTO.getSize() > 0 ? requestDTO.getSize() : 10;
+
+            PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "paymentTime"));
+
+            Page<Invoices> filteredInvoices = invoicesRepo.searchInvoices(
                     requestDTO.getTotalAmount(),
                     requestDTO.getPaymentStatus(),
-                    requestDTO.getPaymentMethod()
+                    requestDTO.getPaymentMethod(),
+                    pageRequest
             );
             result = InvoiceMapper.toResponseDTO(filteredInvoices);
         } catch (Exception e) {
@@ -126,5 +135,21 @@ Invoices savedInvoice=invoicesRepo.save(invoice);
         List<Invoices> invoices = invoicesRepo.findAllByPaymentTimeBetweenAndPaymentStatus(start, end, PaymentStatus.PAID); // Ensure you have PaymentStatus.PAID
         return invoices.stream().mapToDouble(Invoices::getTotalAmount).sum();
 
+    }
+
+    @Override
+    public boolean updatePaymentStatus(int id, PaymentStatus paymentStatus) {
+        if (paymentStatus == PaymentStatus.CANCELLED) {
+            return false;
+        }
+
+        Invoices invoice = invoicesRepo.findById(id).orElse(null);
+        if (invoice == null || invoice.getPaymentStatus() == PaymentStatus.CANCELLED) {
+            return false;
+        }
+
+        invoice.setPaymentStatus(paymentStatus);
+        invoicesRepo.save(invoice);
+        return true;
     }
 }

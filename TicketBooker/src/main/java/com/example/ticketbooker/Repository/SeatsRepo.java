@@ -31,5 +31,7 @@ public interface SeatsRepo extends JpaRepository<Seats, Integer> {
 
     @Query("SELECT COUNT(s) FROM Seats s WHERE s.trip.id = :tripId")
     long countBookedSeatsByTripId(@Param("tripId") Integer tripId);
+
+    Seats findByTripIdAndSeatCode(Integer tripId, String seatCode);
 }
 

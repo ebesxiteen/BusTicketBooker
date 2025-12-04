@@ -25,6 +25,7 @@ import com.example.ticketbooker.DTO.Ticket.AddTicketRequest;
 import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
 import com.example.ticketbooker.DTO.Trips.SearchTripRequest;
 import com.example.ticketbooker.Entity.Invoices;
+import com.example.ticketbooker.Entity.Seats;
 import com.example.ticketbooker.Entity.Users;
 import com.example.ticketbooker.Service.InvoiceService;
 import com.example.ticketbooker.Service.SeatsService;
@@ -286,7 +287,13 @@ public String showPaymentSuccess(HttpServletRequest request,
                     try {
                         addRequest.getSeat().add(Integer.parseInt(s));
                     } catch (NumberFormatException nfe) {
-                        nfe.printStackTrace();
+                        // Nếu cookie chứa seatCode (ví dụ A02) thay vì seatId, map sang seatId theo tripId
+                        Seats seat = seatsService.getSeatByTripIdAndSeatCode(tripId, s);
+                        if (seat != null) {
+                            addRequest.getSeat().add(seat.getId());
+                        } else {
+                            System.out.println("Không tìm thấy seat cho mã: " + s);
+                        }
                     }
                 }
             }
@@ -301,7 +308,18 @@ public String showPaymentSuccess(HttpServletRequest request,
             // Thanh toán thất bại hoặc Hủy -> Xóa ghế đã giữ
             System.out.println("Thanh toán thất bại. Đang xóa ghế tạm...");
             for (String s : listSeatIds) {
-                if (!s.isEmpty()) seatsService.deleteSeat(Integer.parseInt(s));
+                if (s.isEmpty()) continue;
+
+                try {
+                    seatsService.deleteSeat(Integer.parseInt(s));
+                } catch (NumberFormatException nfe) {
+                    Seats seat = seatsService.getSeatByTripIdAndSeatCode(tripId, s);
+                    if (seat != null) {
+                        seatsService.deleteSeat(seat.getId());
+                    } else {
+                        System.out.println("Không thể xóa seat, mã không hợp lệ: " + s);
+                    }
+                }
             }
         }
     } catch (Exception e) {

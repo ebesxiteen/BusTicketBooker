@@ -80,6 +80,11 @@ public List<Integer> addSeats(AddSeatDTO addSeatDTO) {
     }
 
     @Override
+    public Seats getSeatByTripIdAndSeatCode(Integer tripId, String seatCode) {
+        return seatsRepository.findByTripIdAndSeatCode(tripId, seatCode);
+    }
+
+    @Override
     public void deleteSeat(int id) {
         try {
             seatsRepository.deleteById(id);

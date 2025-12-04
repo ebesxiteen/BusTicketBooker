@@ -9,8 +9,7 @@
 </head>
 <body>
 <div layout:fragment="profileContent"
-     id="ticket-history-root"
-     th:attr="data-cancel-api=@{/api/tickets/cancel-ticket}">
+     id="ticket-history-root">
     <main class="w-full p-8 bg-white rounded-xl shadow-lg border border-gray-200">
         <h2 class="text-3xl font-bold text-gray-800 border-b pb-3 mb-6">
             <i class="fas fa-history text-emerald-600 mr-2"></i>Lịch Sử Đặt Vé
@@ -81,9 +80,6 @@
                         class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Số tiền</th>
                     <th scope="col"
                         class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Trạng thái</th>
-                    <!-- CỘT MỚI: THAO TÁC -->
-                    <th scope="col"
-                        class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider border">Thao tác</th>
                 </tr>
                 </thead>
 
@@ -110,22 +106,6 @@
                         <span th:text="${ticket.ticketStatus}"></span>
                     </td>
 
-                    <!-- Ô THAO TÁC -->
-                    <td class="px-6 py-4 text-center text-sm border">
-    <!-- Chỉ cho hủy nếu đang BOOKED -->
-    <button type="button"
-            th:if="${ticket.ticketStatus.name() == 'BOOKED'}"
-            class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-lg shadow-sm transition btn-cancel-ticket"
-            th:attr="data-ticket-id=${ticket.id}">
-        Hủy vé
-    </button>
-
-    <span th:if="${ticket.ticketStatus.name() != 'BOOKED'}"
-          class="text-xs text-gray-400 italic">
-        --
-    </span>
-</td>
-
                 </tr>
                 </tbody>
             </table>
@@ -134,57 +114,6 @@
     </main>
 </div>
 
-<!-- =========== SCRIPT HỦY VÉ =========== -->
-
-<!-- URL API hủy vé (Thymeleaf sẽ tự thêm /greenbus nếu có context-path) -->
-<script th:inline="javascript">
-    const CANCEL_TICKET_API = /*[[@{/api/tickets/cancel-ticket}]]*/ "/api/tickets/cancel-ticket";
-
-    async function cancelTicket(ticketId) {
-        // debug cho chắc: log ra **Console của trình duyệt**, không phải terminal
-        console.log("Đang hủy vé", ticketId);
-
-        if (!ticketId) {
-            alert("Không xác định được mã vé.");
-            return;
-        }
-
-        const ok = confirm('Bà có chắc muốn hủy vé #' + ticketId + ' không?');
-        if (!ok) {
-            return;
-        }
-
-        try {
-            const response = await fetch(CANCEL_TICKET_API, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                // Nếu TicketIdRequest có field "ticketId"
-                body: JSON.stringify({ ticketId: ticketId })
-                // Nếu class TicketIdRequest là { Integer id; } thì đổi thành:
-                // body: JSON.stringify({ id: ticketId })
-            });
-
-            if (!response.ok) {
-                alert("Hủy vé thất bại (HTTP " + response.status + ").");
-                return;
-            }
-
-            const result = await response.json(); // TicketApi.cancelTicket trả boolean
-            if (result === true) {
-                alert("Đã hủy vé #" + ticketId + " thành công.");
-                window.location.reload();
-            } else {
-                alert("Không thể hủy vé. Có thể vé đã được sử dụng hoặc xảy ra lỗi.");
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Có lỗi khi gọi API hủy vé.");
-        }
-    }
-</script>
-
-
 </body>
 </html>
+

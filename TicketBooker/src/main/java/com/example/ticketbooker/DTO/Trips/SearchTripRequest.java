@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class SearchTripRequest {
     private String departure;
     private String arrival;
+    private String keyword;
     private LocalDateTime departureDate;
     private int ticketQuantity;
 }

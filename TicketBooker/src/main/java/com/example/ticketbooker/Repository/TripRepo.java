@@ -45,6 +45,18 @@ Page<Trips> findByTripStatus(Enum tripStatus, Pageable pageable);
             @Param("seats") int seats
     );
 
+    @Query("SELECT t FROM Trips t JOIN t.route r WHERE " +
+           "(LOWER(r.arrivalLocation) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(r.departureLocation) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND t.departureTime >= :startDate " +
+           "AND t.availableSeats >= :seats " +
+           "ORDER BY t.departureTime ASC")
+    List<Trips> findTripsByKeyword(
+            @Param("keyword") String keyword,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("seats") int seats
+    );
+
     ArrayList<Trips> findAllById(int tripId);
     long countTripsByDepartureTimeBetween (LocalDateTime start, LocalDateTime end);
     @Modifying

@@ -108,12 +108,14 @@ public class MainController {
     public String searchTripsFromLink(
             @RequestParam(value = "arrival", required = false) String arrival,
             @RequestParam(value = "departure", required = false) String departure,
+            @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "date", required = false) String dateStr,
             Model model) {
 
         SearchTripRequest searchRequest = new SearchTripRequest();
         searchRequest.setArrival(arrival);
         searchRequest.setDeparture(departure);
+        searchRequest.setKeyword(keyword);
 
         if (dateStr == null || dateStr.isEmpty()) {
             searchRequest.setDepartureDate(LocalDateTime.now());
@@ -127,7 +129,10 @@ public class MainController {
         }
 
         ResponseTripDTO responseTripDTO = new ResponseTripDTO();
-        if (arrival != null && !arrival.isEmpty()) {
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        boolean hasArrival = arrival != null && !arrival.isBlank();
+
+        if (hasKeyword || hasArrival) {
             responseTripDTO = tripService.searchTrip(searchRequest);
         } else {
             responseTripDTO.setTripsCount(0);

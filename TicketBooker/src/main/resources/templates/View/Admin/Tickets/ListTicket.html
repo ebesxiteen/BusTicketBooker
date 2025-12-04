@@ -86,7 +86,29 @@
                 </tbody>
             </table>
         </div>
-        </div>
+         </div>
+
+    <div th:if="${ticketResponse.totalPages > 1}" class="flex justify-center items-center gap-2 pt-6">
+        <a th:if="${ticketResponse.currentPage > 1}"
+           th:href="@{/admin/tickets(page=${ticketResponse.currentPage - 2}, tripId=${param.tripId})}"
+           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+
+        <span th:each="i : ${#numbers.sequence(1, ticketResponse.totalPages)}">
+            <a th:if="${i >= ticketResponse.currentPage - 2 and i <= ticketResponse.currentPage + 2}"
+               th:href="@{/admin/tickets(page=${i - 1}, tripId=${param.tripId})}"
+               th:class="${i == ticketResponse.currentPage ? 'bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition' : 'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition'}">
+                <span th:text="${i}"></span>
+            </a>
+        </span>
+
+        <a th:if="${ticketResponse.currentPage < ticketResponse.totalPages}"
+           th:href="@{/admin/tickets(page=${ticketResponse.currentPage}, tripId=${param.tripId})}"
+           class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
 </div>
 <th:block layout:fragment="scripts">
     <script type="text/javascript" th:src="@{/js/TicketManagement.js}"></script>

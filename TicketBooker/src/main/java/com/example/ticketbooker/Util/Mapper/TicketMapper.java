@@ -28,6 +28,8 @@ public class TicketMapper {
     if (entity.getSeats() != null && !entity.getSeats().isEmpty()) {
         seatCodes = entity.getSeats().stream()
                 .map(Seats::getSeatCode)
+                .distinct()
+                .sorted()
                 .collect(Collectors.joining(", "));
     }
 

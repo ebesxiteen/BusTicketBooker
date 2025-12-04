@@ -31,6 +31,8 @@ public interface TicketService {
     
     TicketResponse getAllTickets(Pageable pageable);
     TicketResponse getTicketsByTripId(int tripId, Pageable pageable);
+    TicketResponse getTicketsByStatus(TicketStatus status, Pageable pageable);
+    TicketResponse getTicketsByTripIdAndStatus(int tripId, TicketStatus status, Pageable pageable);
     
     ByteArrayInputStream exportTicketsToExcelByTripId(int tripId);
     ByteArrayInputStream exportAllTicketsToExcel();

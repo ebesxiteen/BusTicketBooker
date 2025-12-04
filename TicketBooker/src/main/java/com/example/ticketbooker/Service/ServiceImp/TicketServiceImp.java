@@ -346,6 +346,18 @@ public boolean updateTicket(UpdateTicketRequest dto) {
         return new TicketResponse(ticketPage);
     }
 
+      @Override
+    public TicketResponse getTicketsByStatus(TicketStatus status, Pageable pageable) {
+        Page<Tickets> ticketPage = ticketRepository.findAllByTicketStatus(status, pageable);
+        return new TicketResponse(ticketPage);
+    }
+
+    @Override
+    public TicketResponse getTicketsByTripIdAndStatus(int tripId, TicketStatus status, Pageable pageable) {
+        Page<Tickets> ticketPage = ticketRepository.findAllByTicketStatusAndTripId(status, tripId, pageable);
+        return new TicketResponse(ticketPage);
+    }
+
     // --- GIỮ NGUYÊN CÁC HÀM EXCEL (KHÔNG ẢNH HƯỞNG) ---
     @Override
     public ByteArrayInputStream exportTicketsToExcelByTripId(int tripId) {

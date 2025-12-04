@@ -18,19 +18,32 @@
     </div>
 
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-        <form th:action="@{/admin/tickets}" method="get" class="flex flex-col md:flex-row gap-4 items-end">
+        <form th:action="@{/admin/tickets}" method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div class="flex-1 w-full">
                 <label for="tripId" class="block text-sm font-medium text-gray-700 mb-1">Lọc theo chuyến xe:</label>
                 <select name="tripId" id="tripId" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                     <option value="" th:text="'-- Tất cả các chuyến --'"></option>
-                    <option th:each="trip : ${trips}" th:value="${trip.id}" 
+                    <option th:each="trip : ${trips}" th:value="${trip.id}"
                             th:text="${'#' + trip.id + ' | ' + trip.departureStation + ' ➝ ' + trip.arrivalStation}"
                             th:selected="${param.tripId != null and param.tripId.equals(trip.id)}"></option>
                 </select>
             </div>
-            <button type="submit" class="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition shadow-sm w-full md:w-auto">
-                Lọc
-            </button>
+            
+            <div class="flex-1 w-full">
+                <label for="ticketStatus" class="block text-sm font-medium text-gray-700 mb-1">Trạng thái vé:</label>
+                <select name="ticketStatus" id="ticketStatus" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    <option value="" th:text="'-- Tất cả trạng thái --'"></option>
+                    <option th:each="status : ${ticketStatuses}" th:value="${status}"
+                            th:text="${status}"
+                            th:selected="${selectedTicketStatus != null and selectedTicketStatus.name() == status.name()}"></option>
+                </select>
+            </div>
+
+            <div class="flex md:justify-end">
+                <button type="submit" class="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition shadow-sm w-full md:w-auto">
+                    Lọc
+                </button>
+            </div>
         </form>
     </div>
 
@@ -90,21 +103,21 @@
 
     <div th:if="${ticketResponse.totalPages > 1}" class="flex justify-center items-center gap-2 pt-6">
         <a th:if="${ticketResponse.currentPage > 1}"
-           th:href="@{/admin/tickets(page=${ticketResponse.currentPage - 2}, tripId=${param.tripId})}"
+           th:href="@{/admin/tickets(page=${ticketResponse.currentPage - 2}, tripId=${param.tripId}, ticketStatus=${param.ticketStatus})}"
            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
             <i class="fas fa-chevron-left"></i>
         </a>
 
         <span th:each="i : ${#numbers.sequence(1, ticketResponse.totalPages)}">
             <a th:if="${i >= ticketResponse.currentPage - 2 and i <= ticketResponse.currentPage + 2}"
-               th:href="@{/admin/tickets(page=${i - 1}, tripId=${param.tripId})}"
-               th:class="${i == ticketResponse.currentPage ? 'bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition' : 'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition'}">
+                th:href="@{/admin/tickets(page=${i - 1}, tripId=${param.tripId}, ticketStatus=${param.ticketStatus})}"
+                th:class="${i == ticketResponse.currentPage ? 'bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition' : 'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition'}">
                 <span th:text="${i}"></span>
             </a>
         </span>
 
         <a th:if="${ticketResponse.currentPage < ticketResponse.totalPages}"
-           th:href="@{/admin/tickets(page=${ticketResponse.currentPage}, tripId=${param.tripId})}"
+           th:href="@{/admin/tickets(page=${ticketResponse.currentPage}, tripId=${param.tripId}, ticketStatus=${param.ticketStatus})}"
            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
             <i class="fas fa-chevron-right"></i>
         </a>

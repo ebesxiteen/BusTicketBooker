@@ -40,6 +40,8 @@ public interface TicketRepo extends JpaRepository<Tickets, Integer> {
     int countTicketsByPaymentTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     Page<Tickets> findAllByTripId(int tripId, Pageable pageable);
+    Page<Tickets> findAllByTicketStatus(TicketStatus status, Pageable pageable);
+    Page<Tickets> findAllByTicketStatusAndTripId(TicketStatus status, int tripId, Pageable pageable);
     
     List<Tickets> findAllByTripId(int tripId);
     

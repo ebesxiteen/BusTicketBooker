@@ -24,6 +24,7 @@ import com.example.ticketbooker.DTO.Trips.ResponseTripDTO;
 import com.example.ticketbooker.Entity.Trips;
 import com.example.ticketbooker.Service.TicketService;
 import com.example.ticketbooker.Service.TripService;
+import com.example.ticketbooker.Util.Enum.TicketStatus;
 import com.example.ticketbooker.Util.Mapper.TicketMapper;
 
 @Controller
@@ -38,21 +39,27 @@ public class TicketController {
 
     // 1. Hiển thị danh sách vé
     @GetMapping
-    public String allTickets(Model model, 
-                            @PageableDefault(size = 10) Pageable pageable, 
-                            @RequestParam(value = "tripId", required = false) Integer tripId) {
+    public String allTickets(Model model,
+                            @PageableDefault(size = 10) Pageable pageable,
+                            @RequestParam(value = "tripId", required = false) Integer tripId,
+                            @RequestParam(value = "ticketStatus", required = false) TicketStatus ticketStatus) {
         
         ResponseTripDTO responseTripDTO = tripService.getAllTrips();
         List<Trips> trips = responseTripDTO.getListTrips();
         TicketResponse ticketResponse;
 
-        if (tripId != null) {
+        if (tripId != null && ticketStatus != null) {
+            ticketResponse = ticketService.getTicketsByTripIdAndStatus(tripId, ticketStatus, pageable);
+        } else if (tripId != null) {
             ticketResponse = ticketService.getTicketsByTripId(tripId, pageable);
-        } else {
-            ticketResponse = ticketService.getAllTickets(pageable);
+        } else if (ticketStatus != null) {
+            ticketResponse = ticketService.getTicketsByStatus(ticketStatus, pageable);
         }
 
         model.addAttribute("trips", trips);
+        model.addAttribute("ticketStatuses", TicketStatus.values());
+        model.addAttribute("selectedTicketStatus", ticketStatus);
+        model.addAttribute("ticketResponse", ticketResponse);
         model.addAttribute("ticketResponse", ticketResponse);
         return "View/Admin/Tickets/ListTicket";
     }
@@ -70,7 +77,7 @@ public class TicketController {
             updateRequest = TicketMapper.toUpdateDTO(response.getListTickets().get(0));
         }
         
-        model.addAttribute("updateUserForm", updateRequest); // Lưu ý: Tên model attribute là updateUserForm? Nên đổi thành updateTicketForm cho đỡ nhầm
+        model.addAttribute("updateRequest", updateRequest);
         return "View/Admin/Tickets/TicketDetails";
     }
 

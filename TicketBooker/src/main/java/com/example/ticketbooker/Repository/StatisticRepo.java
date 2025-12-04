@@ -14,7 +14,7 @@ import java.util.List;
 public interface StatisticRepo extends JpaRepository<Tickets,Long> {
     @Query(value = "SELECT DATE(i.paymentTime) AS paymentDate, " +
             "COUNT(DISTINCT t.invoiceId) AS totalTickets, " +
-            "COUNT(i.invoiceId) AS totalInvoices, " +
+            "COUNT(DISTINCT CASE WHEN i.paymentStatus = 'PAID' THEN i.invoiceId END) AS totalInvoices, " +
             "SUM(CASE WHEN i.paymentStatus = 'PAID' THEN i.totalAmount ELSE 0 END) AS totalRevenue " +
             "FROM Tickets t " +
             "JOIN Invoices i ON t.invoiceId = i.invoiceId " +
@@ -38,5 +38,10 @@ public interface StatisticRepo extends JpaRepository<Tickets,Long> {
             "WHERE FUNCTION('DATE', t.invoice.paymentTime) BETWEEN :startDate AND :endDate " +
             "AND t.ticketStatus IN ('BOOKED')")
     int countUncompletedOrders(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(DISTINCT t.invoice.id) FROM Tickets t " +
+            "WHERE FUNCTION('DATE', t.invoice.paymentTime) BETWEEN :startDate AND :endDate " +
+            "AND t.ticketStatus = 'CANCELLED'")
+    int countCancelledOrders(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 }

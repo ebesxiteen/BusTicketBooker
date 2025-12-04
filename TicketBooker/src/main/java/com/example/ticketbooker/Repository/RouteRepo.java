@@ -14,7 +14,6 @@ import com.example.ticketbooker.Util.Enum.RouteStatus;
 
 @Repository
 public interface RouteRepo extends JpaRepository<Routes, Integer> {
-    Routes findById(int id);
     ArrayList<Routes> findAll();
     Page<Routes> findAll(Pageable pageable);
     ArrayList<Routes> findByStatus(RouteStatus status);

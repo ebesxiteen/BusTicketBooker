@@ -54,4 +54,8 @@ public class StatisticsService {
     public int countUncompletedOrders(LocalDate startDate, LocalDate endDate) {
         return statisticRepo.countUncompletedOrders(startDate, endDate);
     }
+
+    public int countCancelledOrders(LocalDate startDate, LocalDate endDate) {
+        return statisticRepo.countCancelledOrders(startDate, endDate);
+    }
 }

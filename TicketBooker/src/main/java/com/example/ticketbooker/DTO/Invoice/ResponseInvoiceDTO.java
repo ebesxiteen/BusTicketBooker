@@ -1,10 +1,11 @@
 package com.example.ticketbooker.DTO.Invoice;
 
+import java.util.ArrayList;
+
 import com.example.ticketbooker.Entity.Invoices;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.ArrayList;
 @Data
 @Builder
 public class ResponseInvoiceDTO {
@@ -28,5 +29,13 @@ public class ResponseInvoiceDTO {
         this.totalPages = 0;
         this.currentPage = 0;
         this.pageSize = 0;
+    }
+    
+    public ResponseInvoiceDTO(int invoicesCount, ArrayList<Invoices> listInvoices, int totalPages, int currentPage, int pageSize) {
+        this.invoicesCount = invoicesCount;
+        this.listInvoices = listInvoices;
+        this.totalPages = totalPages;
+        this.currentPage = currentPage;
+        this.pageSize = pageSize;
     }
 }

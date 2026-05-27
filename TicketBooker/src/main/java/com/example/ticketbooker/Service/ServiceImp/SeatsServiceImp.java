@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ticketbooker.DTO.Seats.AddSeatDTO;
 import com.example.ticketbooker.Entity.Seats;
@@ -28,6 +30,7 @@ public class SeatsServiceImp implements SeatsService {
     private TripService tripService;
 
    @Override
+@Transactional
 public List<Integer> addSeats(AddSeatDTO addSeatDTO) {
     List<Integer> seatIds = new ArrayList<>();
 
@@ -51,12 +54,16 @@ public List<Integer> addSeats(AddSeatDTO addSeatDTO) {
             throw new IllegalArgumentException("Ghế " + seatCode + " đã được đặt, vui lòng chọn ghế khác.");
         }
 
-        Seats seat = Seats.builder()
-                .trip(trip)
-                .seatCode(seatCode)
-                .build();
-        Seats savedSeat = seatsRepository.save(seat);
-        seatIds.add(savedSeat.getId());
+        try {
+            Seats seat = Seats.builder()
+                    .trip(trip)
+                    .seatCode(seatCode)
+                    .build();
+            Seats savedSeat = seatsRepository.saveAndFlush(seat);
+            seatIds.add(savedSeat.getId());
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException("Seat " + seatCode + " is already booked.", e);
+        }
     }
 
     return seatIds;
@@ -89,7 +96,7 @@ public List<Integer> addSeats(AddSeatDTO addSeatDTO) {
         try {
             seatsRepository.deleteById(id);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalArgumentException("Seat not found with id: " + id, e);
         }
     }
 }

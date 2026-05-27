@@ -22,6 +22,7 @@ public class UpdateTicketRequest {
     private Invoices invoice;
     private String customerName;
     private String customerPhone;
+    @Builder.Default
     private List<Integer> seat = new java.util.ArrayList<>();
     private String qrCode;
     private TicketStatus ticketStatus;

@@ -2,7 +2,8 @@ package com.example.ticketbooker.Controller.Api;
 
 import java.time.format.DateTimeFormatter;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,136 +24,117 @@ import com.example.ticketbooker.Service.OutSource.EmailService;
 import com.example.ticketbooker.Util.Enum.TicketStatus;
 import com.example.ticketbooker.Util.Mapper.TicketMapper;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/tickets")
 public class TicketApi {
+    private static final Logger log = LoggerFactory.getLogger(TicketApi.class);
 
-    @Autowired
-    private TicketService ticketsService;
+    private final TicketService ticketsService;
+    private final EmailService emailService;
 
-    @Autowired
-    private EmailService emailService;
+    public TicketApi(TicketService ticketsService, EmailService emailService) {
+        this.ticketsService = ticketsService;
+        this.emailService = emailService;
+    }
 
-    // 1. Hủy vé (SỬA LOGIC)
     @DeleteMapping("/cancel-ticket")
-    public boolean cancelTicket(@RequestBody TicketIdRequest id) {
-        
-        System.out.println("Vao ham cancelTicket voi id: " + id.getId());
+    public ResponseEntity<Boolean> cancelTicket(@RequestBody TicketIdRequest id) {
         try {
-            // Bước 1: Lấy thông tin vé hiện tại (Trả về Response chứa List DTO)
-            TicketResponse response = this.ticketsService.getTicketById(id);
-            System.out.println("Response khi lấy vé: " + response);
-
-            // Bước 2: Kiểm tra xem có vé không
-            if (response.getTicketsCount() > 0) {
-                // Lấy DTO đầu tiên
-                TicketDTO ticketDTO = response.getListTickets().get(0);
-
-                if (ticketDTO.getTicketStatus() == TicketStatus.USED) {
-                    return false;
-                }
-
-                // Bước 3: Convert DTO -> UpdateRequest (Dùng hàm mới viết trong Mapper)
-                UpdateTicketRequest updated = TicketMapper.toUpdateDTO(ticketDTO);
-                
-                // Bước 4: Đổi trạng thái và cập nhật
-                updated.setTicketStatus(TicketStatus.CANCELLED);
-                boolean result = this.ticketsService.updateTicket(updated);
-
- if (result) {
-                    // ===== GỬI EMAIL HỦY VÉ Ở ĐÂY =====
-
-                    // Lấy info người đặt
-                    String customerName = ticketDTO.getBooker() != null
-                            ? ticketDTO.getBooker().getFullName()
-                            : "Quý khách";
-
-                    String email = ticketDTO.getBooker() != null
-                            ? ticketDTO.getBooker().getEmail()
-                            : null;
-
-                    if (email != null) {
-
-                        // Tuyến đường
-                        String route = ticketDTO.getTrip().getRoute().getDepartureLocation()
-                                + " → "
-                                + ticketDTO.getTrip().getRoute().getArrivalLocation();
-
-                        // Format thời gian khởi hành cho đẹp
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                        String formattedDeparture = ticketDTO.getTrip().getDepartureTime().format(formatter);
-
-                        // Danh sách số ghế (chuỗi như: A01, A02)
-                        String seatList = (ticketDTO.getSeatCodes() != null
-                                ? ticketDTO.getSeatCodes()
-                                : "Không xác định");
-
-                        // Biển số xe (nếu cần, có thể bỏ nếu chưa map Bus trong Trip)
-                        String licensePlate = ticketDTO.getTrip().getBus() != null
-                                ? ticketDTO.getTrip().getBus().getLicensePlate()
-                                : "Đang cập nhật";
-
-                        String html = ""
-                                + "<html><body style='font-family:Arial, sans-serif; line-height:1.6;'>"
-                                + "<p>Xin chào <b>" + customerName + "</b>,</p>"
-                                + "<p>Vé của bạn đã được "
-                                + "<span style='color:red;font-weight:bold;'>HỦY THÀNH CÔNG</span>.</p>"
-                                + "<p>Thông tin vé đã hủy:</p>"
-                                + "<ul>"
-                                + "<li><b>Mã vé:</b> " + ticketDTO.getId() + "</li>"
-                                + "<li><b>Tuyến đường:</b> " + route + "</li>"
-                                + "<li><b>Thời gian khởi hành:</b> " + formattedDeparture + "</li>"
-                                + "<li><b>Biển số xe:</b> " + licensePlate + "</li>"
-                                + "<li><b>Số ghế:</b> " + seatList + "</li>"
-                                + "</ul>"
-                                + "<p>Nếu đây không phải là yêu cầu của bạn, vui lòng liên hệ tổng đài "
-                                + "<b>1900 1990</b>.</p>"
-                                + "<p>Trân trọng,<br/>GreenBus Line</p>"
-                                + "</body></html>";
-
-                        emailService.sendHtmlContent(
-                                email,
-                                "Hủy vé thành công - GreenBus",
-                                html
-                        );
-                    } else {
-                        System.out.println("Không tìm thấy email booker, bỏ qua gửi mail hủy vé.");
-                    }
-                }
-
-                return result;
+            if (id == null || id.getId() <= 0) {
+                return ResponseEntity.badRequest().body(false);
             }
+
+            TicketResponse response = ticketsService.getTicketById(id);
+            if (response.getTicketsCount() <= 0) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
+            }
+
+            TicketDTO ticketDTO = response.getListTickets().get(0);
+            if (ticketDTO.getTicketStatus() == TicketStatus.USED) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(false);
+            }
+
+            UpdateTicketRequest updated = TicketMapper.toUpdateDTO(ticketDTO);
+            updated.setTicketStatus(TicketStatus.CANCELLED);
+            boolean result = ticketsService.updateTicket(updated);
+
+            if (result) {
+                sendCancelEmail(ticketDTO);
+                return ResponseEntity.ok(true);
+            }
+
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(false);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to cancel ticket", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
         }
-        return false;
     }
 
-    // 2. Tạo vé mới
     @PostMapping("/create-ticket")
-    public boolean createTicket(@RequestBody AddTicketRequest request) {
+    public ResponseEntity<Boolean> createTicket(@Valid @RequestBody AddTicketRequest request) {
         try {
-            boolean result = this.ticketsService.addTicket(request);
-            return result;
+            boolean result = ticketsService.addTicket(request);
+            if (!result) {
+                return ResponseEntity.badRequest().body(false);
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(true);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return false;
+            log.error("Failed to create ticket", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
         }
     }
 
-    // 3. Lấy thông tin thanh toán
     @PostMapping("/payment-infor")
     public ResponseEntity<PaymentInforResponse> paymentInfor(@RequestBody PaymentInforRequest request) {
         try {
             PaymentInforResponse response = ticketsService.getPaymentInfo(request);
             if (response == null) {
-                System.out.println("Khong tim thay thong tin thanh toan");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Failed to get payment information", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    private void sendCancelEmail(TicketDTO ticketDTO) {
+        String email = ticketDTO.getBooker() != null ? ticketDTO.getBooker().getEmail() : null;
+        if (email == null || email.isBlank()) {
+            log.info("Skip cancel email because booker email is missing for ticket {}", ticketDTO.getId());
+            return;
+        }
+
+        String customerName = ticketDTO.getBooker().getFullName() != null
+                ? ticketDTO.getBooker().getFullName()
+                : "Quy khach";
+        String route = ticketDTO.getTrip().getRoute().getDepartureLocation()
+                + " -> "
+                + ticketDTO.getTrip().getRoute().getArrivalLocation();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String formattedDeparture = ticketDTO.getTrip().getDepartureTime().format(formatter);
+        String seatList = ticketDTO.getSeatCodes() != null ? ticketDTO.getSeatCodes() : "Khong xac dinh";
+        String licensePlate = ticketDTO.getTrip().getBus() != null
+                ? ticketDTO.getTrip().getBus().getLicensePlate()
+                : "Dang cap nhat";
+
+        String html = ""
+                + "<html><body style='font-family:Arial, sans-serif; line-height:1.6;'>"
+                + "<p>Xin chao <b>" + customerName + "</b>,</p>"
+                + "<p>Ve cua ban da duoc <b style='color:red;'>huy thanh cong</b>.</p>"
+                + "<ul>"
+                + "<li><b>Ma ve:</b> " + ticketDTO.getId() + "</li>"
+                + "<li><b>Tuyen duong:</b> " + route + "</li>"
+                + "<li><b>Thoi gian khoi hanh:</b> " + formattedDeparture + "</li>"
+                + "<li><b>Bien so xe:</b> " + licensePlate + "</li>"
+                + "<li><b>So ghe:</b> " + seatList + "</li>"
+                + "</ul>"
+                + "<p>Neu day khong phai yeu cau cua ban, vui long lien he tong dai <b>1900 1990</b>.</p>"
+                + "<p>Tran trong,<br/>GreenBus Line</p>"
+                + "</body></html>";
+
+        emailService.sendHtmlContent(email, "Huy ve thanh cong - GreenBus", html);
     }
 }

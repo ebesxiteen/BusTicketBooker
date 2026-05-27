@@ -16,6 +16,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +49,8 @@ import com.example.ticketbooker.Util.Mapper.TicketMapper;
 
 @Service
 public class TicketServiceImp implements TicketService {
+    private static final Logger log = LoggerFactory.getLogger(TicketServiceImp.class);
+
     @Autowired
     private TicketRepo ticketRepository;
     @Autowired
@@ -62,8 +66,22 @@ public class TicketServiceImp implements TicketService {
 
 
    @Override
+@Transactional
 public boolean addTicket(AddTicketRequest dto) {
     try {
+        if (dto == null) {
+            throw new IllegalArgumentException("Ticket request is required");
+        }
+        if (dto.getTripId() == null) {
+            throw new IllegalArgumentException("Trip ID is required");
+        }
+        if (dto.getSeat() == null || dto.getSeat().isEmpty()) {
+            throw new IllegalArgumentException("At least one seat is required");
+        }
+        if (dto.getInvoices() == null || dto.getInvoices().getId() == null) {
+            throw new IllegalArgumentException("Invoice is required");
+        }
+
         // 1. Lấy trip
         Trips trip = tripRepos.findById(dto.getTripId())
                 .orElseThrow(() -> new RuntimeException("Trip not found with id: " + dto.getTripId()));
@@ -75,7 +93,8 @@ public boolean addTicket(AddTicketRequest dto) {
         }
 
         // 3. Lấy invoice (đã tạo ở /thankyou)
-        Invoices invoice = dto.getInvoices();
+        Invoices invoice = invoiceRepo.findById(dto.getInvoices().getId())
+                .orElseThrow(() -> new RuntimeException("Invoice not found with id: " + dto.getInvoices().getId()));
 
         // 4. Lấy danh sách ghế
         List<Seats> seatEntities = new java.util.ArrayList<>();
@@ -92,7 +111,7 @@ public boolean addTicket(AddTicketRequest dto) {
                 .customerName(dto.getCustomerName())
                 .customerPhone(dto.getCustomerPhone())
                 .seats(seatEntities)          // ❗ dùng List<Seat>
-                .ticketStatus(dto.getTicketStatus())
+                .ticketStatus(dto.getTicketStatus() != null ? dto.getTicketStatus() : TicketStatus.BOOKED)
                 .invoice(invoice)             // 1 invoice chung
                 .build();
 
@@ -150,7 +169,7 @@ String html = ""
 
         return true;
     } catch (Exception e) {
-        e.printStackTrace();
+        log.error("Failed to create ticket", e);
         return false;
     }
 }
@@ -179,7 +198,7 @@ String html = ""
             // 2. Cập nhật trip nếu tripId khác 0
             if (dto.getTripId() != 0) {
                 Optional<Trips> trip = tripRepos.findById(dto.getTripId());
-                if (trip == null) {
+                if (trip.isEmpty()) {
                     throw new RuntimeException("Trip not found with id: " + dto.getTripId());
                 }
             }
@@ -256,7 +275,7 @@ String html = ""
             return true;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to update ticket {}", dto != null ? dto.getId() : null, e);
             return false;
         }
     }
@@ -268,19 +287,18 @@ String html = ""
             // toResponseDTO đã được viết lại để nhận List<Entity> và trả về Response chứa DTO
             return TicketMapper.toResponseDTO(this.ticketRepository.findAll());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Failed to get all tickets", e);
             return new TicketResponse();
         }
     }
 
     @Override
     public TicketResponse getTicketById(TicketIdRequest dto) {
-        System.out.println("Vao ham getTicketById voi id: " + dto.getId());
         try {
             // findAllById trả về List, Mapper sẽ xử lý
             return TicketMapper.toResponseDTO(this.ticketRepository.findAllById(Collections.singletonList(dto.getId())));
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Failed to get ticket by id {}", dto != null ? dto.getId() : null, e);
             return new TicketResponse();
         }
     }
@@ -296,16 +314,16 @@ String html = ""
                     if (ticket.getCustomerPhone().equals(request.getCustomerPhone())) {
                         return TicketMapper.toPaymentInfor(ticket);
                     } else {
-                        System.out.println("Số điện thoại không trùng khớp.");
+                        log.info("Customer phone does not match ticket {}", request.getTicketId());
                     }
                 } else {
-                    System.out.println("Trạng thái ticket không hợp lệ: " + ticket.getTicketStatus());
+                    log.info("Ticket {} has invalid status for payment info: {}", request.getTicketId(), ticket.getTicketStatus());
                 }
             } else {
-                System.out.println("Không tìm thấy ticket với ID: " + request.getTicketId());
+                log.info("Ticket {} was not found for payment info lookup", request.getTicketId());
             }
         } catch (Exception e) {
-            System.out.println("Lỗi trong quá trình xử lý: " + e.getMessage());
+            log.error("Failed to get payment info for ticket {}", request != null ? request.getTicketId() : null, e);
         }
         return null;
     }
@@ -317,7 +335,7 @@ String html = ""
             List<Tickets> tickets = ticketRepository.findAllByBookerId(userId); 
             return TicketMapper.toResponseDTO(tickets);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Failed to get tickets by user id {}", userId, e);
             return new TicketResponse();
         }
     }
@@ -328,7 +346,7 @@ String html = ""
             List<Tickets> tickets = ticketRepository.searchTickets(accountId, ticketId, departureDate, route, status);
             return TicketMapper.toResponseDTO(tickets);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Failed to search tickets", e);
             return new TicketResponse();
         }
     }
@@ -494,7 +512,7 @@ for (Tickets ticket : tickets) {
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to export tickets to Excel", e);
             return null;
         }
     }

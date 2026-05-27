@@ -7,11 +7,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.mock.web.MockHttpServletRequest;
 
+import com.example.ticketbooker.DTO.ApiError;
 import com.example.ticketbooker.Util.GlobalExceptionHandler;
 import com.example.ticketbooker.Util.RedirectToPasswordCreationException;
 
@@ -41,7 +42,9 @@ class GlobalExceptionHandlerTest {
                 new NoHandlerFoundException("GET", "/api/missing", null), new ExtendedModelMap(), request);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("API not found"));
+        ApiError body = (ApiError) response.getBody();
+        assertEquals("NOT_FOUND", body.code());
+        assertEquals("API not found", body.message());
     }
 
     @Test
@@ -53,7 +56,9 @@ class GlobalExceptionHandlerTest {
                 new IllegalStateException("boom"), new ExtendedModelMap(), request);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Xin lỗi"));
+        ApiError body = (ApiError) response.getBody();
+        assertEquals("INTERNAL_SERVER_ERROR", body.code());
+        assertEquals("Internal server error", body.message());
     }
 
     @Test

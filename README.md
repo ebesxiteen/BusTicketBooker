@@ -2,76 +2,76 @@
 
 TicketBooker là hệ thống quản lý đặt vé xe khách xây dựng bằng Spring Boot. Ứng dụng xử lý luồng tìm chuyến, chọn ghế, tạo hóa đơn, tạo vé, thanh toán và quản trị dữ liệu vận hành.
 
-## Tech Stack
+## Công nghệ sử dụng
 
-| Layer | Technology |
+| Lớp | Công nghệ |
 | --- | --- |
 | Backend | Java 21, Spring Boot 3.3.4, Spring MVC |
 | Persistence | Spring Data JPA, Hibernate, MySQL 8 |
 | Security | Spring Security, OAuth2 Client |
 | View | Thymeleaf, Thymeleaf Layout Dialect, Thymeleaf Security |
-| Integration | VNPay, ZaloPay, SMTP Mail, OpenAI API |
+| Tích hợp ngoài | VNPay, ZaloPay, SMTP Mail, OpenAI API |
 | Build/Test | Maven, JUnit, Spring Security Test, JaCoCo |
-| Utilities | Lombok, Apache POI, Jackson, Apache HttpClient |
+| Tiện ích | Lombok, Apache POI, Jackson, Apache HttpClient |
 
-## Core Modules
+## Module chính
 
-| Module | Responsibility |
+| Module | Trách nhiệm |
 | --- | --- |
-| `Controller` | MVC pages, admin screens, REST APIs, payment callbacks |
-| `Service` | Business contracts for users, routes, buses, drivers, trips, seats, invoices, tickets |
-| `Service/ServiceImp` | Business implementations and transaction orchestration |
-| `Repository` | Spring Data JPA access layer |
-| `Entity` | JPA mappings for relational schema |
-| `DTO` | Request/response models for API and view binding |
-| `Config` | Security, filters, external service configuration |
-| `Util` | Mappers, enums, exception handling, scheduled cleanup, helpers |
+| `Controller` | Xử lý trang MVC, màn hình quản trị, REST API và callback thanh toán |
+| `Service` | Định nghĩa nghiệp vụ cho người dùng, tuyến, xe, tài xế, chuyến, ghế, hóa đơn, vé |
+| `Service/ServiceImp` | Hiện thực nghiệp vụ và điều phối các luồng giao dịch |
+| `Repository` | Truy cập dữ liệu qua Spring Data JPA |
+| `Entity` | Mapping JPA với schema quan hệ |
+| `DTO` | Model request/response cho API và binding form |
+| `Config` | Cấu hình security, filter và dịch vụ tích hợp ngoài |
+| `Util` | Mapper, enum, exception handler, scheduler và helper |
 
-## Main Features
+## Tính năng chính
 
-- Search trips by route and departure date.
-- Seat availability lookup per trip.
-- Seat pre-booking before ticket creation.
-- Invoice creation and payment status update.
-- Multi-seat ticket booking through `ticket_seats`.
-- Ticket cancellation and booking history lookup.
-- Admin management for users, routes, buses, drivers, trips, tickets and invoices.
-- Authentication with local account and OAuth2 providers.
-- Payment integration with VNPay and ZaloPay.
-- Email sending for account and booking workflows.
-- Revenue, ticket and trip statistics.
+- Tìm chuyến theo tuyến và ngày khởi hành.
+- Tra cứu trạng thái ghế theo từng chuyến.
+- Giữ ghế tạm trước khi tạo vé.
+- Tạo hóa đơn và cập nhật trạng thái thanh toán.
+- Đặt vé nhiều ghế thông qua bảng trung gian `ticket_seats`.
+- Hủy vé và tra cứu lịch sử đặt vé.
+- Quản trị người dùng, tuyến, xe, tài xế, chuyến, vé và hóa đơn.
+- Đăng nhập bằng tài khoản local và OAuth2.
+- Tích hợp thanh toán VNPay và ZaloPay.
+- Gửi email cho các luồng tài khoản và đặt vé.
+- Thống kê doanh thu, vé và chuyến xe.
 
-## Database Architecture
+## Kiến trúc cơ sở dữ liệu
 
-The database uses a relational MySQL schema. Hibernate maps entities to existing tables; table generation is disabled with `spring.jpa.hibernate.ddl-auto=none`.
+Cơ sở dữ liệu sử dụng schema quan hệ trên MySQL. Hibernate chỉ mapping entity với bảng có sẵn; dự án tắt cơ chế tự sinh bảng bằng `spring.jpa.hibernate.ddl-auto=none`.
 
 ![ERD Diagram](docs/erd.png)
 
-### Core Tables
+### Bảng cốt lõi
 
-| Table | Purpose | Key Relationships |
+| Bảng | Vai trò | Quan hệ chính |
 | --- | --- | --- |
-| `Users` | User profile, login data, OAuth provider and role | One user can book many `Tickets` |
-| `Routes` | Departure location, arrival location, estimated time and route status | One route has many `Buses` and `Trips` |
-| `Driver` | Driver profile, license number and status | One driver can be assigned to many `Trips` |
-| `Buses` | Bus license plate, bus type, capacity and status | Belongs to `Routes`; assigned to many `Trips` |
-| `Trips` | Concrete trip schedule with route, bus, driver, price and seat count | Belongs to `Routes`, `Buses`, `Driver`; has many `Seats` and `Tickets` |
-| `Seats` | Seat codes scoped by trip | Unique constraint on `(tripId, seatCode)` |
-| `Invoices` | Total amount, payment method, payment time and payment status | Referenced by `Tickets` |
-| `Tickets` | Passenger booking record, QR code and ticket status | Belongs to `Trips`, `Users`, `Invoices` |
-| `ticket_seats` | Join table between tickets and seats | `UNIQUE(seatId)` prevents duplicated booking for the same seat |
+| `Users` | Hồ sơ người dùng, thông tin đăng nhập, OAuth provider và phân quyền | Một người dùng có thể đặt nhiều `Tickets` |
+| `Routes` | Điểm đi, điểm đến, thời gian dự kiến và trạng thái tuyến | Một tuyến có nhiều `Buses` và `Trips` |
+| `Driver` | Thông tin tài xế, số bằng lái và trạng thái hoạt động | Một tài xế có thể được gán vào nhiều `Trips` |
+| `Buses` | Biển số, loại xe, sức chứa và trạng thái xe | Thuộc `Routes`; được gán vào nhiều `Trips` |
+| `Trips` | Lịch chạy cụ thể theo tuyến, xe, tài xế, giá vé và số ghế còn trống | Thuộc `Routes`, `Buses`, `Driver`; có nhiều `Seats` và `Tickets` |
+| `Seats` | Mã ghế theo từng chuyến | Ràng buộc duy nhất `(tripId, seatCode)` |
+| `Invoices` | Tổng tiền, phương thức thanh toán, thời gian thanh toán và trạng thái thanh toán | Được tham chiếu bởi `Tickets` |
+| `Tickets` | Bản ghi đặt vé, thông tin hành khách, QR code và trạng thái vé | Thuộc `Trips`, `Users`, `Invoices` |
+| `ticket_seats` | Bảng trung gian giữa vé và ghế | `UNIQUE(seatId)` ngăn đặt trùng cùng một ghế |
 
-### Data Write Flows
+### Luồng ghi dữ liệu chính
 
-1. **Trip search**: client sends route/date filters to `/api/trips/search-trip`; service filters `Trips` by route, departure time and status.
-2. **Seat lookup**: client calls `/api/seats/{tripId}/booked`; service reads `Tickets`, `Seats` and `ticket_seats` to calculate unavailable seats.
-3. **Seat pre-booking**: client posts selected seats to `/api/seats/prebooking-seat`; service validates seat availability and stores selected seat IDs for the next booking step.
-4. **Invoice creation**: client posts payment metadata to `/api/invoices/create`; service creates `Invoices` with initial payment status.
-5. **Ticket creation**: client posts passenger, trip, invoice and seat data to `/api/tickets/create-ticket`; service creates `Tickets`, links seats through `ticket_seats` and updates available seats.
-6. **Payment update**: VNPay/ZaloPay callbacks or status checks update `Invoices.paymentStatus`.
-7. **Ticket cancellation**: client calls `/api/tickets/cancel-ticket`; service updates ticket status and related booking state.
+1. **Tìm chuyến**: client gửi bộ lọc tuyến/ngày đến `/api/trips/search-trip`; service lọc `Trips` theo tuyến, thời gian khởi hành và trạng thái.
+2. **Tra cứu ghế**: client gọi `/api/seats/{tripId}/booked`; service đọc `Tickets`, `Seats` và `ticket_seats` để xác định ghế không còn khả dụng.
+3. **Giữ ghế tạm**: client gửi danh sách ghế đến `/api/seats/prebooking-seat`; service kiểm tra tính khả dụng và lưu danh sách `seatId` cho bước đặt vé.
+4. **Tạo hóa đơn**: client gửi thông tin thanh toán đến `/api/invoices/create`; service tạo `Invoices` với trạng thái thanh toán ban đầu.
+5. **Tạo vé**: client gửi thông tin hành khách, chuyến, hóa đơn và ghế đến `/api/tickets/create-ticket`; service tạo `Tickets`, liên kết ghế qua `ticket_seats` và cập nhật số ghế còn trống.
+6. **Cập nhật thanh toán**: callback hoặc truy vấn trạng thái từ VNPay/ZaloPay cập nhật `Invoices.paymentStatus`.
+7. **Hủy vé**: client gọi `/api/tickets/cancel-ticket`; service cập nhật trạng thái vé và các dữ liệu đặt chỗ liên quan.
 
-## Project Structure
+## Cấu trúc thư mục
 
 ```text
 .
@@ -100,14 +100,14 @@ The database uses a relational MySQL schema. Hibernate maps entities to existing
 `-- .env.example
 ```
 
-## Prerequisites
+## Yêu cầu hệ thống
 
 - Java 21
 - Maven 3.9+
 - MySQL 8.0+
 - Git
 
-## Installation & Setup
+## Cài đặt và chạy dự án
 
 Clone repository:
 
@@ -116,59 +116,59 @@ git clone <repository-url>
 cd <repository-folder>
 ```
 
-Install dependencies and run tests:
+Cài đặt dependency và chạy test:
 
 ```bash
 mvn clean test
 ```
 
-Run application:
+Chạy ứng dụng:
 
 ```bash
 mvn spring-boot:run
 ```
 
-Application URL:
+URL ứng dụng:
 
 ```text
 http://localhost:8000/greenbus
 ```
 
-Admin pages are under:
+Trang quản trị:
 
 ```text
 http://localhost:8000/admin
 ```
 
-## Environment Configuration
+## Cấu hình môi trường
 
-Application configuration is loaded from `src/main/resources/application.properties`. Secrets are resolved from environment variables.
+Cấu hình chính nằm trong `src/main/resources/application.properties`. Các giá trị nhạy cảm được đọc từ biến môi trường.
 
-Create a local `.env` file from the sample:
+Tạo file `.env` từ file mẫu:
 
 ```bash
 cp .env.example .env
 ```
 
-Required variables:
+Các biến bắt buộc:
 
-| Variable | Description |
+| Biến | Mô tả |
 | --- | --- |
-| `DB_PASSWORD` | MySQL password for `spring.datasource.username` |
-| `MAIL_PASSWORD` | Gmail SMTP app password |
-| `GOOGLE_CLIENT_ID` | Google OAuth2 client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth2 client secret |
-| `FACEBOOK_CLIENT_ID` | Facebook OAuth2 client ID |
-| `FACEBOOK_CLIENT_SECRET` | Facebook OAuth2 client secret |
-| `GITHUB_CLIENT_ID` | GitHub OAuth2 client ID |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth2 client secret |
-| `VNPAY_TMN_CODE` | VNPay terminal code |
-| `VNPAY_HASH_SECRET` | VNPay hash secret |
-| `ZALO_APP_ID` | ZaloPay app ID |
-| `ZALO_KEY1` | ZaloPay signing key |
-| `OPENAI_API_KEY` | OpenAI API key |
+| `DB_PASSWORD` | Mật khẩu MySQL cho `spring.datasource.username` |
+| `MAIL_PASSWORD` | App password của Gmail SMTP |
+| `GOOGLE_CLIENT_ID` | Client ID OAuth2 Google |
+| `GOOGLE_CLIENT_SECRET` | Client secret OAuth2 Google |
+| `FACEBOOK_CLIENT_ID` | Client ID OAuth2 Facebook |
+| `FACEBOOK_CLIENT_SECRET` | Client secret OAuth2 Facebook |
+| `GITHUB_CLIENT_ID` | Client ID OAuth2 GitHub |
+| `GITHUB_CLIENT_SECRET` | Client secret OAuth2 GitHub |
+| `VNPAY_TMN_CODE` | Mã terminal VNPay |
+| `VNPAY_HASH_SECRET` | Secret ký request VNPay |
+| `ZALO_APP_ID` | App ID ZaloPay |
+| `ZALO_KEY1` | Khóa ký request ZaloPay |
+| `OPENAI_API_KEY` | API key OpenAI |
 
-Default database configuration:
+Cấu hình database mặc định:
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/ticketbooker
@@ -177,106 +177,106 @@ spring.datasource.password=${DB_PASSWORD}
 spring.jpa.hibernate.ddl-auto=none
 ```
 
-For local development without exporting environment variables globally, create `src/main/resources/application-local.properties` and run with:
+Nếu không muốn export biến môi trường toàn cục, tạo `src/main/resources/application-local.properties` và chạy:
 
 ```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-## Database Setup
+## Khởi tạo cơ sở dữ liệu
 
-Create schema:
+Tạo schema:
 
 ```bash
 mysql -u root -p < BusTicketManagement.sql
 ```
 
-Seed sample data:
+Seed dữ liệu mẫu:
 
 ```bash
 mysql -u root -p ticketbooker < insertdata.sql
 ```
 
-Run additional changes if needed:
+Chạy script bổ sung nếu cần:
 
 ```bash
 mysql -u root -p ticketbooker < alter.sql
 ```
 
-Verify database:
+Kiểm tra database:
 
 ```sql
 USE ticketbooker;
 SHOW TABLES;
 ```
 
-## API Endpoints
+## API endpoints
 
-| Method | Endpoint | Description |
+| Method | Endpoint | Mô tả |
 | --- | --- | --- |
-| `POST` | `/api/trips/search-trip` | Search trips by route and departure date |
-| `GET` | `/api/seats/{tripId}/booked` | Return booked seats of a trip |
-| `POST` | `/api/seats/prebooking-seat` | Validate and hold selected seats before booking |
-| `POST` | `/api/invoices/create` | Create invoice and return invoice data |
-| `PUT` | `/api/invoices/{id}/status` | Update payment status |
-| `POST` | `/api/tickets/create-ticket` | Create ticket and attach selected seats |
-| `DELETE` | `/api/tickets/cancel-ticket` | Cancel a booked ticket |
-| `POST` | `/payment/zalo-payment` | Create ZaloPay payment request |
-| `GET` | `/vnpay/create-order` | Create VNPay payment URL |
+| `POST` | `/api/trips/search-trip` | Tìm chuyến theo tuyến và ngày khởi hành |
+| `GET` | `/api/seats/{tripId}/booked` | Trả về danh sách ghế đã được đặt của một chuyến |
+| `POST` | `/api/seats/prebooking-seat` | Kiểm tra và giữ danh sách ghế trước khi đặt vé |
+| `POST` | `/api/invoices/create` | Tạo hóa đơn và trả về dữ liệu hóa đơn |
+| `PUT` | `/api/invoices/{id}/status` | Cập nhật trạng thái thanh toán |
+| `POST` | `/api/tickets/create-ticket` | Tạo vé và gắn danh sách ghế đã chọn |
+| `DELETE` | `/api/tickets/cancel-ticket` | Hủy vé đã đặt |
+| `POST` | `/payment/zalo-payment` | Tạo request thanh toán ZaloPay |
+| `GET` | `/vnpay/create-order` | Tạo URL thanh toán VNPay |
 
-## Admin Routes
+## Tuyến quản trị
 
-| Route | Description |
+| Route | Mô tả |
 | --- | --- |
-| `/admin/users` | User management |
-| `/admin/routes` | Route management |
-| `/admin/buses` | Bus management |
-| `/admin/drivers` | Driver management |
-| `/admin/trips` | Trip management |
-| `/admin/tickets` | Ticket management |
-| `/admin/invoices` | Invoice management |
-| `/admin/statistics` | Revenue, ticket and trip statistics |
+| `/admin/users` | Quản lý người dùng |
+| `/admin/routes` | Quản lý tuyến xe |
+| `/admin/buses` | Quản lý xe |
+| `/admin/drivers` | Quản lý tài xế |
+| `/admin/trips` | Quản lý chuyến xe |
+| `/admin/tickets` | Quản lý vé |
+| `/admin/invoices` | Quản lý hóa đơn |
+| `/admin/statistics` | Thống kê doanh thu, vé và chuyến |
 
-## Testing
+## Kiểm thử
 
-Run all tests:
+Chạy toàn bộ test:
 
 ```bash
 mvn test
 ```
 
-Generate JaCoCo report:
+Tạo báo cáo JaCoCo:
 
 ```bash
 mvn clean test jacoco:report
 ```
 
-Report output:
+Đường dẫn báo cáo:
 
 ```text
 target/site/jacoco/index.html
 ```
 
-The Maven build includes a JaCoCo line coverage rule with minimum coverage `70%` for the configured bundle scope.
+Build Maven đang cấu hình ngưỡng line coverage tối thiểu `70%` cho phạm vi bundle đã khai báo.
 
-## Build Artifact
+## Build artifact
 
-Create executable JAR:
+Tạo file JAR:
 
 ```bash
 mvn clean package
 ```
 
-Run JAR:
+Chạy file JAR:
 
 ```bash
 java -jar target/ticketBooker-0.0.1-SNAPSHOT.jar
 ```
 
-## Operational Notes
+## Ghi chú vận hành
 
-- Database schema is controlled by SQL scripts, not Hibernate auto DDL.
-- Table and column names are preserved by `PhysicalNamingStrategyStandardImpl`.
-- Payment configuration uses sandbox endpoints by default.
-- ZIP artifacts under `src/main/resources/static/components/*.zip` are ignored and should not be committed.
-- Do not commit local secrets, `.env`, `application-local.properties`, database dumps or generated build output.
+- Schema database được quản lý bằng SQL script, không dùng Hibernate auto DDL.
+- Tên bảng và tên cột được giữ nguyên bằng `PhysicalNamingStrategyStandardImpl`.
+- Cấu hình thanh toán đang dùng sandbox endpoint mặc định.
+- File ZIP trong `src/main/resources/static/components/*.zip` được ignore và không nên commit.
+- Không commit secret local, `.env`, `application-local.properties`, database dump hoặc build output.

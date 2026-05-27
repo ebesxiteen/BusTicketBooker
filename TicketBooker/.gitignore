@@ -10,3 +10,4 @@ application-local.properties
 .DS_Store
 /node_modules/
 /bin/
+src/main/resources/static/components/*.zip

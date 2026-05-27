@@ -213,6 +213,7 @@
                     <exclude>**/Entity/**</exclude>
                     <exclude>**/DTO/**</exclude>
                     <exclude>**/Config/**</exclude>
+                    <exclude>**/static/**</exclude>
                     <exclude>**/Util/Mapper/**</exclude>
                     <exclude>**/Util/Enum/**</exclude>
                 </excludes>
@@ -245,6 +246,7 @@
                     <exclude>**/Entity/**</exclude>
                     <exclude>**/DTO/**</exclude>
                     <exclude>**/Config/**</exclude>
+                    <exclude>**/static/**</exclude>
                     <exclude>**/Util/Mapper/**</exclude>
                     <exclude>**/Util/Enum/**</exclude>
                 </excludes>

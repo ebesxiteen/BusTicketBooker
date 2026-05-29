@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class RouteServiceImp implements RouteService {
     private RouteRepo routeRepo;
 
     @Override
+    @CacheEvict(value = {"routeOptions", "routeDtoOptions"}, allEntries = true)
     public boolean addRoute(AddRouteDTO dto) {
         try {
             Routes route = RouteMapper.fromAdd(dto);
@@ -39,6 +42,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @CacheEvict(value = {"routeOptions", "routeDtoOptions"}, allEntries = true)
     public boolean updateRoute(UpdateRouteDTO dto) {
         try {
             Routes route = RouteMapper.fromUpdate(dto.getRouteId(), dto);
@@ -51,6 +55,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @CacheEvict(value = {"routeOptions", "routeDtoOptions"}, allEntries = true)
     public boolean deleteRoute(RequestRouteIdDTO dto) {
         try {
             this.routeRepo.deleteById(dto.getRouteId());
@@ -76,6 +81,7 @@ public class RouteServiceImp implements RouteService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("routeOptions")
     public ResponseRouteDTO findAllRoutes() {
         ResponseRouteDTO result = new ResponseRouteDTO();
         ArrayList<Routes> routes;
@@ -180,6 +186,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("routeDtoOptions")
     public List<RouteDTO> getAllRoutes() {
         List<Routes> routes = routeRepo.findAll();
         List<RouteDTO> dtos = new ArrayList<>();

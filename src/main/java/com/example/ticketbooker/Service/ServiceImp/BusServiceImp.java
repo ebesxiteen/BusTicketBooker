@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class BusServiceImp implements BusService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("busOptions")
     public List<BusDTO> getAllBuses() {
         List<Buses> buses = busRepository.findAll();
         List<BusDTO> dtos = new ArrayList<>();
@@ -64,14 +67,15 @@ public class BusServiceImp implements BusService {
     }
 
     @Override
+    @CacheEvict(value = "busOptions", allEntries = true)
     public BusDTO createBus(BusDTO busDTO) {
         Buses bus = BusMapper.toEntity(busDTO);
-        Buses savedBus = busRepository.save(bus);
         return BusMapper.toDTO(busRepository.save(bus));
     }
 
     @Override
     @Transactional // Quan trọng để đảm bảo tính toàn vẹn
+    @CacheEvict(value = "busOptions", allEntries = true)
     public boolean updateBus(BusDTO busDTO) {
         try {
             // 1. Lấy thông tin xe cũ từ DB
@@ -158,6 +162,7 @@ public class BusServiceImp implements BusService {
     }
 
     @Override
+    @CacheEvict(value = "busOptions", allEntries = true)
     public void deleteBus(Integer id) {
         busRepository.deleteById(id);
     }

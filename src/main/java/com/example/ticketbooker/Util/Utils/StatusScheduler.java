@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.example.ticketbooker.Entity.Tickets;
 import com.example.ticketbooker.Repository.InvoiceRepo;
@@ -19,6 +21,7 @@ import com.example.ticketbooker.Util.Enum.TicketStatus;
 
 @Component
 public class StatusScheduler {
+    private static final Logger log = LoggerFactory.getLogger(StatusScheduler.class);
 
     @Autowired
     private TripRepo tripRepo;
@@ -58,10 +61,8 @@ public class StatusScheduler {
         int tripsUpdated = tripRepo.updateCompletedTrips(now);
 
         if (ticketsUpdated > 0 || tripsUpdated > 0) {
-            System.out.println("--- AUTO UPDATE ---");
-            System.out.println("Time: " + now);
-            System.out.println("Tickets set to USED: " + ticketsUpdated);
-            System.out.println("Trips set to COMPLETED: " + tripsUpdated);
+            log.info("Auto status update completed at {}. Tickets set to USED: {}, trips set to COMPLETED: {}",
+                    now, ticketsUpdated, tripsUpdated);
         }
     }
 

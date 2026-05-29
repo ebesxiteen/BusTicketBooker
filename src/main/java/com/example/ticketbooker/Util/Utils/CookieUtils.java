@@ -3,9 +3,8 @@ package com.example.ticketbooker.Util.Utils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.stereotype.Component;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.net.URLDecoder;
 
 public class CookieUtils {
@@ -14,12 +13,7 @@ public class CookieUtils {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookieName.equals(cookie.getName())) {
-                    try {
-                        return URLDecoder.decode(cookie.getValue(), "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                        return defaultValue;
-                    }
+                    return URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8);
                 }
             }
         }

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class DriverServiceImp implements DriverService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable("driverOptions")
     public List<DriverDTO> getAllDrivers() {
         List<Driver> drivers = driverRepo.findAll();
         List<DriverDTO> dtos = new ArrayList<>();
@@ -39,6 +42,7 @@ public class DriverServiceImp implements DriverService {
     }
     @Override
     @Transactional
+    @CacheEvict(value = "driverOptions", allEntries = true)
     public boolean addDriver(AddDriverDTO dto) {
         // 1. Validate Số điện thoại
         if (driverRepo.existsByPhone(dto.getPhone())) {
@@ -62,6 +66,7 @@ public class DriverServiceImp implements DriverService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "driverOptions", allEntries = true)
     public boolean updateDriver(UpdateDriverDTO dto) {
         // 1. Validate Số điện thoại (trừ chính nó)
         if (driverRepo.existsByPhoneAndDriverIdNot(dto.getPhone(), dto.getDriverId())) {
@@ -92,6 +97,7 @@ public class DriverServiceImp implements DriverService {
 
   @Override
     @Transactional
+    @CacheEvict(value = "driverOptions", allEntries = true)
     public boolean deleteDriver(Integer id) {
         try {
             // 1. KIỂM TRA RÀNG BUỘC NGHIỆP VỤ (Chuyến sắp chạy)

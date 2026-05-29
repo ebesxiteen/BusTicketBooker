@@ -1,26 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log(">>> [DEBUG] trip.js ĐÃ ĐƯỢC LOAD!"); // 1. Kiểm tra file có load không
-
-    // Tìm tất cả các nút có class .delete-trip-btn
     const deleteButtons = document.querySelectorAll('.delete-trip-btn');
-    
-    console.log(">>> [DEBUG] Tìm thấy " + deleteButtons.length + " nút xóa."); // 2. Kiểm tra có tìm thấy nút không
 
-    if (deleteButtons.length === 0) {
-        console.warn(">>> [CẢNH BÁO] Không tìm thấy nút xóa nào. Kiểm tra lại class HTML!");
-    }
-
-    // Gắn sự kiện Click cho từng nút
     deleteButtons.forEach(btn => {
         btn.addEventListener('click', function (event) {
-            event.preventDefault(); // Chặn hành động mặc định (nếu có)
+            event.preventDefault();
             
             const tripId = this.getAttribute("data-id");
             const row = this.closest("tr");
 
-            console.log(">>> [DEBUG] Đang click nút xóa ID: " + tripId);
-
-            // SweetAlert Confirm
             Swal.fire({
                 title: "Xác nhận xóa?",
                 text: `Bạn có chắc muốn xóa chuyến xe ID: ${tripId}?`,

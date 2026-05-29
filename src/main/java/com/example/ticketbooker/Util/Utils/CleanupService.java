@@ -4,11 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.example.ticketbooker.Repository.SeatsRepo;
 
 @Service
 public class CleanupService {
+    private static final Logger log = LoggerFactory.getLogger(CleanupService.class);
 
     @Autowired
     private SeatsRepo seatsRepository;
@@ -17,7 +20,7 @@ public class CleanupService {
     public void cleanupZombieSeatsTask() {
         int deletedCount = seatsRepository.cleanupZombieSeats();
         if (deletedCount > 0) {
-            System.out.println(" Đã dọn dẹp thành công " + deletedCount + " Ghế Zombie.");
+            log.info("Cleaned up {} temporary seats", deletedCount);
         }
     }
 }

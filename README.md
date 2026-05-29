@@ -1,8 +1,8 @@
 # TicketBooker
 
-TicketBooker là hệ thống quản lý đặt vé xe khách xây dựng bằng Spring Boot. Ứng dụng xử lý luồng tìm chuyến, chọn ghế, tạo hóa đơn, tạo vé, thanh toán và quản trị dữ liệu vận hành.
+TicketBooker là hệ thống quản lý đặt vé xe khách xây dựng bằng Spring Boot. Ứng dụng hỗ trợ tìm chuyến, chọn ghế, giữ ghế tạm, tạo hóa đơn, đặt vé, thanh toán, gửi email và quản trị dữ liệu vận hành.
 
-## Công nghệ sử dụng
+## Công Nghệ
 
 | Lớp | Công nghệ |
 | --- | --- |
@@ -11,73 +11,33 @@ TicketBooker là hệ thống quản lý đặt vé xe khách xây dựng bằng
 | Security | Spring Security, OAuth2 Client |
 | View | Thymeleaf, Thymeleaf Layout Dialect, Thymeleaf Security |
 | Tích hợp ngoài | VNPay, ZaloPay, SMTP Mail, OpenAI API |
-| Build/Test | Maven, JUnit, Spring Security Test, JaCoCo |
-| Tiện ích | Lombok, Apache POI, Jackson, Apache HttpClient |
+| Build/Test | Maven, JUnit 5, Mockito, Spring Test, MockMvc, JaCoCo |
+| Vận hành | Docker, Docker Compose, GitHub Actions |
+| Tối ưu | Spring Cache, HTTP compression, static resource cache, read-only transaction |
 
-## Module chính
-
-| Module | Trách nhiệm |
-| --- | --- |
-| `Controller` | Xử lý trang MVC, màn hình quản trị, REST API và callback thanh toán |
-| `Service` | Định nghĩa nghiệp vụ cho người dùng, tuyến, xe, tài xế, chuyến, ghế, hóa đơn, vé |
-| `Service/ServiceImp` | Hiện thực nghiệp vụ và điều phối các luồng giao dịch |
-| `Repository` | Truy cập dữ liệu qua Spring Data JPA |
-| `Entity` | Mapping JPA với schema quan hệ |
-| `DTO` | Model request/response cho API và binding form |
-| `Config` | Cấu hình security, filter và dịch vụ tích hợp ngoài |
-| `Util` | Mapper, enum, exception handler, scheduler và helper |
-
-## Tính năng chính
+## Tính Năng Chính
 
 - Tìm chuyến theo tuyến và ngày khởi hành.
-- Tra cứu trạng thái ghế theo từng chuyến.
-- Giữ ghế tạm trước khi tạo vé.
+- Xem trạng thái ghế theo từng chuyến.
+- Giữ ghế tạm trước khi đặt vé.
 - Tạo hóa đơn và cập nhật trạng thái thanh toán.
-- Đặt vé nhiều ghế thông qua bảng trung gian `ticket_seats`.
+- Đặt vé nhiều ghế qua bảng trung gian `ticket_seats`.
 - Hủy vé và tra cứu lịch sử đặt vé.
-- Quản trị người dùng, tuyến, xe, tài xế, chuyến, vé và hóa đơn.
-- Đăng nhập bằng tài khoản local và OAuth2.
+- Quản trị người dùng, tuyến, xe, tài xế, chuyến, vé, hóa đơn và thống kê.
+- Đăng nhập local và OAuth2 Google/Facebook/GitHub.
 - Tích hợp thanh toán VNPay và ZaloPay.
-- Gửi email cho các luồng tài khoản và đặt vé.
-- Thống kê doanh thu, vé và chuyến xe.
+- Gửi email cho các luồng tài khoản, đặt vé và hoàn tất chuyến.
+- Scheduler tự cập nhật trạng thái vé/chuyến và dọn ghế tạm hết hạn.
 
-## Kiến trúc cơ sở dữ liệu
-
-Cơ sở dữ liệu sử dụng schema quan hệ trên MySQL. Hibernate chỉ mapping entity với bảng có sẵn; dự án tắt cơ chế tự sinh bảng bằng `spring.jpa.hibernate.ddl-auto=none`.
-
-![ERD Diagram](docs/erd.png)
-
-### Bảng cốt lõi
-
-| Bảng | Vai trò | Quan hệ chính |
-| --- | --- | --- |
-| `Users` | Hồ sơ người dùng, thông tin đăng nhập, OAuth provider và phân quyền | Một người dùng có thể đặt nhiều `Tickets` |
-| `Routes` | Điểm đi, điểm đến, thời gian dự kiến và trạng thái tuyến | Một tuyến có nhiều `Buses` và `Trips` |
-| `Driver` | Thông tin tài xế, số bằng lái và trạng thái hoạt động | Một tài xế có thể được gán vào nhiều `Trips` |
-| `Buses` | Biển số, loại xe, sức chứa và trạng thái xe | Thuộc `Routes`; được gán vào nhiều `Trips` |
-| `Trips` | Lịch chạy cụ thể theo tuyến, xe, tài xế, giá vé và số ghế còn trống | Thuộc `Routes`, `Buses`, `Driver`; có nhiều `Seats` và `Tickets` |
-| `Seats` | Mã ghế theo từng chuyến | Ràng buộc duy nhất `(tripId, seatCode)` |
-| `Invoices` | Tổng tiền, phương thức thanh toán, thời gian thanh toán và trạng thái thanh toán | Được tham chiếu bởi `Tickets` |
-| `Tickets` | Bản ghi đặt vé, thông tin hành khách, QR code và trạng thái vé | Thuộc `Trips`, `Users`, `Invoices` |
-| `ticket_seats` | Bảng trung gian giữa vé và ghế | `UNIQUE(seatId)` ngăn đặt trùng cùng một ghế |
-
-### Luồng ghi dữ liệu chính
-
-1. **Tìm chuyến**: client gửi bộ lọc tuyến/ngày đến `/api/trips/search-trip`; service lọc `Trips` theo tuyến, thời gian khởi hành và trạng thái.
-2. **Tra cứu ghế**: client gọi `/api/seats/{tripId}/booked`; service đọc `Tickets`, `Seats` và `ticket_seats` để xác định ghế không còn khả dụng.
-3. **Giữ ghế tạm**: client gửi danh sách ghế đến `/api/seats/prebooking-seat`; service kiểm tra tính khả dụng và lưu danh sách `seatId` cho bước đặt vé.
-4. **Tạo hóa đơn**: client gửi thông tin thanh toán đến `/api/invoices/create`; service tạo `Invoices` với trạng thái thanh toán ban đầu.
-5. **Tạo vé**: client gửi thông tin hành khách, chuyến, hóa đơn và ghế đến `/api/tickets/create-ticket`; service tạo `Tickets`, liên kết ghế qua `ticket_seats` và cập nhật số ghế còn trống.
-6. **Cập nhật thanh toán**: callback hoặc truy vấn trạng thái từ VNPay/ZaloPay cập nhật `Invoices.paymentStatus`.
-7. **Hủy vé**: client gọi `/api/tickets/cancel-ticket`; service cập nhật trạng thái vé và các dữ liệu đặt chỗ liên quan.
-
-## Cấu trúc thư mục
+## Cấu Trúc Chính
 
 ```text
 .
 |-- BusTicketManagement.sql
 |-- insertdata.sql
 |-- alter.sql
+|-- docker-compose.yml
+|-- Dockerfile
 |-- pom.xml
 |-- README.md
 |-- src
@@ -87,200 +47,75 @@ Cơ sở dữ liệu sử dụng schema quan hệ trên MySQL. Hibernate chỉ m
 |   |   |   |-- Controller
 |   |   |   |-- DTO
 |   |   |   |-- Entity
-|   |   |   |-- Exception
 |   |   |   |-- Repository
 |   |   |   |-- Service
 |   |   |   |-- Util
 |   |   |   `-- TicketBookerApplication.java
 |   |   `-- resources
 |   |       |-- application.properties
+|   |       |-- application-docker.properties
+|   |       |-- application-prod.properties
 |   |       |-- static
 |   |       `-- templates
 |   `-- test
+|       |-- java
+|       `-- resources/application.properties
 `-- .env.example
 ```
 
-## Yêu cầu hệ thống
+## Yêu Cầu
 
 - Java 21
 - Maven 3.9+
-- MySQL 8.0+
-- Git
+- MySQL 8.0+ nếu chạy không dùng Docker
+- Docker/Docker Compose nếu chạy bằng container
 
-## Cài đặt và chạy dự án
+## Cấu Hình Môi Trường
 
-Clone repository:
-
-```bash
-git clone <repository-url>
-cd <repository-folder>
-```
-
-Cài đặt dependency và chạy test:
-
-```bash
-mvn clean test
-```
-
-Chạy ứng dụng:
-
-```bash
-mvn spring-boot:run
-```
-
-URL ứng dụng:
-
-```text
-http://localhost:8000/greenbus
-```
-
-Trang quản trị:
-
-```text
-http://localhost:8000/admin
-```
-
-## Cấu hình môi trường
-
-Cấu hình chính nằm trong `src/main/resources/application.properties`. Các giá trị nhạy cảm được đọc từ biến môi trường.
-
-Tạo file `.env` từ file mẫu:
+Ứng dụng đọc secret từ biến môi trường. Tạo file `.env` từ mẫu:
 
 ```bash
 cp .env.example .env
 ```
 
-Các biến bắt buộc:
+Các biến chính:
 
 | Biến | Mô tả |
 | --- | --- |
-| `DB_PASSWORD` | Mật khẩu MySQL cho `spring.datasource.username` |
-| `MAIL_PASSWORD` | App password của Gmail SMTP |
-| `GOOGLE_CLIENT_ID` | Client ID OAuth2 Google |
-| `GOOGLE_CLIENT_SECRET` | Client secret OAuth2 Google |
-| `FACEBOOK_CLIENT_ID` | Client ID OAuth2 Facebook |
-| `FACEBOOK_CLIENT_SECRET` | Client secret OAuth2 Facebook |
-| `GITHUB_CLIENT_ID` | Client ID OAuth2 GitHub |
-| `GITHUB_CLIENT_SECRET` | Client secret OAuth2 GitHub |
-| `VNPAY_TMN_CODE` | Mã terminal VNPay |
-| `VNPAY_HASH_SECRET` | Secret ký request VNPay |
-| `ZALO_APP_ID` | App ID ZaloPay |
-| `ZALO_KEY1` | Khóa ký request ZaloPay |
+| `DB_PASSWORD` | Mật khẩu MySQL user `root` |
+| `MYSQL_PORT` | Port expose MySQL khi chạy Docker, mặc định `3306` |
+| `APP_PORT` | Port expose ứng dụng khi chạy Docker, mặc định `8000` |
+| `MAIL_PASSWORD` | App password SMTP |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth2 Google |
+| `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET` | OAuth2 Facebook |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | OAuth2 GitHub |
+| `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` | Cấu hình VNPay |
+| `ZALO_APP_ID`, `ZALO_KEY1` | Cấu hình ZaloPay |
 | `OPENAI_API_KEY` | API key OpenAI |
+| `SPRING_AI_OPENAI_API_KEY` | API key Spring AI/OpenAI |
+| `SPRING_AI_OPENAI_BASE_URL` | Base URL cho Spring AI |
+| `SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL` | Model dùng cho Spring AI |
 
-Cấu hình database mặc định:
+Không commit `.env` hoặc `src/main/resources/application-local.properties`.
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/ticketbooker
-spring.datasource.username=root
-spring.datasource.password=${DB_PASSWORD}
-spring.jpa.hibernate.ddl-auto=none
-```
+## Chạy Bằng Docker
 
-Nếu không muốn export biến môi trường toàn cục, tạo `src/main/resources/application-local.properties` và chạy:
+Docker Compose chạy cả ứng dụng và MySQL. Lần khởi động đầu tiên MySQL sẽ init schema/data từ:
 
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=local
-```
+- `BusTicketManagement.sql`
+- `insertdata.sql`
 
-## Khởi tạo cơ sở dữ liệu
-
-Tạo schema:
-
-```bash
-mysql -u root -p < BusTicketManagement.sql
-```
-
-Seed dữ liệu mẫu:
-
-```bash
-mysql -u root -p ticketbooker < insertdata.sql
-```
-
-Chạy script bổ sung nếu cần:
-
-```bash
-mysql -u root -p ticketbooker < alter.sql
-```
-
-Kiểm tra database:
-
-```sql
-USE ticketbooker;
-SHOW TABLES;
-```
-
-## API endpoints
-
-| Method | Endpoint | Mô tả |
-| --- | --- | --- |
-| `POST` | `/api/trips/search-trip` | Tìm chuyến theo tuyến và ngày khởi hành |
-| `GET` | `/api/seats/{tripId}/booked` | Trả về danh sách ghế đã được đặt của một chuyến |
-| `POST` | `/api/seats/prebooking-seat` | Kiểm tra và giữ danh sách ghế trước khi đặt vé |
-| `POST` | `/api/invoices/create` | Tạo hóa đơn và trả về dữ liệu hóa đơn |
-| `PUT` | `/api/invoices/{id}/status` | Cập nhật trạng thái thanh toán |
-| `POST` | `/api/tickets/create-ticket` | Tạo vé và gắn danh sách ghế đã chọn |
-| `DELETE` | `/api/tickets/cancel-ticket` | Hủy vé đã đặt |
-| `POST` | `/payment/zalo-payment` | Tạo request thanh toán ZaloPay |
-| `GET` | `/vnpay/create-order` | Tạo URL thanh toán VNPay |
-
-## Tuyến quản trị
-
-| Route | Mô tả |
-| --- | --- |
-| `/admin/users` | Quản lý người dùng |
-| `/admin/routes` | Quản lý tuyến xe |
-| `/admin/buses` | Quản lý xe |
-| `/admin/drivers` | Quản lý tài xế |
-| `/admin/trips` | Quản lý chuyến xe |
-| `/admin/tickets` | Quản lý vé |
-| `/admin/invoices` | Quản lý hóa đơn |
-| `/admin/statistics` | Thống kê doanh thu, vé và chuyến |
-
-## Kiểm thử
-
-Chạy toàn bộ test:
-
-```bash
-mvn test
-```
-
-Tạo báo cáo JaCoCo:
-
-```bash
-mvn clean test jacoco:report
-```
-
-Đường dẫn báo cáo:
-
-```text
-target/site/jacoco/index.html
-```
-
-Build Maven đang cấu hình ngưỡng line coverage tối thiểu `90%` cho phạm vi bundle đã khai báo.
-
-## Docker
-
-Copy file env mẫu và điền secret nếu cần:
-
-```bash
-cp .env.example .env
-```
-
-Chạy ứng dụng cùng MySQL:
+Chạy:
 
 ```bash
 docker compose up --build
 ```
 
-Ứng dụng sẽ chạy tại:
+Ứng dụng:
 
 ```text
 http://localhost:8000
 ```
-
-MySQL trong Docker dùng database `ticketbooker`, user `root`, password lấy từ `DB_PASSWORD`.
-Lần khởi động đầu tiên sẽ init schema và data từ `BusTicketManagement.sql` và `insertdata.sql`.
 
 Dừng container:
 
@@ -294,32 +129,161 @@ Xóa cả volume database để init lại từ đầu:
 docker compose down -v
 ```
 
-## Production profile
+## Chạy Local Không Dùng Docker
 
-Khi deploy ngoài Docker, bật profile `prod` để tắt SQL debug, tắt Open Session in View và bật cache static:
+Tạo database:
+
+```bash
+mysql -u root -p < BusTicketManagement.sql
+mysql -u root -p ticketbooker < insertdata.sql
+```
+
+Chạy ứng dụng:
+
+```bash
+mvn spring-boot:run
+```
+
+Nếu dùng cấu hình local riêng:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+URL:
+
+```text
+http://localhost:8000
+```
+
+Trang quản trị:
+
+```text
+http://localhost:8000/admin
+```
+
+## Profile
+
+| Profile | Mục đích |
+| --- | --- |
+| mặc định | Chạy local với MySQL tại `localhost:3306` |
+| `docker` | Chạy trong Docker Compose, datasource trỏ tới service `mysql` |
+| `prod` | Tắt SQL debug, tắt Open Session in View, bật cache static |
+| test resources | Test dùng H2 in-memory, tắt scheduler, dùng dummy secret |
+
+Chạy production profile:
 
 ```bash
 SPRING_PROFILES_ACTIVE=prod java -jar target/ticketBooker-0.0.1-SNAPSHOT.jar
 ```
 
-## Build artifact
+## Kiểm Thử
 
-Tạo file JAR:
+Chạy toàn bộ test:
+
+```bash
+mvn test
+```
+
+Chạy verify đầy đủ, bao gồm JaCoCo check:
+
+```bash
+mvn verify
+```
+
+Ngưỡng coverage hiện tại:
+
+```text
+Line coverage tối thiểu: 90%
+```
+
+Báo cáo JaCoCo:
+
+```text
+target/site/jacoco/index.html
+```
+
+Test hiện gồm unit test và integration test dùng Spring Test/MockMvc. Integration test không phụ thuộc MySQL thật vì dùng H2 in-memory.
+
+## CI
+
+Repository có GitHub Actions tại:
+
+```text
+.github/workflows/ci.yml
+```
+
+Pipeline chạy:
+
+```bash
+mvn -B verify
+```
+
+Nếu test fail hoặc coverage dưới 90%, CI sẽ fail.
+
+## Build Artifact
+
+Tạo JAR:
 
 ```bash
 mvn clean package
 ```
 
-Chạy file JAR:
+Chạy JAR:
 
 ```bash
 java -jar target/ticketBooker-0.0.1-SNAPSHOT.jar
 ```
 
-## Ghi chú vận hành
+## API Chính
+
+| Method | Endpoint | Mô tả |
+| --- | --- | --- |
+| `POST` | `/api/trips/search-trip` | Tìm chuyến theo tuyến/ngày |
+| `GET` | `/api/seats/{tripId}/booked` | Lấy danh sách ghế đã đặt |
+| `POST` | `/api/seats/prebooking-seat` | Giữ ghế tạm |
+| `POST` | `/api/invoices/create` | Tạo hóa đơn |
+| `PUT` | `/api/invoices/{id}/status` | Cập nhật trạng thái thanh toán |
+| `POST` | `/api/tickets/create-ticket` | Tạo vé |
+| `DELETE` | `/api/tickets/cancel-ticket` | Hủy vé |
+| `POST` | `/payment/zalo-payment` | Tạo request thanh toán ZaloPay |
+| `GET` | `/vnpay/create-order` | Tạo URL thanh toán VNPay |
+
+## Route Quản Trị
+
+| Route | Mô tả |
+| --- | --- |
+| `/admin/users` | Quản lý người dùng |
+| `/admin/routes` | Quản lý tuyến |
+| `/admin/buses` | Quản lý xe |
+| `/admin/drivers` | Quản lý tài xế |
+| `/admin/trips` | Quản lý chuyến |
+| `/admin/tickets` | Quản lý vé |
+| `/admin/invoices` | Quản lý hóa đơn |
+| `/admin/statistics` | Thống kê |
+
+## Tối Ưu Đã Áp Dụng
+
+- Bật HTTP compression.
+- Bật static resource cache cho `docker` và `prod`.
+- Tách scheduling bằng `app.scheduling.enabled`.
+- Test tắt scheduler để tránh tác vụ nền ảnh hưởng kết quả.
+- Dùng H2 in-memory cho test, không cần MySQL local.
+- Dùng `@Transactional(readOnly = true)` cho các service đọc dữ liệu.
+- Thêm Spring Cache cho dữ liệu lookup form admin:
+  - route options
+  - bus options
+  - driver options
+- Tự clear cache khi thêm/sửa/xóa tuyến, xe, tài xế.
+- Docker image chạy bằng user non-root và có JVM memory flags.
+- Loại trùng dependency JSON trong test.
+- Loại `commons-logging` conflict với `spring-jcl`.
+- Dọn các log debug/`System.out` không cần thiết ở một số luồng chính.
+
+## Ghi Chú Vận Hành
 
 - Schema database được quản lý bằng SQL script, không dùng Hibernate auto DDL.
-- Tên bảng và tên cột được giữ nguyên bằng `PhysicalNamingStrategyStandardImpl`.
-- Cấu hình thanh toán đang dùng sandbox endpoint mặc định.
-- File ZIP trong `src/main/resources/static/components/*.zip` được ignore và không nên commit.
-- Không commit secret local, `.env`, `application-local.properties`, database dump hoặc build output.
+- Tên bảng/cột được giữ nguyên bằng `PhysicalNamingStrategyStandardImpl`.
+- Các endpoint thanh toán đang dùng sandbox/default endpoint.
+- `.env`, `application-local.properties`, database dump và build output không nên commit.
+- Nếu thay đổi dữ liệu lookup ngoài service, cần chú ý cache invalidation tương ứng.

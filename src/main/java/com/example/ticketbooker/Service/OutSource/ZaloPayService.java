@@ -92,7 +92,7 @@ public ZaloPaymentResponse requestPayment(ZaloPaymentRequest requestInfo) throws
     System.out.println("Data to MAC: " + data);
     System.out.println("Generated MAC: " + order.get("mac"));
 
-    CloseableHttpClient client = HttpClients.createDefault();
+    CloseableHttpClient client = createHttpClient();
     HttpPost postRequest = new HttpPost(createEndpoint);
 
     List<NameValuePair> params = new ArrayList<>();
@@ -141,7 +141,7 @@ public ZaloPaymentResponse requestPayment(ZaloPaymentRequest requestInfo) throws
         URIBuilder uri = new URIBuilder(queryEndpoint);
         uri.addParameters(params);
 
-        CloseableHttpClient client = HttpClients.createDefault();
+        CloseableHttpClient client = createHttpClient();
         HttpPost post = new HttpPost(uri.build());
         post.setEntity(new UrlEncodedFormEntity(params));
 
@@ -164,5 +164,9 @@ public ZaloPaymentResponse requestPayment(ZaloPaymentRequest requestInfo) throws
         response.setProcessing(result.getBoolean("is_processing"));
 
         return response;
+    }
+
+    protected CloseableHttpClient createHttpClient() {
+        return HttpClients.createDefault();
     }
 }

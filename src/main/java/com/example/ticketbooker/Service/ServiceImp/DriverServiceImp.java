@@ -30,6 +30,7 @@ public class DriverServiceImp implements DriverService {
     private TripRepo tripRepo;
 
     @Override
+    @Transactional(readOnly = true)
     public List<DriverDTO> getAllDrivers() {
         List<Driver> drivers = driverRepo.findAll();
         List<DriverDTO> dtos = new ArrayList<>();
@@ -116,6 +117,7 @@ public class DriverServiceImp implements DriverService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Driver getDriver(Integer id) {
         Driver result;
         try{
@@ -129,6 +131,7 @@ public class DriverServiceImp implements DriverService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseDriverDTO findAll() {
         ResponseDriverDTO response;
         try{
@@ -142,11 +145,13 @@ public class DriverServiceImp implements DriverService {
     }
 
    @Override
+    @Transactional(readOnly = true)
     public Page<DriverDTO> findAll(Pageable pageable) {
         return driverRepo.findAll(pageable).map(DriverMapper::toDTO);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseDriverDTO findAllField(String searchTerm) {
         ResponseDriverDTO response;
         try{
@@ -159,6 +164,7 @@ public class DriverServiceImp implements DriverService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseDriverDTO findDriverByName(String driverName) {
         ResponseDriverDTO response;
         try{
@@ -171,6 +177,7 @@ public class DriverServiceImp implements DriverService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseDriverDTO findDriverByStatus(DriverStatus status) {
         ResponseDriverDTO response;
         try{
@@ -195,6 +202,7 @@ public class DriverServiceImp implements DriverService {
         return false; 
     }
 
+    @Transactional(readOnly = true)
     public Page<DriverDTO> searchDrivers(String keyword, String statusStr, Pageable pageable) {
         DriverStatus statusEnum = null;
         if (statusStr != null && !statusStr.equals("ALL") && !statusStr.isEmpty()) {

@@ -8,10 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 @Service
 public class OAuthUserService {
+    private final RestTemplate restTemplate;
+
+    public OAuthUserService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     public String getUserInfo(String accessToken) {
         String url = "https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,photos,genders,birthdays,addresses,phoneNumbers";
-
-        RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);

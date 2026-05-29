@@ -257,7 +257,50 @@ mvn clean test jacoco:report
 target/site/jacoco/index.html
 ```
 
-Build Maven đang cấu hình ngưỡng line coverage tối thiểu `70%` cho phạm vi bundle đã khai báo.
+Build Maven đang cấu hình ngưỡng line coverage tối thiểu `90%` cho phạm vi bundle đã khai báo.
+
+## Docker
+
+Copy file env mẫu và điền secret nếu cần:
+
+```bash
+cp .env.example .env
+```
+
+Chạy ứng dụng cùng MySQL:
+
+```bash
+docker compose up --build
+```
+
+Ứng dụng sẽ chạy tại:
+
+```text
+http://localhost:8000
+```
+
+MySQL trong Docker dùng database `ticketbooker`, user `root`, password lấy từ `DB_PASSWORD`.
+Lần khởi động đầu tiên sẽ init schema và data từ `BusTicketManagement.sql` và `insertdata.sql`.
+
+Dừng container:
+
+```bash
+docker compose down
+```
+
+Xóa cả volume database để init lại từ đầu:
+
+```bash
+docker compose down -v
+```
+
+## Production profile
+
+Khi deploy ngoài Docker, bật profile `prod` để tắt SQL debug, tắt Open Session in View và bật cache static:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod java -jar target/ticketBooker-0.0.1-SNAPSHOT.jar
+```
 
 ## Build artifact
 

@@ -32,6 +32,14 @@ class SecurityUtilsTest {
     }
 
     @Test
+    void isLoggedInReturnsFalseForAnonymousPrincipal() {
+        Authentication authentication = new UsernamePasswordAuthenticationToken("anonymousUser", "creds");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        assertFalse(SecurityUtils.isLoggedIn());
+    }
+
+    @Test
     void isLoggedInReturnsTrueWhenAuthenticatedUserPresent() {
         Users user = Users.builder().email("user@example.com").password("pass").role("ROLE_USER").enabled(true).build();
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
@@ -71,5 +79,12 @@ class SecurityUtilsTest {
         assertEquals("creds", refreshed.getCredentials());
         assertTrue(refreshed.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN")));
+    }
+
+    @Test
+    void updateAuthenticationReturnsFalseWhenCurrentAuthenticationMissing() {
+        Users user = Users.builder().email("user@example.com").password("pass").role("ROLE_ADMIN").enabled(true).build();
+
+        assertFalse(SecurityUtils.updateAuthentication(new CustomUserDetails(user)));
     }
 }

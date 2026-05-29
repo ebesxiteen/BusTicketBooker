@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ticketbooker.DTO.Routes.AddRouteDTO;
 import com.example.ticketbooker.DTO.Routes.RequestRouteIdDTO;
@@ -61,6 +62,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Routes getRoute(Integer id) {
         Routes route;
         try {
@@ -73,6 +75,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseRouteDTO findAllRoutes() {
         ResponseRouteDTO result = new ResponseRouteDTO();
         ArrayList<Routes> routes;
@@ -88,6 +91,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RouteDTO> findAllRoutes(Pageable pageable) {
         Page<Routes> routes = this.routeRepo.findAll(pageable);
         System.out.println(routes.toString());
@@ -95,6 +99,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseRouteDTO findByStatus(RouteStatus status) {
         ResponseRouteDTO result = new ResponseRouteDTO();
         ArrayList<Routes> routes;
@@ -110,6 +115,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseRouteDTO findByDepartureLocation(String departureLocation) {
         ResponseRouteDTO result = new ResponseRouteDTO();
         ArrayList<Routes> routes;
@@ -126,6 +132,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseRouteDTO findByArrivalLocation(String arrivalLocation) {
         ResponseRouteDTO result = new ResponseRouteDTO();
         ArrayList<Routes> routes;
@@ -141,6 +148,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseRouteDTO findByLocation(String location) {
         ResponseRouteDTO result = new ResponseRouteDTO();
         ArrayList<Routes> routes;
@@ -156,6 +164,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseRouteDTO findByLocations(SearchRouteRequest request) {
         ResponseRouteDTO result = new ResponseRouteDTO();
         ArrayList<Routes> routes;
@@ -170,6 +179,7 @@ public class RouteServiceImp implements RouteService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public List<RouteDTO> getAllRoutes() {
         List<Routes> routes = routeRepo.findAll();
         List<RouteDTO> dtos = new ArrayList<>();
@@ -178,6 +188,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RouteDTO> searchRoutes(String keyword, Pageable pageable) {
     Page<Routes> routes;
     if (keyword != null && !keyword.trim().isEmpty()) {
@@ -189,6 +200,7 @@ public class RouteServiceImp implements RouteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RouteDTO> searchRoutesByStatus(String keyword, String statusStr, Pageable pageable) {
         RouteStatus statusEnum = null;
         

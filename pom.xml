@@ -54,6 +54,12 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.13</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Thymeleaf Layout Dialect -->
@@ -113,11 +119,23 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -222,6 +240,7 @@
                     <exclude>**/static/**</exclude>
                     <exclude>**/Util/Mapper/**</exclude>
                     <exclude>**/Util/Enum/**</exclude>
+                    <exclude>vn/zalopay/crypto/**</exclude>
                 </excludes>
             </configuration>
         </execution>
@@ -229,6 +248,7 @@
         <!-- 3. Coverage threshold rule -->
         <execution>
             <id>jacoco-check</id>
+            <phase>verify</phase>
             <goals>
                 <goal>check</goal>
             </goals>
@@ -240,7 +260,7 @@
                             <limit>
                                 <counter>LINE</counter>
                                 <value>COVEREDRATIO</value>
-                                <minimum>0.70</minimum>
+                                <minimum>0.90</minimum>
                             </limit>
                         </limits>
                     </rule>
@@ -255,6 +275,7 @@
                     <exclude>**/static/**</exclude>
                     <exclude>**/Util/Mapper/**</exclude>
                     <exclude>**/Util/Enum/**</exclude>
+                    <exclude>vn/zalopay/crypto/**</exclude>
                 </excludes>
             </configuration>
         </execution>

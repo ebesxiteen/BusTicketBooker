@@ -1,0 +1,52 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ticketbooker-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./BusTicketManagement.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./insertdata.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ticketbooker-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-mail-password}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-google-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-google-client-secret}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-dummy-facebook-client-id}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-dummy-facebook-client-secret}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-dummy-github-client-id}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-dummy-github-client-secret}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-dummy-vnpay-tmn-code}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-dummy-vnpay-hash-secret}
+      ZALO_APP_ID: ${ZALO_APP_ID:-dummy-zalo-app-id}
+      ZALO_KEY1: ${ZALO_KEY1:-dummy-zalo-key1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-dummy-openai-api-key}
+      SPRING_AI_OPENAI_API_KEY: ${SPRING_AI_OPENAI_API_KEY:-dummy-openai-api-key}
+      SPRING_AI_OPENAI_BASE_URL: ${SPRING_AI_OPENAI_BASE_URL:-https://api.openai.com}
+      SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: ${SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL:-gpt-4o-mini}
+
+volumes:
+  mysql-data:

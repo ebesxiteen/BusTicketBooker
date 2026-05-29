@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ticketbooker.DTO.Invoice.AddInvoiceDTO;
 import com.example.ticketbooker.DTO.Invoice.RequestInvoiceDTO;
@@ -52,6 +53,7 @@ Invoices savedInvoice=invoicesRepo.save(invoice);
         return 0;
     }
     @Override
+    @Transactional(readOnly = true)
     public ResponseInvoiceDTO getAllInvoices() {
         ResponseInvoiceDTO result = new ResponseInvoiceDTO();
         try {
@@ -62,6 +64,7 @@ Invoices savedInvoice=invoicesRepo.save(invoice);
         }
         return result;
     }
+    @Transactional(readOnly = true)
     public ResponseInvoiceDTO searchInvoices(RequestInvoiceDTO requestDTO) {
         ResponseInvoiceDTO result = new ResponseInvoiceDTO();
         try {
@@ -84,11 +87,13 @@ Invoices savedInvoice=invoicesRepo.save(invoice);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Invoices getById(int id) {
         return this.invoicesRepo.findById(id).orElse(null);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RevenueStatsDTO getRevenueStats(String period, LocalDate selectedDate) {
         LocalDate previousDate;
         switch (period) {

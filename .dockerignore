@@ -1,0 +1,9 @@
+.git
+.idea
+.mvn/wrapper/maven-wrapper.jar
+target
+*.log
+.env
+src/main/resources/application-local.properties
+docs
+README.md

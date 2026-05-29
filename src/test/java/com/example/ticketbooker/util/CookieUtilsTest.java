@@ -42,4 +42,16 @@ class CookieUtilsTest {
         assertEquals("/api", cookie.getPath());
         assertEquals(10, cookie.getMaxAge());
     }
+
+    @Test
+    void addCookieLeavesMaxAgeDefaultWhenMaxAgeIsNotPositive() {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        CookieUtils.addCookie(response, "sessionId", "abc", "/", 0);
+
+        Cookie cookie = response.getCookie("sessionId");
+        assertEquals("abc", cookie.getValue());
+        assertEquals("/", cookie.getPath());
+        assertEquals(-1, cookie.getMaxAge());
+    }
 }

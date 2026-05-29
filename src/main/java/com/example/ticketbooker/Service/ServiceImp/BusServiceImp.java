@@ -40,6 +40,7 @@ public class BusServiceImp implements BusService {
     private TicketRepo ticketRepo;
 
     @Override
+    @Transactional(readOnly = true)
     public List<BusDTO> getAllBuses() {
         List<Buses> buses = busRepository.findAll();
         List<BusDTO> dtos = new ArrayList<>();
@@ -48,12 +49,14 @@ public class BusServiceImp implements BusService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BusDTO> getAllBuses(Pageable pageable) {
         Page<Buses> buses = busRepository.findAll(pageable);
         return buses.map(BusMapper::toDTO);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BusDTO getBusById(Integer id) {
         return busRepository.findById(id)
                       .map(BusMapper::toDTO) 
@@ -160,28 +163,33 @@ public class BusServiceImp implements BusService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Integer> getBusIdByLicensePlate(String licensePlate) {
         return busRepository.findByLicensePlate(licensePlate).map(Buses::getId); // Use map to extract the ID directly
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BusDTO> getBusesByLicensePlateContaining(String licensePlate, Pageable pageable) {
         Page<Buses> buses = busRepository.findByLicensePlateContainingIgnoreCase(licensePlate, pageable);
         return buses.map(BusMapper::toDTO);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Integer getBusCapacityById(Integer busId) {
         // Sử dụng findById và trả về capacity (hoặc null nếu không tìm thấy)
         Optional<Buses> bus = busRepository.findById(busId);
         return bus.map(Buses::getCapacity).orElse(null);
     }
     @Override
+    @Transactional(readOnly = true)
     public Buses getBusEntityById(Integer id) {
         return busRepository.findById(id).orElse(null);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BusDTO> searchBuses(String keyword, String statusStr, String typeStr, Pageable pageable) {
         BusStatus statusEnum = null;
         BusType typeEnum = null;

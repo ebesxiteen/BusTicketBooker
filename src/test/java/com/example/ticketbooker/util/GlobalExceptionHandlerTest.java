@@ -3,10 +3,16 @@ package com.example.ticketbooker.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.MethodParameter;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.servlet.ModelAndView;
@@ -71,5 +77,83 @@ class GlobalExceptionHandlerTest {
 
         assertEquals("View/Util/404Page", modelAndView.getViewName());
         assertTrue(modelAndView.getModel().containsKey("error"));
+    }
+
+    @Test
+    void handleIllegalArgumentReturnsApiBadRequest() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/bad");
+
+        ResponseEntity<?> response = (ResponseEntity<?>) handler.handleIllegalArgumentException(
+                new IllegalArgumentException("bad input"), new ExtendedModelMap(), request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiError body = (ApiError) response.getBody();
+        assertEquals("BAD_REQUEST", body.code());
+        assertEquals("bad input", body.message());
+    }
+
+    @Test
+    void handleIllegalArgumentReturnsErrorViewForWebRequest() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/admin/page");
+
+        ModelAndView modelAndView = (ModelAndView) handler.handleIllegalArgumentException(
+                new IllegalArgumentException("bad input"), new ExtendedModelMap(), request);
+
+        assertEquals("View/Util/404Page", modelAndView.getViewName());
+        assertTrue(modelAndView.getModel().containsKey("error"));
+    }
+
+    @Test
+    void handleExceptionReturnsGenericWebErrorView() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/admin/error");
+
+        ModelAndView modelAndView = (ModelAndView) handler.handleException(
+                new IllegalStateException("boom"), new ExtendedModelMap(), request);
+
+        assertEquals("View/Util/404Page", modelAndView.getViewName());
+        assertTrue(modelAndView.getModel().containsKey("error"));
+    }
+
+    @Test
+    void handleValidationExceptionReturnsApiFieldError() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/tickets");
+        MethodArgumentNotValidException exception = validationException("customerName", "must not be blank");
+
+        ResponseEntity<?> response = (ResponseEntity<?>) handler.handleValidationException(
+                exception, new ExtendedModelMap(), request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ApiError body = (ApiError) response.getBody();
+        assertEquals("VALIDATION_ERROR", body.code());
+        assertEquals("customerName: must not be blank", body.message());
+    }
+
+    @Test
+    void handleValidationExceptionReturnsWebErrorView() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/admin/tickets");
+
+        ModelAndView modelAndView = (ModelAndView) handler.handleValidationException(
+                validationException("customerName", "must not be blank"), new ExtendedModelMap(), request);
+
+        assertEquals("View/Util/404Page", modelAndView.getViewName());
+        assertTrue(modelAndView.getModel().containsKey("error"));
+    }
+
+    private MethodArgumentNotValidException validationException(String field, String message) throws Exception {
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "request");
+        bindingResult.addError(new FieldError("request", field, message));
+        Method method = SampleController.class.getDeclaredMethod("handle", String.class);
+        return new MethodArgumentNotValidException(new MethodParameter(method, 0), bindingResult);
+    }
+
+    private static class SampleController {
+        @SuppressWarnings("unused")
+        void handle(String request) {
+        }
     }
 }

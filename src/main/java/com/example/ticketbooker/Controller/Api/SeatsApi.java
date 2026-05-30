@@ -29,6 +29,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("/api/seats")
 public class SeatsApi {
     private static final Logger log = LoggerFactory.getLogger(SeatsApi.class);
+    private static final int SEAT_HOLD_SECONDS = 300;
 
     private final SeatsService seatsService;
 
@@ -60,7 +61,7 @@ public class SeatsApi {
             addSeatDTO.setTripId(tripId);
             addSeatDTO.setSeatCode(selectedSeats);
 
-            List<Integer> seatIds = seatsService.addSeats(addSeatDTO);
+            List<Integer> seatIds = seatsService.holdSeats(addSeatDTO, SEAT_HOLD_SECONDS);
             if (seatIds == null || seatIds.isEmpty()) {
                 return ResponseEntity.badRequest().body("No seats were created.");
             }
@@ -71,10 +72,12 @@ public class SeatsApi {
 
             Cookie seatIdsCookie = new Cookie("seatIds", URLEncoder.encode(seatIdsString, StandardCharsets.UTF_8));
             seatIdsCookie.setPath("/");
-            seatIdsCookie.setMaxAge(900);
+            seatIdsCookie.setMaxAge(SEAT_HOLD_SECONDS);
             response.addCookie(seatIdsCookie);
 
-            return ResponseEntity.ok("Seats pre-booked successfully.");
+            return ResponseEntity.ok()
+                    .header("X-Seat-Hold-Seconds", String.valueOf(SEAT_HOLD_SECONDS))
+                    .body("Seats pre-booked successfully.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {

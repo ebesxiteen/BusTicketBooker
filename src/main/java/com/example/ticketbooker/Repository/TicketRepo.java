@@ -36,6 +36,18 @@ public interface TicketRepo extends JpaRepository<Tickets, Integer> {
                                 @Param("route") String route,
                                 @Param("status") TicketStatus status);
 
+    @Query("SELECT t FROM Tickets t WHERE t.booker.id = :bookerId " +
+           "AND (:ticketId IS NULL OR t.id = :ticketId) " +
+           "AND (:departureDate IS NULL OR FUNCTION('DATE', t.trip.departureTime) = :departureDate) " +
+           "AND (:route IS NULL OR CONCAT(t.trip.route.departureLocation, ' - ', t.trip.route.arrivalLocation) LIKE CONCAT('%', :route, '%')) " +
+           "AND (:status IS NULL OR t.ticketStatus = :status)")
+    Page<Tickets> searchTickets(@Param("bookerId") int bookerId,
+                                @Param("ticketId") Integer ticketId,
+                                @Param("departureDate") LocalDate departureDate,
+                                @Param("route") String route,
+                                @Param("status") TicketStatus status,
+                                Pageable pageable);
+
     @Query("SELECT COUNT(t) FROM Tickets t WHERE t.invoice.paymentTime BETWEEN :start AND :end")
     int countTicketsByPaymentTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 

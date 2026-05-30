@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets; // Thêm import này
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,9 +210,16 @@ public String showPaymentSuccess(HttpServletRequest request,
         int tripId = Integer.parseInt(CookieUtils.getCookieValue(request, "tripId", "0"));
         int bookerId = Integer.parseInt(CookieUtils.getCookieValue(request, "bookerId", "0"));
         String seatIdsRaw = CookieUtils.getCookieValue(request, "seatIds", "");
+
+        int paymentStatus = 0;
+        if (allParams.containsKey("paymentStatus")) {
+             paymentStatus = Integer.parseInt(allParams.get("paymentStatus"));
+        } else if (allParams.containsKey("status")) {
+             paymentStatus = Integer.parseInt(allParams.get("status"));
+        }
         
         // --- FIX: Kiểm tra dữ liệu quan trọng ---
-        if (tripId == 0 || bookerId == 0 || seatIdsRaw.isEmpty()) {
+        if (tripId == 0 || seatIdsRaw.isEmpty() || (paymentStatus == 1 && bookerId == 0)) {
             System.out.println("Lỗi: Thiếu thông tin trong Cookie (tripId, bookerId hoặc seatIds)");
             return "redirect:/greenbus"; // Hoặc trang lỗi
         }
@@ -225,16 +233,6 @@ public String showPaymentSuccess(HttpServletRequest request,
         // Giải mã Seat IDs
         String seatIdsDecoded = URLDecoder.decode(seatIdsRaw, StandardCharsets.UTF_8);
         String[] listSeatIds = seatIdsDecoded.trim().split("\\s+");
-
-        // Lấy trạng thái thanh toán từ URL (ZaloPay redirect về kèm param)
-        // Lưu ý: ZaloPay trả về 'status' hoặc 'returncode', nhưng ở Service bạn đang set hardcode '?paymentStatus=1'
-        int paymentStatus = 0;
-        if (allParams.containsKey("paymentStatus")) {
-             paymentStatus = Integer.parseInt(allParams.get("paymentStatus"));
-        } else if (allParams.containsKey("status")) { 
-             // Dự phòng trường hợp cổng thanh toán khác trả về 'status'
-             paymentStatus = Integer.parseInt(allParams.get("status")); 
-        }
 
        if (paymentStatus == 1) { // Thanh toán thành công (hoặc đặt đơn thành công với COD)
 
@@ -303,24 +301,30 @@ public String showPaymentSuccess(HttpServletRequest request,
 
             // Xóa Cookie để tránh đặt lại (Optional)
             CookieUtils.addCookie(response, "seatIds", "", "/", 0);
+            CookieUtils.addCookie(response, "selectedSeats", "", "/", 0);
             
         } else {
-            // Thanh toán thất bại hoặc Hủy -> Xóa ghế đã giữ
-            System.out.println("Thanh toán thất bại. Đang xóa ghế tạm...");
+            // Thanh toán thất bại hoặc hủy -> giải phóng ghế đang giữ.
+            System.out.println("Thanh toán thất bại. Đang giải phóng ghế tạm...");
+            List<Integer> heldSeatIds = new ArrayList<>();
             for (String s : listSeatIds) {
                 if (s.isEmpty()) continue;
 
                 try {
-                    seatsService.deleteSeat(Integer.parseInt(s));
+                    heldSeatIds.add(Integer.parseInt(s));
                 } catch (NumberFormatException nfe) {
                     Seats seat = seatsService.getSeatByTripIdAndSeatCode(tripId, s);
                     if (seat != null) {
-                        seatsService.deleteSeat(seat.getId());
+                        heldSeatIds.add(seat.getId());
                     } else {
-                        System.out.println("Không thể xóa seat, mã không hợp lệ: " + s);
+                        System.out.println("Không thể giải phóng seat, mã không hợp lệ: " + s);
                     }
                 }
             }
+            seatsService.releaseHeldSeats(heldSeatIds);
+            CookieUtils.addCookie(response, "seatIds", "", "/", 0);
+            CookieUtils.addCookie(response, "selectedSeats", "", "/", 0);
+            return "redirect:/greenbus/booking?tripId=" + tripId + "&paymentFailed=true";
         }
     } catch (Exception e) {
         e.printStackTrace();

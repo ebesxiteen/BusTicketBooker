@@ -11,6 +11,7 @@ services:
       - mysql-data:/var/lib/mysql
       - ./BusTicketManagement.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./insertdata.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+      - ./backups:/backups
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 10s
@@ -29,8 +30,17 @@ services:
         condition: service_healthy
     ports:
       - "${APP_PORT:-8000}:8000"
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/actuator/health | grep -q 'UP'"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: docker,prod
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8000}
       DB_PASSWORD: ${DB_PASSWORD:-changeme}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-mail-password}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-google-client-id}

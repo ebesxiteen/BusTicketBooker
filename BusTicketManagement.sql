@@ -1,6 +1,8 @@
 -- PHẦN 1: CLEANUP VÀ KHỞI TẠO DATABASE
 DROP DATABASE IF EXISTS ticketbooker;
-CREATE DATABASE ticketbooker;
+CREATE DATABASE ticketbooker
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_0900_ai_ci;
 USE ticketbooker;
 
 -- PHẦN 2: TẠO SCHEMA MỚI
@@ -86,6 +88,7 @@ CREATE TABLE Seats (
     seatId INT AUTO_INCREMENT PRIMARY KEY,
     tripId INT NOT NULL,
     seatCode VARCHAR(10) NOT NULL,
+    holdExpiresAt DATETIME NULL,
     FOREIGN KEY (tripId) REFERENCES Trips(tripId),
     CONSTRAINT uq_seat_trip UNIQUE (tripId, seatCode) -- mỗi ghế code chỉ xuất hiện 1 lần trong 1 trip
 );

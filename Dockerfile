@@ -12,7 +12,10 @@ RUN --mount=type=cache,target=/root/.m2 mvn -q -DskipTests package
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-RUN useradd --system --create-home --uid 10001 appuser
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --create-home --uid 10001 appuser
 COPY --from=build /workspace/target/*.jar /app/ticketbooker.jar
 
 USER appuser

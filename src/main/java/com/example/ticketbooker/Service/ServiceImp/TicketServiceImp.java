@@ -352,6 +352,16 @@ String html = ""
     }
 
     @Override
+    public TicketResponse searchTickets(int accountId, Integer ticketId, LocalDate departureDate, String route, TicketStatus status, Pageable pageable) {
+        try {
+            return new TicketResponse(ticketRepository.searchTickets(accountId, ticketId, departureDate, route, status, pageable));
+        } catch (Exception e) {
+            log.error("Failed to search paged tickets", e);
+            return new TicketResponse();
+        }
+    }
+
+    @Override
     public TicketStatsDTO getTicketStats(String period, LocalDate selectedDate) {
         LocalDate previousDate = getPreviousDate(period, selectedDate);
         int currentPeriodCount = getTicketCountByPeriod(period, selectedDate);

@@ -17,6 +17,7 @@
 
         <!-- Form lọc -->
         <form method="get" th:action="@{/profile/history-booking}" class="bg-gray-50 p-4 rounded-lg mb-6 shadow-inner">
+            <input type="hidden" name="size" th:value="${pageSize}">
             <div class="grid grid-cols-5 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Mã vé</label>
@@ -126,6 +127,42 @@
                 </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div th:if="${ticketResponse.totalPages > 1}"
+             class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-6">
+            <p class="text-sm text-gray-500"
+               th:text="'Trang ' + ${ticketResponse.currentPage} + '/' + ${ticketResponse.totalPages} + ' - Tổng ' + ${ticketResponse.ticketsCount} + ' vé'"></p>
+
+            <div class="flex justify-center items-center gap-2">
+                <a th:if="${ticketResponse.currentPage > 1}"
+                   th:href="@{/profile/history-booking(page=${ticketResponse.currentPage - 2}, size=${pageSize}, ticketId=${filterTicketId}, departureDate=${filterDepartureDate}, route=${filterRoute}, status=${filterStatus})}"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+                    Trước
+                </a>
+                <span th:unless="${ticketResponse.currentPage > 1}"
+                      class="px-4 py-2 text-sm font-medium text-gray-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+                    Trước
+                </span>
+
+                <span th:each="i : ${#numbers.sequence(1, ticketResponse.totalPages)}">
+                    <a th:if="${i >= ticketResponse.currentPage - 2 and i <= ticketResponse.currentPage + 2}"
+                       th:href="@{/profile/history-booking(page=${i - 1}, size=${pageSize}, ticketId=${filterTicketId}, departureDate=${filterDepartureDate}, route=${filterRoute}, status=${filterStatus})}"
+                       th:text="${i}"
+                       th:class="${i == ticketResponse.currentPage ? 'bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition' : 'px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition'}">
+                    </a>
+                </span>
+
+                <a th:if="${ticketResponse.currentPage < ticketResponse.totalPages}"
+                   th:href="@{/profile/history-booking(page=${ticketResponse.currentPage}, size=${pageSize}, ticketId=${filterTicketId}, departureDate=${filterDepartureDate}, route=${filterRoute}, status=${filterStatus})}"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition">
+                    Sau
+                </a>
+                <span th:unless="${ticketResponse.currentPage < ticketResponse.totalPages}"
+                      class="px-4 py-2 text-sm font-medium text-gray-400 bg-white border border-gray-200 rounded-lg cursor-not-allowed">
+                    Sau
+                </span>
+            </div>
         </div>
 
     </main>

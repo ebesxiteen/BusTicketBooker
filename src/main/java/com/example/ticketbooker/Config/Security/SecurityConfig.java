@@ -2,6 +2,7 @@ package com.example.ticketbooker.Config.Security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -85,8 +86,11 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/routes/search").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/api/routes/getDepartureLocation").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/api/routes/getArrivalLocation").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/routes/get-all").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/api/routes/get-routes").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/api/tickets/payment-infor").permitAll()
+                                                .requestMatchers(EndpointRequest.to("health", "info")).permitAll()
+                                                .requestMatchers(EndpointRequest.toAnyEndpoint()).hasAuthority("ADMIN")
 
                                                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "MANAGER")
                                                 .requestMatchers("/api/users/**", "/api/drivers/**", "/api/buses/**")

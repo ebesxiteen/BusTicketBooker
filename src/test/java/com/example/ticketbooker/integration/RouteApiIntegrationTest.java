@@ -109,4 +109,19 @@ class RouteApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.routeCount").value(0));
     }
+
+    @Test
+    void getAllRoutesReturnsAllRoutesForSearchDropdown() throws Exception {
+        ResponseRouteDTO response = new ResponseRouteDTO();
+        response.setRouteCount(1);
+        response.setList(new ArrayList<>());
+        response.getList().add(new Routes(1, "Ha Noi", "Da Nang", LocalTime.of(10, 30), RouteStatus.ACTIVE));
+        when(routeService.findAllRoutes()).thenReturn(response);
+
+        mockMvc.perform(get("/api/routes/get-all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.routeCount").value(1))
+                .andExpect(jsonPath("$.list[0].departureLocation").value("Ha Noi"))
+                .andExpect(jsonPath("$.list[0].arrivalLocation").value("Da Nang"));
+    }
 }

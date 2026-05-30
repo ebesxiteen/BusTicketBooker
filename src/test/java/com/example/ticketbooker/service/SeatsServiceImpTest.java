@@ -70,13 +70,36 @@ class SeatsServiceImpTest {
 
     @Test
     void getBookedSeatsForTripMapsSeatCodes() {
-        when(seatsRepository.findByTripId(10)).thenReturn(List.of(
-                new Seats(1, new Trips(), "A01"),
-                new Seats(2, new Trips(), "A02")));
+        when(seatsRepository.findUnavailableSeatCodesByTripId(10)).thenReturn(List.of("A01", "A02"));
 
         List<String> result = seatsServiceImp.getBookedSeatsForTrip(10);
 
         assertEquals(List.of("A01", "A02"), result);
+    }
+
+    @Test
+    void holdSeatsMarksExistingSeatsWithExpiryAndReturnsIds() {
+        Trips trip = new Trips();
+        trip.setId(10);
+        Seats seat = new Seats(1, trip, "A01");
+        when(tripService.getTripById(Integer.valueOf(10))).thenReturn(trip);
+        when(seatsRepository.findOptionalByTripIdAndSeatCode(10, "A01")).thenReturn(Optional.of(seat));
+        when(seatsRepository.saveAndFlush(seat)).thenReturn(seat);
+
+        List<Integer> result = seatsServiceImp.holdSeats(new AddSeatDTO(10, "A01"), 300);
+
+        assertEquals(List.of(1), result);
+        org.junit.jupiter.api.Assertions.assertNotNull(seat.getHoldExpiresAt());
+    }
+
+    @Test
+    void holdSeatsRejectsUnavailableSeats() {
+        Trips trip = new Trips();
+        trip.setId(10);
+        when(tripService.getTripById(Integer.valueOf(10))).thenReturn(trip);
+        when(seatsRepository.countUnavailableSeatByTripIdAndSeatCode(10, "A01")).thenReturn(1);
+
+        assertThrows(IllegalArgumentException.class, () -> seatsServiceImp.holdSeats(new AddSeatDTO(10, "A01"), 300));
     }
 
     @Test
@@ -94,5 +117,17 @@ class SeatsServiceImpTest {
         seatsServiceImp.deleteSeat(1);
 
         verify(seatsRepository).deleteById(1);
+    }
+
+    @Test
+    void releaseHeldSeatsDelegatesToRepository() {
+        when(seatsRepository.releaseHeldSeatsByIds(List.of(1, 2))).thenReturn(2);
+
+        assertEquals(2, seatsServiceImp.releaseHeldSeats(List.of(1, 2)));
+    }
+
+    @Test
+    void releaseHeldSeatsIgnoresEmptyInput() {
+        assertEquals(0, seatsServiceImp.releaseHeldSeats(List.of()));
     }
 }

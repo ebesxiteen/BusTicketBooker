@@ -8,6 +8,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -176,6 +179,8 @@ public ResponseEntity<byte[]> getProfilePhoto(@PathVariable Integer userId) {
                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
                                     @RequestParam(required = false) String route,
                                     @RequestParam(required = false) TicketStatus status,
+                                    @RequestParam(defaultValue = "0") int page,
+                                    @RequestParam(defaultValue = "5") int size,
                                     Model model) {
         
         if (!SecurityUtils.isLoggedIn()) {
@@ -185,7 +190,10 @@ public ResponseEntity<byte[]> getProfilePhoto(@PathVariable Integer userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Users user = SecurityUtils.extractUser(authentication.getPrincipal());
         
-        TicketResponse ticketResponse = ticketService.searchTickets(user.getId(), ticketId, departureDate, route, status);
+        page = Math.max(page, 0);
+        size = Math.max(1, Math.min(size, 20));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        TicketResponse ticketResponse = ticketService.searchTickets(user.getId(), ticketId, departureDate, route, status, pageable);
         
         model.addAttribute("ticketResponse", ticketResponse);
         model.addAttribute("ticketStatuses", TicketStatus.values());
@@ -193,6 +201,7 @@ public ResponseEntity<byte[]> getProfilePhoto(@PathVariable Integer userId) {
         model.addAttribute("filterDepartureDate", departureDate);
         model.addAttribute("filterRoute", route);
         model.addAttribute("filterStatus", status);
+        model.addAttribute("pageSize", size);
         System.out.println("DEBUG: User đang login ID = " + user.getId());
         System.out.println("DEBUG: Đang tìm vé cho ID = " + user.getId());
         System.out.println("DEBUG: Số vé tìm thấy = " + (ticketResponse.getListTickets() != null ? ticketResponse.getListTickets().size() : 0));

@@ -12,8 +12,9 @@ TicketBooker là hệ thống quản lý đặt vé xe khách xây dựng bằng
 | View | Thymeleaf, Thymeleaf Layout Dialect, Thymeleaf Security |
 | Tích hợp ngoài | VNPay, ZaloPay, SMTP Mail, OpenAI API |
 | Build/Test | Maven, JUnit 5, Mockito, Spring Test, MockMvc, JaCoCo |
-| Vận hành | Docker, Docker Compose, GitHub Actions |
-| Tối ưu | Spring Cache, HTTP compression, static resource cache, read-only transaction |
+| Vận hành | Docker, Docker Compose, GitHub Actions, Spring Boot Actuator |
+| Quan sát | Micrometer, Prometheus metrics, health/readiness endpoint |
+| Tối ưu | Caffeine Cache, HTTP compression, static resource cache, read-only transaction, HikariCP tuning |
 
 ## Tính Năng Chính
 
@@ -117,6 +118,12 @@ docker compose up --build
 http://localhost:8000
 ```
 
+Healthcheck:
+
+```text
+http://localhost:8000/actuator/health
+```
+
 Dừng container:
 
 ```bash
@@ -168,7 +175,7 @@ http://localhost:8000/admin
 | --- | --- |
 | mặc định | Chạy local với MySQL tại `localhost:3306` |
 | `docker` | Chạy trong Docker Compose, datasource trỏ tới service `mysql` |
-| `prod` | Tắt SQL debug, tắt Open Session in View, bật cache static |
+| `prod` | Tắt SQL debug, tắt Open Session in View, bật cache static, tăng TTL cache |
 | test resources | Test dùng H2 in-memory, tắt scheduler, dùng dummy secret |
 
 Chạy production profile:
@@ -262,15 +269,33 @@ java -jar target/ticketBooker-0.0.1-SNAPSHOT.jar
 | `/admin/invoices` | Quản lý hóa đơn |
 | `/admin/statistics` | Thống kê |
 
+## Observability
+
+Các endpoint vận hành đã bật:
+
+| Endpoint | Quyền truy cập | Mục đích |
+| --- | --- | --- |
+| `/actuator/health` | Public | Healthcheck cho Docker/load balancer |
+| `/actuator/info` | Public | Thông tin ứng dụng |
+| `/actuator/metrics` | ADMIN | Xem metric runtime |
+| `/actuator/prometheus` | ADMIN | Scrape metric cho Prometheus/Grafana |
+
+Docker Compose dùng `/actuator/health` để kiểm tra container app đã sẵn sàng.
+Healthcheck không phụ thuộc SMTP vì `management.health.mail.enabled=false`.
+
 ## Tối Ưu Đã Áp Dụng
 
 - Bật HTTP compression.
 - Bật static resource cache cho `docker` và `prod`.
+- Bật Spring Boot Actuator cho healthcheck/metrics.
+- Bật Micrometer Prometheus để tích hợp Prometheus/Grafana.
+- Dùng Caffeine làm cache provider có TTL, giới hạn size và thống kê cache.
+- Tinh chỉnh HikariCP connection pool để tránh mở quá nhiều connection MySQL.
 - Tách scheduling bằng `app.scheduling.enabled`.
 - Test tắt scheduler để tránh tác vụ nền ảnh hưởng kết quả.
 - Dùng H2 in-memory cho test, không cần MySQL local.
 - Dùng `@Transactional(readOnly = true)` cho các service đọc dữ liệu.
-- Thêm Spring Cache cho dữ liệu lookup form admin:
+- Thêm cache cho dữ liệu lookup form admin:
   - route options
   - bus options
   - driver options

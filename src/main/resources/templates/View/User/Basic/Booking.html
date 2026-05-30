@@ -6,10 +6,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chọn ghế & Thanh toán - GreenBus</title>
-    <!-- Thêm CSS cho ghế nếu chưa có trong file riêng -->
-     <!-- Link JS    -->
-<script src="/js/booking.js"></script>
-<script src="/js/ZaloPayment.js"></script>
     <style>
         .seat { transition: all 0.2s; }
         .seat:active { transform: scale(0.95); }
@@ -103,6 +99,15 @@
                         <span>Ghế:</span>
                         <span id="selectedSeats" class="font-bold text-emerald-600 text-right max-w-[150px] break-words">...</span>
                     </div>
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-semibold">Thời gian giữ ghế</span>
+                            <span id="seatHoldTimer" class="font-bold tabular-nums">--:--</span>
+                        </div>
+                        <p id="seatHoldStatus" class="mt-1 text-xs text-amber-700">
+                            Chọn ghế và bấm Đặt vé để giữ ghế trong 5 phút.
+                        </p>
+                    </div>
                     <div class="flex justify-between text-gray-600">
                         <span>Đơn giá:</span>
                         <span id="ticketPrice" class="font-bold text-gray-800">0đ</span>
@@ -156,5 +161,9 @@
         </div>
     </div>
 </div>
+<th:block layout:fragment="script">
+    <script th:src="@{/js/Booking.js}"></script>
+    <script th:src="@{/js/ZaloPayment.js}"></script>
+</th:block>
 </body>
 </html>

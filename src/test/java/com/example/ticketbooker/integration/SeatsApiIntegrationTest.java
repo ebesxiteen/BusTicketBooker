@@ -59,13 +59,14 @@ class SeatsApiIntegrationTest {
 
     @Test
     void preBookingSeatReadsCookiesAndWritesSeatIdsCookie() throws Exception {
-        when(seatsService.addSeats(new AddSeatDTO(10, "A01 A02"))).thenReturn(List.of(1, 2));
+        when(seatsService.holdSeats(new AddSeatDTO(10, "A01 A02"), 300)).thenReturn(List.of(1, 2));
 
         mockMvc.perform(post("/api/seats/prebooking-seat")
                         .cookie(new Cookie("tripId", "10"))
                         .cookie(new Cookie("selectedSeats", "A01+A02")))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Seats pre-booked successfully."))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Seat-Hold-Seconds", "300"))
                 .andExpect(cookie().exists("seatIds"));
     }
 

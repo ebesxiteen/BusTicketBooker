@@ -50,6 +50,9 @@ public class ZaloPayService {
     @Value("${zalo.queryEndpoint}")
     private String queryEndpoint;
 
+    @Value("${app.base-url}")
+    private String appBaseUrl;
+
     private String getCurrentTimeString(String format) {
         Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT+7"));
         SimpleDateFormat fmt = new SimpleDateFormat(format);
@@ -64,7 +67,7 @@ public class ZaloPayService {
         String appTransId = getCurrentTimeString("yyMMdd") + "_" + randomId;
 
         Map<String, Object> embedData = new HashMap<>();
-        embedData.put("redirecturl", "http://localhost:8000/greenbus/thankyou?paymentStatus=1");
+        embedData.put("redirecturl", appBaseUrl + "/greenbus/thankyou?paymentStatus=1");
 
         String embedDataJson = new JSONObject(embedData).toString();
         String itemJson = "[]";

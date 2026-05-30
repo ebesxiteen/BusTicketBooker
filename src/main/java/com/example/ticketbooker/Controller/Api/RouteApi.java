@@ -1,7 +1,9 @@
 package com.example.ticketbooker.Controller.Api;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -67,9 +69,9 @@ public class RouteApi {
     @GetMapping("/getDepartureLocation")
     public List<String> getDepartureLocation() {
         ResponseRouteDTO responseRoute = routeService.findAllRoutes();
-        List<String> departureLocationList = new ArrayList<>();
-        responseRoute.getList().forEach(route -> departureLocationList.add(route.getDepartureLocation()));
-        return departureLocationList;
+        Set<String> departureLocations = new LinkedHashSet<>();
+        responseRoute.getList().forEach(route -> departureLocations.add(route.getDepartureLocation()));
+        return new ArrayList<>(departureLocations);
     }
     @GetMapping("/getArrivalLocation")
     public List<Routes> getArrivalLocation(@RequestParam String departureLocation) {
@@ -79,6 +81,11 @@ public class RouteApi {
 
     @PostMapping("/get-routes")
     public ResponseRouteDTO getRoutes() {
+        return routeService.findAllRoutes();
+    }
+
+    @GetMapping("/get-all")
+    public ResponseRouteDTO getAllRoutes() {
         return routeService.findAllRoutes();
     }
 }

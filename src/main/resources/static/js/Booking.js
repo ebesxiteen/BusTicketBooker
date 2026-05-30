@@ -4,7 +4,9 @@
         let TICKET_PRICE = 0;
         let selectedSeats = [];
         const MAX_SEATS = 5;
+        const DEFAULT_SEAT_HOLD_SECONDS = 5 * 60;
         let BUS_CAPACITY = 36; // mặc định
+        let seatHoldIntervalId = null;
 
         init();
 
@@ -36,10 +38,16 @@
 
                 if (!response.ok) {
                     console.error("Lỗi gọi API /api/trips: ", response.status);
+                    showTripLoadError("Không tải được thông tin chuyến đi.");
                     return;
                 }
 
                 const data = await response.json();
+
+                if (!data || !data.departureLocation || !data.arrivalLocation) {
+                    showTripLoadError("Không tìm thấy thông tin chuyến đi.");
+                    return;
+                }
 
                 // Cập nhật UI
                 const depLoc = document.getElementById('departureLocation');
@@ -79,6 +87,23 @@
 
             } catch (error) {
                 console.error('Lỗi lấy thông tin chuyến:', error);
+                showTripLoadError("Không tải được thông tin chuyến đi.");
+            }
+        }
+
+        function showTripLoadError(message) {
+            const depLoc = document.getElementById('departureLocation');
+            const depTime = document.getElementById('departureTime');
+            const seatMapContainer = document.getElementById('seatMapContainer');
+
+            if (depLoc) depLoc.textContent = message;
+            if (depTime) depTime.textContent = "--";
+            if (seatMapContainer) {
+                seatMapContainer.innerHTML = `
+                    <div class="text-center w-full py-8 text-red-500">
+                        <i class="fas fa-circle-exclamation mr-2"></i>${message}
+                    </div>
+                `;
             }
         }
 
@@ -217,9 +242,12 @@
     if (!btnPay) return;
 
     btnPay.addEventListener('click', async () => {
-        const name  = document.querySelector('input[name="customerName"]').value;
-        const phone = document.querySelector('input[name="customerPhone"]').value;
-        const email = document.querySelector('input[name="email"]').value;
+        const nameInput = document.querySelector('input[name="customerName"]');
+        const phoneInput = document.querySelector('input[name="customerPhone"]');
+        const emailInput = document.querySelector('input[name="email"]');
+        const name = nameInput?.value.trim();
+        const phone = phoneInput?.value.trim();
+        const email = emailInput?.value.trim();
 
         if (selectedSeats.length === 0) {
             Swal.fire({
@@ -229,12 +257,18 @@
             });
             return;
         }
-        if (!name || !phone || !email) {
+        const missingField = [
+            { input: nameInput, label: 'họ và tên' },
+            { input: phoneInput, label: 'số điện thoại' },
+            { input: emailInput, label: 'email' }
+        ].find(field => !field.input?.value.trim());
+
+        if (missingField) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Thiếu thông tin',
-                text: 'Vui lòng điền đầy đủ thông tin khách hàng!'
-            });
+                text: `Vui lòng nhập ${missingField.label}.`
+            }).then(() => focusField(missingField.input));
             return;
         }
 
@@ -257,6 +291,9 @@
         const msg = await res.text();
         throw new Error(msg || 'Giữ chỗ ghế thất bại');
     }
+
+    const holdSeconds = parseInt(res.headers.get('X-Seat-Hold-Seconds') || DEFAULT_SEAT_HOLD_SECONDS, 10);
+    startSeatHoldCountdown(Number.isFinite(holdSeconds) ? holdSeconds : DEFAULT_SEAT_HOLD_SECONDS);
 
     const paymentMethod =
         document.querySelector('input[name="payment"]:checked').value;
@@ -313,11 +350,54 @@
             }).format(amount || 0);
         }
 
+        function focusField(input) {
+            if (!input) return;
+
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            input.focus({ preventScroll: true });
+            input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+            input.addEventListener('input', () => {
+                input.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+            }, { once: true });
+        }
+
         function setCookie(cname, cvalue, exhours) {
             const d = new Date();
             d.setTime(d.getTime() + (exhours * 60 * 60 * 1000));
             const expires = "expires=" + d.toUTCString();
             document.cookie = cname + "=" + encodeURIComponent(cvalue) + ";" + expires + ";path=/";
+        }
+
+        function startSeatHoldCountdown(totalSeconds) {
+            const timerEl = document.getElementById('seatHoldTimer');
+            const statusEl = document.getElementById('seatHoldStatus');
+            const btnPay = document.getElementById('btnPay');
+            if (!timerEl || !statusEl) return;
+
+            const expiresAt = Date.now() + totalSeconds * 1000;
+            if (seatHoldIntervalId) {
+                clearInterval(seatHoldIntervalId);
+            }
+
+            statusEl.textContent = 'Ghế đang được giữ tạm thời. Vui lòng hoàn tất thanh toán trước khi hết giờ.';
+
+            const tick = () => {
+                const remainingSeconds = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+                const minutes = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+                const seconds = String(remainingSeconds % 60).padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(seatHoldIntervalId);
+                    seatHoldIntervalId = null;
+                    timerEl.textContent = '00:00';
+                    statusEl.textContent = 'Thời gian giữ ghế đã hết. Vui lòng tải lại trang và chọn ghế lại.';
+                    if (btnPay) btnPay.disabled = true;
+                }
+            };
+
+            tick();
+            seatHoldIntervalId = setInterval(tick, 1000);
         }
     });
 })();

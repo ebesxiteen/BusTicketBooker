@@ -1,6 +1,7 @@
 package com.example.ticketbooker.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,13 +17,52 @@ public interface SeatsRepo extends JpaRepository<Seats, Integer> {
     List<Seats> findByTripId(Integer tripId);
 
     boolean existsByTripIdAndSeatCode(Integer id, String seatCode); 
+
+    Optional<Seats> findOptionalByTripIdAndSeatCode(Integer tripId, String seatCode);
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM Seats s
+            LEFT JOIN ticket_seats ts ON ts.seatId = s.seatId
+            WHERE s.tripId = :tripId
+              AND s.seatCode = :seatCode
+              AND (ts.seatId IS NOT NULL OR s.holdExpiresAt > CURRENT_TIMESTAMP)
+            """, nativeQuery = true)
+    int countUnavailableSeatByTripIdAndSeatCode(@Param("tripId") Integer tripId,
+                                                @Param("seatCode") String seatCode);
+
+    @Query(value = """
+            SELECT DISTINCT s.seatCode
+            FROM Seats s
+            LEFT JOIN ticket_seats ts ON ts.seatId = s.seatId
+            WHERE s.tripId = :tripId
+              AND (ts.seatId IS NOT NULL OR s.holdExpiresAt > CURRENT_TIMESTAMP)
+            ORDER BY s.seatCode
+            """, nativeQuery = true)
+    List<String> findUnavailableSeatCodesByTripId(@Param("tripId") Integer tripId);
     
     @Modifying
     @Transactional
-    @Query(value = "DELETE FROM Seats " +
-                   "WHERE seatId NOT IN (SELECT seatId FROM ticket_seats)", 
-           nativeQuery = true)
+    @Query(value = """
+            UPDATE Seats s
+            LEFT JOIN ticket_seats ts ON ts.seatId = s.seatId
+            SET s.holdExpiresAt = NULL
+            WHERE ts.seatId IS NULL
+              AND s.holdExpiresAt IS NOT NULL
+              AND s.holdExpiresAt <= CURRENT_TIMESTAMP
+            """, nativeQuery = true)
     int cleanupZombieSeats();
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+            UPDATE Seats s
+            LEFT JOIN ticket_seats ts ON ts.seatId = s.seatId
+            SET s.holdExpiresAt = NULL
+            WHERE ts.seatId IS NULL
+              AND s.seatId IN (:seatIds)
+            """, nativeQuery = true)
+    int releaseHeldSeatsByIds(@Param("seatIds") List<Integer> seatIds);
     
     @Modifying
     @Transactional

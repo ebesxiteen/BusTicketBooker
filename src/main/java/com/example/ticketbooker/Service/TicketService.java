@@ -25,6 +25,8 @@ public interface TicketService {
     TicketResponse getTicketsByUserId(int userId); 
 
     TicketResponse searchTickets(int userId, Integer ticketId, LocalDate departureDate, String route, TicketStatus status);
+
+    TicketResponse searchTickets(int userId, Integer ticketId, LocalDate departureDate, String route, TicketStatus status, Pageable pageable);
     
     TicketStatsDTO getTicketStats(String period, LocalDate selectedDate);
     

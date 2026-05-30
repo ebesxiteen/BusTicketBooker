@@ -1,0 +1,9 @@
+services:
+  mysql:
+    ports: []
+
+  app:
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,prod

@@ -54,38 +54,7 @@ async function startZaloPay(tripId, selectedSeats) {
 
         // 3. KIỂM TRA KẾT QUẢ TẠO ĐƠN
         if (data.returnCode === 1 && data.returnUrl) {
-            
-            // 3.1. TẠO ĐƠN ZALOPAY THÀNH CÔNG -> GỌI API TẠO GHẾ TẠM
-            
-            // Dữ liệu tạo ghế tạm (/api/seats/add cần tripId và seatCode là chuỗi "A01 A02")
-            const seatPayload = {
-                tripId: parseInt(tripId), 
-                seatCode: selectedSeats.join(' ') 
-            };
-
-            // GỌI API TẠO GHẾ TẠM CŨ CỦA BẠN (SeatsApi.java)
-            const seatRes = await fetch("/api/seats/add", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(seatPayload)
-            });
-            
-            if (seatRes.ok) {
-                // 3.2. ĐẶT CHỖ THÀNH CÔNG -> Redirect sang ZaloPay
-                window.location.href = data.returnUrl;
-            } else {
-                // Lỗi 4xx/5xx từ /api/seats/add (Ví dụ: ghế đã bị người khác đặt/Lỗi DB)
-                const errorText = await seatRes.text();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Lỗi đặt chỗ tạm thời',
-                    // Hiển thị message lỗi chi tiết từ SeatsApi.java (nếu có)
-                    text: "Ghế không thể đặt chỗ. Có thể ghế đã bị người khác chọn. Chi tiết: " + errorText 
-                });
-                // ⚠️ Quan trọng: Đơn ZaloPay đã được tạo nhưng sẽ hết hạn sau 15 phút.
-                // Chúng ta không cần làm gì thêm ở đây.
-            }
-            
+            window.location.href = data.returnUrl;
         } else {
             // LỖI TỪ ZALOPAY (Return Code != 1) - Ghế chưa được tạo
             Swal.fire({

@@ -236,21 +236,16 @@
     </div>
 
 </div>
-<script>
-    function searchTrip(destination) {
-        // Lấy ngày hiện tại format YYYY-MM-DD
-        const today = new Date().toISOString().slice(0, 10);
-        
-        // Tạo link URL với tham số đúng logic
-        // Mặc định departure là rỗng hoặc set cứng TP. Hồ Chí Minh tùy bạn
-        const url = `/greenbus/search-trips?arrival=${encodeURIComponent(destination)}&date=${today}`;
-        
-        // Chuyển trang
-        window.location.href = url;
-    }
-</script>
-<!-- Import Script JS cho Trang Chủ (Nằm cuối body để đảm bảo DOM load xong) -->
-<script th:src="@{/js/trangchu.js}"></script>
+<th:block layout:fragment="script">
+    <script>
+        function searchTrip(destination) {
+            const today = new Date().toISOString().slice(0, 10);
+            const url = `/greenbus/search-trips?arrival=${encodeURIComponent(destination)}&date=${today}`;
+            window.location.href = url;
+        }
+    </script>
+    <script th:src="@{/js/TrangChu.js}"></script>
+</th:block>
 
 
 </body>

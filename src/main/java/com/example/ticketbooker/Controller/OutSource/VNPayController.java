@@ -1,6 +1,7 @@
 package com.example.ticketbooker.Controller.OutSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,9 @@ public class VNPayController {
 
     @Autowired
     private VNPAYService vnPayService;
+
+    @Value("${app.base-url}")
+    private String appBaseUrl;
 
     // =========================
     // 1. HIỂN THỊ TRANG TẠO ĐƠN (createOrder.html)
@@ -46,13 +50,7 @@ public class VNPayController {
                               @RequestParam("orderInfo") String orderInfo,
                               HttpServletRequest request) {
 
-        // baseUrl: vd http://localhost:8000
-        String baseUrl = request.getScheme() + "://" 
-                       + request.getServerName() + ":" 
-                       + request.getServerPort();
-
-        // Tạo URL thanh toán VNPay (service bà đã có)
-        String vnpayUrl = vnPayService.createOrder(request, orderTotal, orderInfo, baseUrl);
+        String vnpayUrl = vnPayService.createOrder(request, orderTotal, orderInfo, appBaseUrl);
 
         return "redirect:" + vnpayUrl;
     }

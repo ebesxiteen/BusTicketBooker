@@ -8,8 +8,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.ticketbooker.Config.VNPAYConfig;
 import com.example.ticketbooker.Service.OutSource.VNPAYService;
@@ -17,6 +19,16 @@ import com.example.ticketbooker.Service.OutSource.VNPAYService;
 class VNPAYServiceTest {
 
     private final VNPAYService vnpayService = new VNPAYService();
+    private static final String HASH_SECRET = "dummy-vnpay-hash-secret";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(vnpayService, "payUrl", VNPAYConfig.vnp_PayUrl);
+        ReflectionTestUtils.setField(vnpayService, "returnPath", VNPAYConfig.vnp_Returnurl);
+        ReflectionTestUtils.setField(vnpayService, "tmnCode", "dummy-vnpay-tmn-code");
+        ReflectionTestUtils.setField(vnpayService, "hashSecret", HASH_SECRET);
+        VNPAYConfig.vnp_HashSecret = HASH_SECRET;
+    }
 
     @Test
     void createOrderBuildsPaymentUrlWithAmountReturnUrlAndSecureHash() {
@@ -27,7 +39,7 @@ class VNPAYServiceTest {
 
         assertTrue(url.startsWith(VNPAYConfig.vnp_PayUrl + "?"));
         assertTrue(url.contains("vnp_Amount=100000"));
-        assertTrue(url.contains("vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A8000%2Fvnpay-payment-return"));
+        assertTrue(url.contains("vnp_ReturnUrl=http%3A%2F%2Flocalhost%3A8000%2Fvnpay%2Freturn"));
         assertTrue(url.contains("vnp_SecureHash="));
     }
 
